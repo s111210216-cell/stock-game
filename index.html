@@ -2,167 +2,360 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <title>AI 程式設計競技場（免 API Key 手動對決版）</title>
+  <title>Backtest Alpha Arena｜AI 量化交易策略競技場</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col">
 
-  <!-- 頂部：出題產生器 -->
+  <!-- 頂部控制列 -->
   <header class="bg-slate-900 border-b border-slate-800 p-4">
-    <div class="max-w-7xl mx-auto flex flex-col md:flex-row gap-3 items-center justify-between">
+    <div class="max-w-7xl mx-auto flex flex-col lg:flex-row gap-3 items-center justify-between">
       <div class="flex items-center gap-2">
-        <span class="text-2xl">⚔️</span>
-        <h1 class="text-lg font-bold text-cyan-400">AI Code Arena（免 Key 單機對決版）</h1>
+        <span class="text-2xl">📈</span>
+        <div>
+          <h1 class="text-lg font-bold text-emerald-400">Backtest Alpha Arena（AI 量化策略對決）</h1>
+          <p class="text-xs text-slate-400">初始本金 1,000,000｜買進手續費 0.1425%｜賣出含稅 0.4425%｜嚴格防未來函數隔離</p>
+        </div>
       </div>
-      
-      <div class="flex-1 flex gap-2 w-full md:max-w-2xl">
-        <input id="topic-input" type="text" 
-          value="用單一 HTML 檔案寫一個霓虹風格的貪吃蛇遊戲，要有計分板、加速道具與重新開始按鈕" 
-          class="flex-1 bg-slate-800 border border-slate-700 rounded px-3 py-1.5 text-sm text-white focus:outline-none focus:border-cyan-500"
-          placeholder="輸入你想考 AI 的題目...">
-        <button onclick="copyPrompt()" id="copy-btn" class="bg-cyan-600 hover:bg-cyan-500 px-4 py-1.5 rounded text-sm font-bold whitespace-nowrap transition">
-          📋 複製標準出題 Prompt
+
+      <div class="flex flex-wrap items-center gap-2">
+        <select id="market-regime" class="bg-slate-800 border border-slate-700 rounded px-3 py-1.5 text-sm text-white">
+          <option value="bull">戰場 1：多頭趨勢 + 中途回檔 (500 交易日)</option>
+          <option value="crash">戰場 2：大空頭股災崩盤 -35% 再反彈 (500 交易日)</option>
+          <option value="chop">戰場 3：高波動箱型震盪盤 (500 交易日)</option>
+          <option value="csv">戰場 4：貼上自訂收盤價序列 (如 0050.TW 歷史資料)</option>
+        </select>
+
+        <button onclick="copyPrompt()" id="copy-btn" class="bg-cyan-600 hover:bg-cyan-500 px-4 py-1.5 rounded text-sm font-bold transition">
+          📋 複製量化出題 Prompt
         </button>
       </div>
     </div>
+
+    <!-- 自訂 CSV 收盤價輸入框（選戰場 4 時顯示） -->
+    <div id="csv-box" class="hidden max-w-7xl mx-auto mt-3">
+      <textarea id="custom-prices" rows="2" placeholder="貼上逗號或換行分隔的收盤價數字，例如：150.5, 152.0, 149.8, 148.2 ... (至少 60 筆)" class="w-full bg-slate-950 text-xs text-cyan-300 p-2 rounded border border-slate-700 font-mono"></textarea>
+    </div>
   </header>
 
-  <!-- 貼上程式碼區（可收合） -->
-  <section id="setup-panel" class="max-w-7xl mx-auto w-full p-4">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-      <!-- 左側輸入 -->
-      <div class="bg-slate-900 p-3 rounded-lg border border-slate-800">
+  <!-- 雙 AI 策略輸入區 -->
+  <main class="max-w-7xl mx-auto w-full p-4 flex-1 flex flex-col gap-4">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <!-- 選手 A -->
+      <div class="bg-slate-900 p-3 rounded-lg border border-slate-800 flex flex-col">
         <div class="flex justify-between items-center mb-2">
-          <input id="name-1" type="text" value="ChatGPT" class="bg-slate-800 text-amber-400 font-bold text-sm px-2 py-1 rounded border border-slate-700 w-40">
-          <span class="text-xs text-slate-400">貼上第一位 AI 的程式碼</span>
+          <input id="name-a" type="text" value="Model A (預設：雙均線策略)" class="bg-slate-800 text-amber-400 font-bold text-sm px-2 py-1 rounded border border-slate-700 w-60">
+          <span class="text-xs text-slate-400">實作 decide(history, state)</span>
         </div>
-        <textarea id="raw-1" rows="5" placeholder="把第一個 AI 產出的 HTML 程式碼整段貼在這裡..." class="w-full bg-slate-950 text-xs text-green-400 p-2 rounded border border-slate-800 font-mono focus:outline-none focus:border-amber-500"></textarea>
+        <textarea id="code-a" rows="9" class="w-full bg-slate-950 text-xs text-green-400 p-2.5 rounded border border-slate-800 font-mono focus:outline-none focus:border-amber-500">function decide(history, state) {
+  // 範例策略 A：20日與60日均線黃金交叉全倉買進，死亡交叉全數賣出
+  if (history.length < 60) return { action: "HOLD" };
+  const close = history.map(d => d.close);
+  const ma20 = close.slice(-20).reduce((a, b) => a + b, 0) / 20;
+  const ma60 = close.slice(-60).reduce((a, b) => a + b, 0) / 60;
+
+  if (ma20 > ma60 && state.shares === 0) {
+    return { action: "BUY", ratio: 1.0 }; // 動用 100% 可用現金買進
+  }
+  if (ma20 < ma60 && state.shares > 0) {
+    return { action: "SELL", ratio: 1.0 }; // 賣出 100% 持股
+  }
+  return { action: "HOLD" };
+}</textarea>
       </div>
 
-      <!-- 右側輸入 -->
-      <div class="bg-slate-900 p-3 rounded-lg border border-slate-800">
+      <!-- 選手 B -->
+      <div class="bg-slate-900 p-3 rounded-lg border border-slate-800 flex flex-col">
         <div class="flex justify-between items-center mb-2">
-          <input id="name-2" type="text" value="Gemini" class="bg-slate-800 text-purple-400 font-bold text-sm px-2 py-1 rounded border border-slate-700 w-40">
-          <span class="text-xs text-slate-400">貼上第二位 AI 的程式碼</span>
+          <input id="name-b" type="text" value="Model B (預設：階梯回檔抄底)" class="bg-slate-800 text-purple-400 font-bold text-sm px-2 py-1 rounded border border-slate-700 w-60">
+          <span class="text-xs text-slate-400">實作 decide(history, state)</span>
         </div>
-        <textarea id="raw-2" rows="5" placeholder="把第二個 AI 產出的 HTML 程式碼整段貼在這裡..." class="w-full bg-slate-950 text-xs text-green-400 p-2 rounded border border-slate-800 font-mono focus:outline-none focus:border-purple-500"></textarea>
+        <textarea id="code-b" rows="9" class="w-full bg-slate-950 text-xs text-green-400 p-2.5 rounded border border-slate-800 font-mono focus:outline-none focus:border-purple-500">function decide(history, state) {
+  // 範例策略 B：從歷史最高點回檔超過 15% 分批買進，反彈獲利 20% 停利一半
+  const prices = history.map(d => d.close);
+  const current = prices[prices.length - 1];
+  const peak = Math.max(...prices);
+  const drawdown = (peak - current) / peak;
+
+  if (drawdown >= 0.15 && state.cash > current * 100) {
+    return { action: "BUY", ratio: 0.5 }; // 動用 50% 剩餘現金抄底
+  }
+  if (state.shares > 0 && current >= state.avgCost * 1.25) {
+    return { action: "SELL", ratio: 0.5 }; // 獲利 25% 減碼一半
+  }
+  return { action: "HOLD" };
+}</textarea>
       </div>
     </div>
 
-    <div class="flex justify-center items-center gap-4">
-      <label class="flex items-center gap-2 text-sm text-slate-300 cursor-pointer select-none">
-        <input id="blind-mode" type="checkbox" checked class="accent-cyan-500 w-4 h-4">
-        啟用盲測模式（隨機交換左右位置，投票後才揭曉誰是誰）
-      </label>
-      <button onclick="startBattle()" class="bg-gradient-to-r from-amber-500 to-purple-600 hover:opacity-90 px-6 py-2 rounded-lg font-bold text-white shadow-lg transition">
-        ⚔️ 開始渲染對決！
+    <!-- 開戰按鈕 -->
+    <div class="flex justify-center">
+      <button onclick="runArena()" class="bg-gradient-to-r from-emerald-500 to-cyan-600 hover:opacity-90 px-8 py-2.5 rounded-lg font-bold text-white shadow-lg transition">
+        ⚔️ 啟動回測引擎・開始量化對決！
       </button>
     </div>
-  </section>
 
-  <!-- 雙欄並排競技場舞台 -->
-  <main id="arena-stage" class="hidden flex-1 max-w-7xl mx-auto w-full px-4 pb-6 flex flex-col">
-    <div class="flex justify-between items-center mb-2">
-      <button onclick="resetSetup()" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded border border-slate-700">
-        ⬅️ 修改題目 / 重新貼上程式碼
-      </button>
-      <span id="status-banner" class="text-sm font-bold text-cyan-400">盲測進行中：請試玩兩邊的成品並選出較優者！</span>
-    </div>
+    <!-- 錯誤訊息提示 -->
+    <div id="error-box" class="hidden bg-red-950/80 border border-red-600 text-red-200 p-3 rounded text-xs font-mono"></div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
-      <!-- 舞台 A -->
-      <div class="flex flex-col bg-slate-900 rounded-lg border border-slate-800 overflow-hidden">
-        <div class="p-2.5 bg-slate-800/80 flex justify-between items-center">
-          <span id="title-a" class="font-bold text-amber-400">🤖 選手 A（神秘模型）</span>
-          <button onclick="toggleCode('a')" class="text-xs bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded">切換原始碼</button>
-        </div>
-        <iframe id="frame-a" sandbox="allow-scripts" class="w-full h-[520px] bg-white"></iframe>
-        <pre id="code-a" class="hidden p-3 text-xs overflow-auto h-[520px] bg-slate-950 text-green-400 font-mono"></pre>
+    <!-- 戰報與圖表區 -->
+    <section id="result-section" class="hidden flex flex-col gap-4">
+      <!-- 勝負橫幅 -->
+      <div id="winner-banner" class="bg-slate-900 border border-emerald-500/50 p-4 rounded-lg text-center font-bold text-lg text-emerald-400"></div>
+
+      <!-- 雙邊績效指標對比表 -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+        <div id="stats-a" class="bg-slate-900 p-4 rounded-lg border border-amber-500/40"></div>
+        <div id="stats-bench" class="bg-slate-900 p-4 rounded-lg border border-slate-700"></div>
+        <div id="stats-b" class="bg-slate-900 p-4 rounded-lg border border-purple-500/40"></div>
       </div>
 
-      <!-- 舞台 B -->
-      <div class="flex flex-col bg-slate-900 rounded-lg border border-slate-800 overflow-hidden">
-        <div class="p-2.5 bg-slate-800/80 flex justify-between items-center">
-          <span id="title-b" class="font-bold text-purple-400">🤖 選手 B（神秘模型）</span>
-          <button onclick="toggleCode('b')" class="text-xs bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded">切換原始碼</button>
-        </div>
-        <iframe id="frame-b" sandbox="allow-scripts" class="w-full h-[520px] bg-white"></iframe>
-        <pre id="code-b" class="hidden p-3 text-xs overflow-auto h-[520px] bg-slate-950 text-green-400 font-mono"></pre>
+      <!-- 淨值曲線走勢圖 -->
+      <div class="bg-slate-900 p-4 rounded-lg border border-slate-800">
+        <canvas id="equityChart" height="110"></canvas>
       </div>
-    </div>
-
-    <!-- 投票揭曉區 -->
-    <div id="vote-bar" class="mt-4 flex justify-center gap-4">
-      <button onclick="revealWinner('A')" class="bg-amber-600 hover:bg-amber-500 px-6 py-2.5 rounded-lg font-bold shadow">👈 左邊 (選手 A) 勝出</button>
-      <button onclick="revealWinner('TIE')" class="bg-slate-700 hover:bg-slate-600 px-6 py-2.5 rounded-lg font-bold shadow">🤝 平手</button>
-      <button onclick="revealWinner('B')" class="bg-purple-600 hover:bg-purple-500 px-6 py-2.5 rounded-lg font-bold shadow">👉 右邊 (選手 B) 勝出</button>
-    </div>
+    </section>
   </main>
 
   <script>
-    let contestants = { A: { name: '', code: '' }, B: { name: '', code: '' } };
+    let chartInstance = null;
 
-    // 自動剝除 AI 回覆中的 ```html ... ``` 與前後廢話
-    function cleanHtml(raw) {
-      const match = raw.match(/```html\s*([\s\S]*?)\s*```/i) || raw.match(/```\s*([\s\S]*?)\s*```/);
-      if (match) return match[1].trim();
-      const docStart = raw.indexOf('<!DOCTYPE html>');
-      const htmlStart = raw.indexOf('<html');
-      const startIdx = docStart !== -1 ? docStart : htmlStart;
-      return startIdx !== -1 ? raw.slice(startIdx).trim() : raw.trim();
-    }
+    document.getElementById('market-regime').addEventListener('change', (e) => {
+      document.getElementById('csv-box').classList.toggle('hidden', e.target.value !== 'csv');
+    });
 
     function copyPrompt() {
-      const topic = document.getElementById('topic-input').value.trim();
-      const fullPrompt = `請擔任頂尖前端與遊戲工程師，根據以下需求寫出一個「完全獨立、單一 HTML 檔案」的可執行網頁或小遊戲。\n需求：${topic}\n\n嚴格規則：\n1. 所有 CSS 與 JavaScript 必須全部寫在同一個 HTML 檔案內，不可引用外部本地檔案。\n2. 只輸出純 HTML 程式碼，不要有任何解釋文字。`;
-      navigator.clipboard.writeText(fullPrompt);
+      const promptText = `請擔任頂尖量化交易員，寫一個純 JavaScript 交易決策函式 \`function decide(history, state)\`，用來在股票回測競技場中擊敗對手（目標是最大化總報酬率與夏普比率，並嚴格控制最大回撤）。
+
+【輸入參數規格】
+1. \`history\`: 陣列，包含從第 0 天到「今天」為止的 K 線物件 \`{ day, open, high, low, close, volume }\`（嚴禁偷看未來資料）。
+2. \`state\`: 當前帳戶狀態物件 \`{ cash, shares, avgCost, equity }\`。
+   - 初始資金為 1,000,000，買進手續費 0.1425%，賣出手續費+證交稅共 0.4425%。
+
+【回傳格式規格】
+必須回傳一個物件：
+- 買進：\`{ action: "BUY", ratio: 0.5 }\` （ratio 為 0~1，代表動用多少比例的可用現金買進）
+- 賣出：\`{ action: "SELL", ratio: 1.0 }\` （ratio 為 0~1，代表賣出多少比例的現有持股）
+- 觀望：\`{ action: "HOLD" }\`
+
+【嚴格規則】
+1. 不可使用任何外部套件，所有技術指標（如 MA、EMA、RSI、MACD、布林通道、ATR）必須在函式內自己手寫計算。
+2. 只輸出 \`function decide(history, state) { ... }\` 的純 JavaScript 程式碼，不要有任何解釋文字。`;
+
+      navigator.clipboard.writeText(promptText);
       const btn = document.getElementById('copy-btn');
       btn.innerText = '✅ 已複製！去貼給兩個 AI';
-      setTimeout(() => btn.innerText = '📋 複製標準出題 Prompt', 2000);
+      setTimeout(() => btn.innerText = '📋 複製量化出題 Prompt', 2000);
     }
 
-    function startBattle() {
-      const c1 = { name: document.getElementById('name-1').value || 'AI 1', code: cleanHtml(document.getElementById('raw-1').value) };
-      const c2 = { name: document.getElementById('name-2').value || 'AI 2', code: cleanHtml(document.getElementById('raw-2').value) };
+    function cleanJS(raw) {
+      const match = raw.match(/```(?:javascript|js)?\s*([\s\S]*?)\s*```/i);
+      return match ? match[1].trim() : raw.trim();
+    }
 
-      if (!c1.code || !c2.code) {
-        alert('請先在左右兩邊都貼上 AI 產出的程式碼！');
-        return;
+    // 生成不同市場型態的確定性模擬 K 線數據
+    function generateMarketData(regime) {
+      if (regime === 'csv') {
+        const raw = document.getElementById('custom-prices').value;
+        const nums = raw.split(/[\s,]+/).map(Number).filter(n => !isNaN(n) && n > 0);
+        if (nums.length < 60) throw new Error("自訂收盤價資料不足 60 筆，請貼上更多歷史價格！");
+        return nums.map((c, i) => ({ day: i, open: c, high: c * 1.01, low: c * 0.99, close: c, volume: 10000 }));
       }
 
-      const isBlind = document.getElementById('blind-mode').checked;
-      const swap = isBlind && Math.random() > 0.5;
+      let seed = 42;
+      const rand = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+      const data = [];
+      let price = 100;
 
-      contestants.A = swap ? c2 : c1;
-      contestants.B = swap ? c1 : c2;
-
-      document.getElementById('title-a').innerText = isBlind ? '🤖 選手 A（神秘模型）' : `🤖 選手 A：${contestants.A.name}`;
-      document.getElementById('title-b').innerText = isBlind ? '🤖 選手 B（神秘模型）' : `🤖 選手 B：${contestants.B.name}`;
-      document.getElementById('status-banner').innerText = isBlind ? '盲測進行中：請試玩兩邊的成品並選出較優者！' : '公開對決進行中！';
-
-      document.getElementById('frame-a').srcdoc = contestants.A.code;
-      document.getElementById('frame-b').srcdoc = contestants.B.code;
-      document.getElementById('code-a').textContent = contestants.A.code;
-      document.getElementById('code-b').textContent = contestants.B.code;
-
-      document.getElementById('setup-panel').classList.add('hidden');
-      document.getElementById('arena-stage').classList.remove('hidden');
+      for (let i = 0; i < 500; i++) {
+        let drift = 0.0005;
+        let vol = 0.018;
+        if (regime === 'bull') {
+          drift = (i > 220 && i < 280) ? -0.003 : 0.0012; // 中途有一波 18% 回檔
+        } else if (regime === 'crash') {
+          drift = (i >= 120 && i <= 240) ? -0.0045 : 0.0015; // 股災暴跌後復甦
+          vol = 0.025;
+        } else if (regime === 'chop') {
+          drift = Math.sin(i / 25) * 0.004; // 大幅箱型震盪
+          vol = 0.022;
+        }
+        const shock = (rand() + rand() + rand() - 1.5) * 2 * vol;
+        const prev = price;
+        price = Math.max(10, price * (1 + drift + shock));
+        data.push({
+          day: i,
+          open: prev,
+          high: Math.max(prev, price) * (1 + rand() * 0.01),
+          low: Math.min(prev, price) * (1 - rand() * 0.01),
+          close: Number(price.toFixed(2)),
+          volume: Math.floor(5000 + rand() * 15000)
+        });
+      }
+      return data;
     }
 
-    function revealWinner(winner) {
-      document.getElementById('title-a').innerText = `🤖 選手 A：${contestants.A.name} ${winner === 'A' ? '👑 勝出' : ''}`;
-      document.getElementById('title-b').innerText = `🤖 選手 B：${contestants.B.name} ${winner === 'B' ? '👑 勝出' : ''}`;
-      document.getElementById('status-banner').innerText = `🎉 揭曉結果：左邊是 ${contestants.A.name}，右邊是 ${contestants.B.name}！`;
+    // 執行單一策略回測
+    function backtest(codeStr, marketData, label) {
+      let userFn;
+      try {
+        userFn = new Function(`${codeStr}; return decide;`)();
+        if (typeof userFn !== 'function') throw new Error("找不到 decide(history, state) 函式");
+      } catch (e) {
+        throw new Error(`[${label}] 語法編譯失敗：${e.message}`);
+      }
+
+      const INITIAL_CASH = 1000000;
+      const BUY_FEE = 0.001425;
+      const SELL_FEE = 0.004425;
+
+      let cash = INITIAL_CASH;
+      let shares = 0;
+      let avgCost = 0;
+      let trades = 0;
+      let wins = 0;
+      let peakEquity = INITIAL_CASH;
+      let maxDrawdown = 0;
+      const equityCurve = [];
+      const dailyReturns = [];
+
+      for (let i = 0; i < marketData.length; i++) {
+        const bar = marketData[i];
+        const prevEquity = i === 0 ? INITIAL_CASH : equityCurve[i - 1];
+        const currentEquity = cash + shares * bar.close;
+
+        // 嚴格切片：只給看到今天為止的歷史資料，杜絕未來函數
+        const visibleHistory = marketData.slice(0, i + 1);
+        const state = { cash, shares, avgCost, equity: currentEquity };
+
+        let decision;
+        try {
+          decision = userFn(visibleHistory, state) || { action: "HOLD" };
+        } catch (e) {
+          throw new Error(`[${label}] 第 ${i} 天執行時期報錯：${e.message}`);
+        }
+
+        const ratio = Math.min(1, Math.max(0, Number(decision.ratio) || 0));
+
+        if (decision.action === "BUY" && ratio > 0 && cash > 10) {
+          const budget = cash * ratio;
+          const buyShares = Math.floor(budget / (bar.close * (1 + BUY_FEE)));
+          if (buyShares > 0) {
+            const cost = buyShares * bar.close * (1 + BUY_FEE);
+            avgCost = (avgCost * shares + cost) / (shares + buyShares);
+            shares += buyShares;
+            cash -= cost;
+            trades++;
+          }
+        } else if (decision.action === "SELL" && ratio > 0 && shares > 0) {
+          const sellShares = Math.max(1, Math.floor(shares * ratio));
+          const actualSell = Math.min(shares, sellShares);
+          const revenue = actualSell * bar.close * (1 - SELL_FEE);
+          if (bar.close > avgCost) wins++;
+          shares -= actualSell;
+          cash += revenue;
+          if (shares === 0) avgCost = 0;
+          trades++;
+        }
+
+        const endEquity = cash + shares * bar.close;
+        equityCurve.push(endEquity);
+        dailyReturns.push((endEquity - prevEquity) / prevEquity);
+
+        if (endEquity > peakEquity) peakEquity = endEquity;
+        const dd = (peakEquity - endEquity) / peakEquity;
+        if (dd > maxDrawdown) maxDrawdown = dd;
+      }
+
+      const finalEquity = equityCurve[equityCurve.length - 1];
+      const totalReturn = ((finalEquity - INITIAL_CASH) / INITIAL_CASH) * 100;
+      const meanRet = dailyReturns.reduce((a, b) => a + b, 0) / dailyReturns.length;
+      const stdRet = Math.sqrt(dailyReturns.reduce((a, b) => a + Math.pow(b - meanRet, 2), 0) / dailyReturns.length) || 1e-9;
+      const sharpe = (meanRet / stdRet) * Math.sqrt(252);
+
+      // 綜合戰力評分（報酬率 + 夏普加成 - 最大回撤懲罰）
+      const alphaScore = totalReturn + (sharpe * 15) - (maxDrawdown * 100 * 0.8);
+
+      return { finalEquity, totalReturn, maxDrawdown: maxDrawdown * 100, sharpe, trades, equityCurve, alphaScore };
     }
 
-    function toggleCode(side) {
-      document.getElementById(`frame-${side}`).classList.toggle('hidden');
-      document.getElementById(`code-${side}`).classList.toggle('hidden');
-    }
+    function runArena() {
+      const errBox = document.getElementById('error-box');
+      errBox.classList.add('hidden');
 
-    function resetSetup() {
-      document.getElementById('arena-stage').classList.add('hidden');
-      document.getElementById('setup-panel').classList.remove('hidden');
+      try {
+        const regime = document.getElementById('market-regime').value;
+        const marketData = generateMarketData(regime);
+
+        const nameA = document.getElementById('name-a').value || 'Model A';
+        const nameB = document.getElementById('name-b').value || 'Model B';
+        const codeA = cleanJS(document.getElementById('code-a').value);
+        const codeB = cleanJS(document.getElementById('code-b').value);
+
+        const resA = backtest(codeA, marketData, nameA);
+        const resB = backtest(codeB, marketData, nameB);
+
+        // 計算大盤買進持有 (Buy & Hold) 基準線
+        const startPrice = marketData[0].close;
+        const benchCurve = marketData.map(d => (1000000 / startPrice) * d.close);
+        const benchReturn = ((benchCurve[benchCurve.length - 1] - 1000000) / 1000000) * 100;
+
+        // 判定勝負
+        const winnerText = resA.alphaScore > resB.alphaScore
+          ? `👑 ${nameA} 勝出！（綜合 Alpha 評分：${resA.alphaScore.toFixed(1)} vs ${resB.alphaScore.toFixed(1)}）`
+          : `👑 ${nameB} 勝出！（綜合 Alpha 評分：${resB.alphaScore.toFixed(1)} vs ${resA.alphaScore.toFixed(1)}）`;
+        document.getElementById('winner-banner').innerText = winnerText;
+
+        const renderCard = (title, color, r) => `
+          <h3 class="font-bold ${color} mb-2">${title}</h3>
+          <div class="space-y-1 text-slate-300 font-mono text-xs">
+            <div>最終淨值：<span class="text-white font-bold">$${Math.round(r.finalEquity).toLocaleString()}</span></div>
+            <div>總報酬率：<span class="${r.totalReturn >= 0 ? 'text-emerald-400' : 'text-rose-400'} font-bold">${r.totalReturn.toFixed(2)}%</span></div>
+            <div>最大回撤 (MDD)：<span class="text-amber-400">-${r.maxDrawdown.toFixed(2)}%</span></div>
+            <div>年化夏普比率：<span class="text-cyan-400">${r.sharpe.toFixed(2)}</span></div>
+            <div>總交易次數：${r.trades} 次</div>
+          </div>`;
+
+        document.getElementById('stats-a').innerHTML = renderCard(`🤖 ${nameA}`, 'text-amber-400', resA);
+        document.getElementById('stats-b').innerHTML = renderCard(`🤖 ${nameB}`, 'text-purple-400', resB);
+        document.getElementById('stats-bench').innerHTML = `
+          <h3 class="font-bold text-slate-400 mb-2">📊 大盤基準 (Buy & Hold)</h3>
+          <div class="space-y-1 text-slate-400 font-mono text-xs">
+            <div>期末淨值：$${Math.round(benchCurve[benchCurve.length - 1]).toLocaleString()}</div>
+            <div>基準報酬率：<span class="${benchReturn >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${benchReturn.toFixed(2)}%</span></div>
+            <div class="pt-2 text-[11px] text-slate-500">評分公式：報酬率 + 15×夏普 - 0.8×最大回撤</div>
+          </div>`;
+
+        document.getElementById('result-section').classList.remove('hidden');
+
+        // 繪製走勢圖
+        const ctx = document.getElementById('equityChart').getContext('2d');
+        if (chartInstance) chartInstance.destroy();
+        chartInstance = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: marketData.map(d => `Day ${d.day}`),
+            datasets: [
+              { label: nameA, data: resA.equityCurve, borderColor: '#fbbf24', borderWidth: 2, pointRadius: 0 },
+              { label: nameB, data: resB.equityCurve, borderColor: '#c084fc', borderWidth: 2, pointRadius: 0 },
+              { label: '大盤 Buy & Hold', data: benchCurve, borderColor: '#64748b', borderWidth: 1.5, borderDash: [5, 5], pointRadius: 0 }
+            ]
+          },
+          options: {
+            responsive: true,
+            interaction: { mode: 'index', intersect: false },
+            plugins: { legend: { labels: { color: '#cbd5e1' } } },
+            scales: {
+              x: { ticks: { color: '#64748b', maxTicksLimit: 10 }, grid: { color: '#1e293b' } },
+              y: { ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' } }
+            }
+          }
+        });
+
+      } catch (err) {
+        errBox.innerText = `❌ 裁判系統攔截錯誤：\n${err.message}`;
+        errBox.classList.remove('hidden');
+      }
     }
   </script>
 </body>
