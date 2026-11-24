@@ -1,0 +1,705 @@
+from IPython.display import HTML, display
+
+ai_stock_game_html = """
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&family=JetBrains+Mono:wght@600;800&display=swap');
+
+    .terminal-box {
+        font-family: 'Noto Sans TC', sans-serif;
+        background: #0d1117;
+        color: #e6edf3;
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 20px;
+        border-radius: 14px;
+        border: 1px solid #30363d;
+        box-shadow: 0 12px 35px rgba(0,0,0,0.75);
+    }
+
+    .top-bar {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #21262d;
+        padding-bottom: 12px;
+        margin-bottom: 12px;
+        gap: 10px;
+    }
+
+    .stock-tabs {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+    }
+
+    .stock-tab {
+        background: #161b22;
+        border: 1px solid #30363d;
+        color: #8b949e;
+        padding: 6px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: bold;
+        transition: 0.2s;
+    }
+    .stock-tab:hover { border-color: #58a6ff; color: #e6edf3; }
+    .stock-tab.active {
+        background: #1f6feb;
+        color: white;
+        border-color: #58a6ff;
+    }
+
+    .price-display {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 28px;
+        font-weight: 800;
+    }
+
+    .up { color: #ff4d4f; }
+    .down { color: #00e676; }
+
+    .news-ticker {
+        background: rgba(255, 193, 7, 0.1);
+        border-left: 4px solid #ffc107;
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-size: 14px;
+        color: #ffd54f;
+        margin-bottom: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .chart-wrapper {
+        position: relative;
+        background: #010409;
+        border: 1px solid #21262d;
+        border-radius: 10px;
+        padding: 10px;
+        margin-bottom: 12px;
+    }
+
+    canvas {
+        width: 100%;
+        height: 220px;
+        display: block;
+    }
+
+    .ai-banner {
+        display: none;
+        background: linear-gradient(90deg, rgba(31, 111, 235, 0.25), rgba(138, 43, 226, 0.25));
+        border: 1px solid #58a6ff;
+        padding: 10px 14px;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .ai-log-box {
+        background: #010409;
+        border: 1px solid #21262d;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-family: 'JetBrains Mono', 'Noto Sans TC', monospace;
+        font-size: 12px;
+        color: #79c0ff;
+        height: 62px;
+        overflow-y: auto;
+        margin-bottom: 12px;
+    }
+
+    .dashboard {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+
+    .stat-card {
+        background: #161b22;
+        border: 1px solid #30363d;
+        padding: 10px;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .stat-label { font-size: 12px; color: #8b949e; margin-bottom: 4px; }
+    .stat-value { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: bold; }
+
+    .controls-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: space-between;
+        align-items: center;
+        background: #161b22;
+        padding: 12px 14px;
+        border-radius: 10px;
+        border: 1px solid #30363d;
+    }
+
+    .lev-group { display: flex; gap: 6px; }
+    .lev-btn {
+        background: #21262d;
+        color: #c9d1d9;
+        border: 1px solid #30363d;
+        padding: 7px 11px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .lev-btn.active { background: #1f6feb; color: white; border-color: #58a6ff; }
+
+    .trade-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn {
+        border: none;
+        padding: 9px 16px;
+        font-size: 14px;
+        font-weight: 900;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: 0.15s;
+    }
+    .btn:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.1); }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    .btn-long { background: #d32f2f; color: white; }
+    .btn-short { background: #00a152; color: white; }
+    .btn-close { background: #f57c00; color: white; }
+    .btn-ai { background: linear-gradient(90deg, #00b4db, #0083b0); color: white; box-shadow: 0 0 12px rgba(0, 180, 219, 0.4); }
+    .btn-gacha { background: linear-gradient(90deg, #8e2de2, #4a00e0); color: white; }
+
+    .items-bar {
+        margin-top: 12px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: space-between;
+        align-items: center;
+        background: #161b22;
+        padding: 10px 14px;
+        border-radius: 10px;
+        border: 1px dashed #8a2be2;
+    }
+
+    .inventory-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+    .item-tag {
+        background: rgba(138, 43, 226, 0.25);
+        border: 1px solid #a371f7;
+        color: #d2a8ff;
+        padding: 5px 10px;
+        border-radius: 6px;
+        font-size: 13px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+</style>
+</head>
+<body>
+
+<div class="terminal-box">
+    <!-- 股票切換列 -->
+    <div class="stock-tabs" id="stock-tabs"></div>
+
+    <div class="top-bar">
+        <div>
+            <span id="stock-header" style="font-size: 20px; font-weight: 900;">0050 元大台灣50</span>
+            <span id="stock-desc" style="font-size: 12px; color: #8b949e; margin-left: 8px;">穩健大盤指數</span>
+        </div>
+        <div>
+            <span id="price-val" class="price-display up">195.00</span>
+            <span id="pct-val" class="up" style="font-family: 'JetBrains Mono'; font-size: 14px; margin-left: 6px;">(+0.00%)</span>
+        </div>
+    </div>
+
+    <div class="news-ticker">
+        <span id="news-text">📢 市場開盤平穩，AI 演算法正在掃描盤勢...</span>
+        <span id="insider-hint" style="color: #58a6ff; font-weight: bold;"></span>
+    </div>
+
+    <!-- AI 代操狀態橫幅 -->
+    <div class="ai-banner" id="ai-banner">
+        <span style="font-weight: 900; color: #79c0ff;">🤖 量化 AI 自動代操接管中... 剩餘 <span id="ai-timer" style="font-size: 18px; color: #ffd700;">30</span> 秒</span>
+        <button class="btn" style="background: #da3633; color: white; padding: 5px 12px; font-size: 12px;" onclick="stopAI(true)">手動中止代操</button>
+    </div>
+
+    <div class="chart-wrapper">
+        <canvas id="stockCanvas" width="800" height="220"></canvas>
+    </div>
+
+    <!-- AI 決策即時日誌 -->
+    <div class="ai-log-box" id="ai-log">
+        <div>> [系統就緒] 可手動操盤，或點擊「🤖 電腦 AI 代操 30 秒」讓演算法自動幫你低買高賣。</div>
+    </div>
+
+    <div class="dashboard">
+        <div class="stat-card">
+            <div class="stat-label">可用現金</div>
+            <div class="stat-value" id="cash-val" style="color: #ffd700;">$10,000</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">目前倉位</div>
+            <div class="stat-value" id="pos-val">空手觀望</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">進場均價</div>
+            <div class="stat-value" id="entry-val">-</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">未實現損益</div>
+            <div class="stat-value" id="pnl-val">$0</div>
+        </div>
+    </div>
+
+    <div class="controls-row">
+        <div class="lev-group">
+            <button class="lev-btn active" onclick="setLev(1, this)">1x 現貨</button>
+            <button class="lev-btn" onclick="setLev(5, this)">5x 融資</button>
+            <button class="lev-btn" onclick="setLev(20, this)">20x 飆車</button>
+        </div>
+
+        <div class="trade-btns">
+            <button class="btn btn-ai" id="btn-ai" onclick="startAI()">🤖 電腦 AI 代操 30 秒</button>
+            <button class="btn btn-long" id="btn-long" onclick="openPosition('LONG')">🔴 做多</button>
+            <button class="btn btn-short" id="btn-short" onclick="openPosition('SHORT')">🟢 放空</button>
+            <button class="btn btn-close" id="btn-close" onclick="closePosition()" disabled>💰 平倉</button>
+        </div>
+    </div>
+
+    <div class="items-bar">
+        <div>
+            <button class="btn btn-gacha" onclick="drawBox()">🎁 抽操盤手盲盒 ($2,000)</button>
+            <span style="font-size: 12px; color: #8b949e; margin-left: 8px;">點擊道具使用：</span>
+        </div>
+        <div class="inventory-tags" id="items-list">
+            <span style="font-size: 12px; color: #6e7681;">(尚無道具)</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('stockCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // 多檔股票設定（含不同初始價格與波動度）
+    const stocks = {
+        "0050": { code: "0050", name: "元大台灣50", desc: "穩健大盤指數 (低波動)", price: 195.00, vol: 1.1, history: Array(60).fill(195.00) },
+        "2330": { code: "2330", name: "台積電", desc: "護國神山權值王 (中波動)", price: 1050.00, vol: 1.7, history: Array(60).fill(1050.00) },
+        "2454": { code: "2454", name: "聯發科", desc: "AI 晶片旗艦 (中高波動)", price: 1320.00, vol: 2.3, history: Array(60).fill(1320.00) },
+        "2317": { code: "2317", name: "鴻海", desc: "AI 伺服器代工龍頭 (中波動)", price: 215.00, vol: 1.9, history: Array(60).fill(215.00) },
+        "3481": { code: "3481", name: "群創", desc: "面板主力飆股 (極高波動)", price: 16.50, vol: 3.4, history: Array(60).fill(16.50) }
+    };
+
+    let currentStockKey = "0050";
+    let cash = 10000;
+    let leverage = 1;
+
+    let position = null;
+    let entryPrice = 0;
+    let investedCash = 0;
+    let shieldActive = false;
+
+    let trendBias = 0;
+    let trendTicks = 0;
+    let items = [];
+
+    // AI 代操變數
+    let aiActive = false;
+    let aiSecondsLeft = 0;
+    let aiCountdownInterval = null;
+    let aiStartEquity = 0;
+
+    const newsEvents = [
+        { text: "🔥 利多：AI 伺服器與晶片訂單爆滿，外資大舉買超！", bias: 0.55, ticks: 8 },
+        { text: "🚀 利多：法人調升目標價，主力大單連續敲進！", bias: 0.65, ticks: 6 },
+        { text: "❄️ 利空：美股科技股重挫，外資提款賣超！", bias: -0.55, ticks: 8 },
+        { text: "💥 利空：供應鏈傳砍單雜音，停損賣壓湧現！", bias: -0.65, ticks: 6 },
+        { text: "⚖️ 盤整：市場觀望總經數據，多空狹幅震盪。", bias: 0.0, ticks: 7 }
+    ];
+
+    function logAI(msg) {
+        const box = document.getElementById('ai-log');
+        const line = document.createElement('div');
+        line.innerText = `> ${msg}`;
+        box.prepend(line);
+        if (box.children.length > 15) box.removeChild(box.lastChild);
+    }
+
+    function renderStockTabs() {
+        const container = document.getElementById('stock-tabs');
+        container.innerHTML = Object.keys(stocks).map(k => {
+            const s = stocks[k];
+            const activeClass = k === currentStockKey ? 'active' : '';
+            return `<button class="stock-tab ${activeClass}" onclick="selectStock('${k}')">${s.code} ${s.name}</button>`;
+        }).join('');
+    }
+
+    function selectStock(key) {
+        if (position) {
+            alert("目前有持倉部位，請先平倉後再切換股票！");
+            return;
+        }
+        currentStockKey = key;
+        const s = stocks[key];
+        document.getElementById('stock-header').innerText = `${s.code} ${s.name}`;
+        document.getElementById('stock-desc').innerText = s.desc;
+        renderStockTabs();
+        drawChart();
+        updateUI();
+    }
+
+    function setLev(val, btn) {
+        if (position || aiActive) {
+            alert("持倉中或 AI 代操期間無法手動切換槓桿！");
+            return;
+        }
+        leverage = val;
+        document.querySelectorAll('.lev-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+
+    function openPosition(type, isByAI = false) {
+        if (cash < 100) {
+            if (!isByAI) alert("本金不足！系統發放 $3,000 救濟金！");
+            cash = 3000;
+        }
+        const s = stocks[currentStockKey];
+        position = type;
+        entryPrice = s.price;
+        investedCash = cash;
+        cash = 0;
+
+        updateButtonStates();
+        updateUI();
+    }
+
+    function closePosition() {
+        if (!position) return;
+        const pnl = calcPnL();
+        cash = Math.max(0, Math.round(investedCash + pnl));
+        position = null;
+        entryPrice = 0;
+        investedCash = 0;
+        shieldActive = false;
+
+        updateButtonStates();
+        updateUI();
+    }
+
+    function updateButtonStates() {
+        document.getElementById('btn-long').disabled = !!position || aiActive;
+        document.getElementById('btn-short').disabled = !!position || aiActive;
+        document.getElementById('btn-close').disabled = !position || aiActive;
+        document.getElementById('btn-ai').disabled = aiActive;
+    }
+
+    function calcPnL() {
+        if (!position) return 0;
+        const s = stocks[currentStockKey];
+        const pctChange = (s.price - entryPrice) / entryPrice;
+        const direction = position === 'LONG' ? 1 : -1;
+        return investedCash * pctChange * leverage * direction;
+    }
+
+    // 啟動電腦 AI 代操 30 秒
+    function startAI() {
+        if (aiActive) return;
+        if (position) {
+            alert("請先平倉現有部位，再交給電腦 AI 從空手開始全權操作！");
+            return;
+        }
+        if (cash < 100) cash = 3000;
+
+        aiActive = true;
+        aiSecondsLeft = 30;
+        aiStartEquity = cash;
+
+        document.getElementById('ai-banner').style.display = 'flex';
+        document.getElementById('ai-timer').innerText = aiSecondsLeft;
+        updateButtonStates();
+        logAI(`[AI 啟動] 接管帳戶！初始資金 $${aiStartEquity.toLocaleString()}，開始掃描 ${stocks[currentStockKey].name} 盤勢...`);
+
+        aiCountdownInterval = setInterval(() => {
+            aiSecondsLeft--;
+            document.getElementById('ai-timer').innerText = aiSecondsLeft;
+            if (aiSecondsLeft <= 0) {
+                stopAI(false);
+            }
+        }, 1000);
+    }
+
+    function stopAI(manualStop) {
+        if (!aiActive) return;
+        clearInterval(aiCountdownInterval);
+        if (position) {
+            closePosition();
+        }
+        aiActive = false;
+        document.getElementById('ai-banner').style.display = 'none';
+        updateButtonStates();
+
+        const diff = cash - aiStartEquity;
+        const sign = diff >= 0 ? '+' : '';
+        logAI(`[AI 結束] ${manualStop ? '已手動中止' : '30 秒代操完成'}！結算總資金 $${cash.toLocaleString()} (${sign}$${diff.toLocaleString()})`);
+    }
+
+    // AI 交易核心決策邏輯 (每次報價跳動時執行)
+    function runAIDecision() {
+        const s = stocks[currentStockKey];
+        const hist = s.history;
+        const len = hist.length;
+        // 計算短期動能 (最近 4 根 vs 前 4 根平均)
+        const recentAvg = (hist[len-1] + hist[len-2] + hist[len-3]) / 3;
+        const pastAvg = (hist[len-4] + hist[len-5] + hist[len-6]) / 3;
+        const momentum = (recentAvg - pastAvg) / pastAvg;
+
+        // 結合新聞訊號與均線動能的綜合分數
+        const signalScore = momentum * 100 + trendBias * 0.8;
+
+        if (!position) {
+            // 空手時尋找進場機會
+            if (signalScore > 0.25) {
+                leverage = signalScore > 0.6 ? 5 : 1;
+                document.querySelectorAll('.lev-btn').forEach(b => b.classList.toggle('active', b.innerText.startsWith(leverage + 'x')));
+                openPosition('LONG', true);
+                logAI(`[AI 進場] 均線向上突破 (信號 +${signalScore.toFixed(2)})，開啟 ${leverage}x 做多 @ ${s.price.toFixed(2)}`);
+            } else if (signalScore < -0.25) {
+                leverage = signalScore < -0.6 ? 5 : 1;
+                document.querySelectorAll('.lev-btn').forEach(b => b.classList.toggle('active', b.innerText.startsWith(leverage + 'x')));
+                openPosition('SHORT', true);
+                logAI(`[AI 進場] 偵測空頭下殺 (信號 ${signalScore.toFixed(2)})，開啟 ${leverage}x 放空 @ ${s.price.toFixed(2)}`);
+            }
+        } else {
+            // 持倉中：判斷停利、停損或趨勢反轉
+            const pnl = calcPnL();
+            const roi = pnl / investedCash;
+
+            // 1. 獲利超過 8% 自動鎖利平倉
+            if (roi >= 0.08) {
+                closePosition();
+                logAI(`[AI 停利] 達標獲利 +$${Math.round(pnl).toLocaleString()} (+${(roi*100).toFixed(1)}%)，落袋為安！`);
+                return;
+            }
+            // 2. 虧損超過 -6% 嚴格停損
+            if (roi <= -0.06) {
+                closePosition();
+                logAI(`[AI 停損] 觸及風控線 -$${Math.abs(Math.round(pnl)).toLocaleString()}，果斷砍倉保本！`);
+                return;
+            }
+            // 3. 趨勢反轉平倉
+            if (position === 'LONG' && signalScore < -0.2) {
+                closePosition();
+                logAI(`[AI 轉向] 多頭動能轉弱，平倉結算 ($${pnl >= 0 ? '+' : ''}${Math.round(pnl)})`);
+            } else if (position === 'SHORT' && signalScore > 0.2) {
+                closePosition();
+                logAI(`[AI 轉向] 空頭回補拉升，平倉結算 ($${pnl >= 0 ? '+' : ''}${Math.round(pnl)})`);
+            }
+        }
+    }
+
+    function drawBox() {
+        if (cash < 2000) {
+            alert("可用現金不足 $2,000（持倉中請先平倉）！");
+            return;
+        }
+        cash -= 2000;
+        const r = Math.random();
+        if (r < 0.35) {
+            items.push({ id: Date.now(), name: "🔮 內線消息卡", type: "INSIDER" });
+            alert("抽中【🔮 內線消息卡】！使用後可直接製造並預知下一波大行情！");
+        } else if (r < 0.70) {
+            items.push({ id: Date.now(), name: "🛡️ 防爆倉護身符", type: "SHIELD" });
+            alert("抽中【🛡️ 防爆倉護身符】！下次強制平倉時可保住 80% 本金！");
+        } else {
+            cash += 5000;
+            alert("🎉 頭獎！抽中【💰 大戶空投支票】，現金直接 +$5,000！");
+        }
+        renderItems();
+        updateUI();
+    }
+
+    function useItem(index) {
+        const item = items[index];
+        items.splice(index, 1);
+        if (item.type === "INSIDER") {
+            const bull = Math.random() > 0.5;
+            trendBias = bull ? 0.85 : -0.85;
+            trendTicks = 8;
+            document.getElementById('insider-hint').innerText = bull ? "🤫 內線：主力即將暴力拉抬！" : "🤫 內線：大戶準備倒貨下殺！";
+            setTimeout(() => { document.getElementById('insider-hint').innerText = ""; }, 6500);
+        } else if (item.type === "SHIELD") {
+            shieldActive = true;
+            alert("🛡️ 防爆倉護身符已啟動！");
+        }
+        renderItems();
+    }
+
+    function renderItems() {
+        const box = document.getElementById('items-list');
+        if (items.length === 0) {
+            box.innerHTML = `<span style="font-size: 12px; color: #6e7681;">(尚無道具)</span>`;
+            return;
+        }
+        box.innerHTML = items.map((it, idx) =>
+            `<span class="item-tag" onclick="useItem(${idx})">${it.name}</span>`
+        ).join('');
+    }
+
+    function updateUI() {
+        const s = stocks[currentStockKey];
+        const prev = s.history[s.history.length - 2];
+        const diffPct = ((s.price - prev) / prev) * 100;
+        const priceEl = document.getElementById('price-val');
+        const pctEl = document.getElementById('pct-val');
+
+        priceEl.innerText = s.price.toFixed(2);
+        pctEl.innerText = `(${diffPct >= 0 ? '+' : ''}${diffPct.toFixed(2)}%)`;
+
+        if (diffPct >= 0) {
+            priceEl.className = "price-display up";
+            pctEl.className = "up";
+        } else {
+            priceEl.className = "price-display down";
+            pctEl.className = "down";
+        }
+
+        document.getElementById('cash-val').innerText = `$${cash.toLocaleString()}`;
+
+        if (position) {
+            const dirText = (aiActive ? "🤖 " : "") + (position === 'LONG' ? `做多 ${leverage}x` : `放空 ${leverage}x`);
+            document.getElementById('pos-val').innerText = dirText + (shieldActive ? " 🛡️" : "");
+            document.getElementById('pos-val').style.color = position === 'LONG' ? "#ff4d4f" : "#00e676";
+            document.getElementById('entry-val').innerText = entryPrice.toFixed(2);
+
+            const pnl = Math.round(calcPnL());
+            const pnlEl = document.getElementById('pnl-val');
+            pnlEl.innerText = `${pnl >= 0 ? '+' : ''}$${pnl.toLocaleString()}`;
+            pnlEl.style.color = pnl >= 0 ? "#ff4d4f" : "#00e676";
+
+            if (investedCash + pnl <= 0) {
+                if (shieldActive) {
+                    cash = Math.round(investedCash * 0.8);
+                    position = null;
+                    shieldActive = false;
+                    updateButtonStates();
+                    alert("🛡️ 觸發爆倉線！護身符幫你保住了 80% 本金！");
+                } else {
+                    position = null;
+                    investedCash = 0;
+                    updateButtonStates();
+                    if (!aiActive) alert("💥 慘遭斷頭爆倉！本金全數歸零！");
+                    else logAI("[AI 警告] 遭遇極端行情爆倉！");
+                }
+            }
+        } else {
+            document.getElementById('pos-val').innerText = aiActive ? "🤖 AI 觀察中" : "空手觀望";
+            document.getElementById('pos-val').style.color = "#8b949e";
+            document.getElementById('entry-val').innerText = "-";
+            document.getElementById('pnl-val').innerText = "$0";
+            document.getElementById('pnl-val').style.color = "#e6edf3";
+        }
+    }
+
+    function drawChart() {
+        const s = stocks[currentStockKey];
+        const hist = s.history;
+        const w = canvas.width;
+        const h = canvas.height;
+        ctx.clearRect(0, 0, w, h);
+
+        ctx.strokeStyle = "#161b22";
+        ctx.lineWidth = 1;
+        for (let i = 1; i < 5; i++) {
+            let y = (h / 5) * i;
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(w, y);
+            ctx.stroke();
+        }
+
+        const minP = Math.min(...hist) * 0.996;
+        const maxP = Math.max(...hist) * 1.004;
+        const range = maxP - minP || 1;
+
+        const isRising = hist[hist.length - 1] >= hist[hist.length - 2];
+        const lineColor = isRising ? "#ff4d4f" : "#00e676";
+
+        ctx.beginPath();
+        ctx.strokeStyle = lineColor;
+        ctx.lineWidth = 3;
+        ctx.shadowColor = lineColor;
+        ctx.shadowBlur = 8;
+
+        hist.forEach((val, idx) => {
+            const x = (idx / (hist.length - 1)) * w;
+            const y = h - ((val - minP) / range) * (h - 30) - 15;
+            if (idx === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        if (position && entryPrice >= minP && entryPrice <= maxP) {
+            const entryY = h - ((entryPrice - minP) / range) * (h - 30) - 15;
+            ctx.setLineDash([6, 6]);
+            ctx.strokeStyle = "#ffd700";
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(0, entryY);
+            ctx.lineTo(w, entryY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.fillStyle = "#ffd700";
+            ctx.font = "12px JetBrains Mono";
+            ctx.fillText(`進場線 ${entryPrice.toFixed(2)}`, 10, entryY - 5);
+        }
+    }
+
+    // 主遊戲迴圈
+    setInterval(() => {
+        if (trendTicks > 0) {
+            trendTicks--;
+            if (trendTicks === 0) trendBias = 0;
+        } else if (Math.random() < 0.14) {
+            const ev = newsEvents[Math.floor(Math.random() * newsEvents.length)];
+            trendBias = ev.bias;
+            trendTicks = ev.ticks;
+            document.getElementById('news-text').innerText = ev.text;
+        }
+
+        // 所有股票同步跳動報價
+        Object.keys(stocks).forEach(k => {
+            const st = stocks[k];
+            const biasFactor = (k === currentStockKey) ? trendBias : trendBias * 0.5;
+            const pctMove = (Math.random() - 0.5 + biasFactor * 0.38) * st.vol;
+            st.price = Math.max(2, st.price * (1 + pctMove / 100));
+            st.history.push(st.price);
+            if (st.history.length > 60) st.history.shift();
+        });
+
+        if (aiActive) {
+            runAIDecision();
+        }
+
+        drawChart();
+        updateUI();
+    }, 800);
+
+    renderStockTabs();
+    drawChart();
+    updateUI();
+</script>
+</body>
+</html>
+"""
+
+display(HTML(ai_stock_game_html))
