@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI 量化對決交易室 | 即時行情與排行榜</title>
+  <title>AI 量化對決交易室 | 多模型即時對戰</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body {
@@ -23,11 +23,11 @@
     .ai-badge {
       background: linear-gradient(135deg, #6366f1, #a855f7);
       color: #fff;
-      font-size: 11px;
-      padding: 2px 7px;
+      font-size: 10px;
+      padding: 2px 6px;
       border-radius: 999px;
       font-weight: 700;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.4px;
     }
   </style>
 </head>
@@ -42,7 +42,7 @@
             AI 量化對決交易室
             <span id="market-badge" class="text-xs px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">市場常態</span>
           </h1>
-          <p class="text-xs text-slate-400">全球同步 Tick 引擎 · 即時「現在金額」排名 · 玩家專屬盤面技能</p>
+          <p class="text-xs text-slate-400">全球同步 Tick 引擎 · 多性格 AI 軍團 · 支援 ChatGPT 外部連線對決</p>
         </div>
       </div>
 
@@ -88,7 +88,6 @@
             <canvas id="price-chart" style="width:100%;height:100%;display:block;"></canvas>
           </div>
 
-          <!-- 玩家專屬盤面技能列（每 60 秒一次，AI 看不到） -->
           <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3 space-y-2">
             <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
               <div class="flex items-center gap-2">
@@ -98,30 +97,29 @@
               <span id="skill-cooldown-text" class="font-mono font-bold text-emerald-400">技能就緒（可施放）</span>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              <button type="button" id="skill-pump-btn" onclick="triggerPlayerSkill('PUMP')"
+              <button type="button" onclick="triggerPlayerSkill('PUMP')"
                 class="skill-btn py-2 px-3 rounded-lg font-bold text-xs text-white bg-rose-600 hover:bg-rose-500 transition">
-                🚀 拉高盤（連拉急漲）
+                🚀 拉高盤（狙擊做空 AI）
               </button>
-              <button type="button" id="skill-dump-btn" onclick="triggerPlayerSkill('DUMP')"
+              <button type="button" onclick="triggerPlayerSkill('DUMP')"
                 class="skill-btn py-2 px-3 rounded-lg font-bold text-xs text-white bg-emerald-600 hover:bg-emerald-500 transition">
-                📉 砸盤（重挫下殺）
+                📉 砸盤（收割追高 AI）
               </button>
-              <button type="button" id="skill-wick-btn" onclick="triggerPlayerSkill('WICK')"
+              <button type="button" onclick="triggerPlayerSkill('WICK')"
                 class="skill-btn py-2 px-3 rounded-lg font-bold text-xs text-slate-950 bg-amber-400 hover:bg-amber-300 transition">
                 🪡 插針（瞬間劇烈洗盤）
               </button>
             </div>
           </div>
 
-          <!-- 交易與 AI 訊號日誌 -->
-          <div id="trade-log-box" class="bg-slate-950/90 border border-slate-800 rounded-xl p-2.5 h-24 overflow-y-auto font-mono text-xs space-y-1">
-            <div class="text-slate-500">&gt; 系統就緒，等待手動下單、施放盤面技能或啟動「AI 代操 30s」。</div>
+          <div id="trade-log-box" class="bg-slate-950/90 border border-slate-800 rounded-xl p-2.5 h-28 overflow-y-auto font-mono text-xs space-y-1">
+            <div class="text-slate-500">&gt; 系統就緒，4 大性格 AI 軍團已進場自由交易。</div>
           </div>
         </div>
 
         <div class="card p-4 space-y-3">
           <div class="flex flex-wrap items-center justify-between gap-2">
-            <span class="text-sm font-bold text-white">交易操作與 AI 代操</span>
+            <span class="text-sm font-bold text-white">交易操作與個人代操</span>
             <span class="text-xs text-slate-400">可用現金：<b id="user-cash" class="text-white">$10,000</b></span>
           </div>
 
@@ -159,7 +157,7 @@
             </button>
             <button type="button" id="ai-autopilot-btn" onclick="toggleAiAutopilot()"
               class="py-2.5 rounded-full font-bold text-white bg-sky-600 hover:bg-sky-500 transition">
-              🤖 AI 代操 30s
+              🤖 個人代操 30s
             </button>
           </div>
 
@@ -169,7 +167,7 @@
               <span id="user-pos-badge" class="px-2 py-0.5 rounded bg-slate-800 text-slate-400">空手觀望</span>
             </div>
             <div id="user-pos-detail" class="text-slate-400">
-              尚未進場，可手動下單或按「AI 代操 30s」。
+              尚未進場，可手動下單或啟動「個人代操 30s」。
             </div>
           </div>
         </div>
@@ -179,67 +177,16 @@
         <div class="card p-4 border-indigo-500/40 relative overflow-hidden">
           <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
             <div class="flex items-center gap-2">
-              <span class="text-base font-bold text-white">🤖 AI 量化即時看板</span>
-              <span class="ai-badge">DUAL AI</span>
+              <span class="text-base font-bold text-white">🤖 AI 軍團即時看板</span>
+              <span class="ai-badge">MULTI-AI</span>
             </div>
-            <div class="flex items-center gap-1">
-              <button type="button" id="ai-tab-both" onclick="setAiView('both')" class="text-[11px] px-2 py-0.5 rounded bg-indigo-600 text-white font-bold">全部</button>
-              <button type="button" id="ai-tab-1" onclick="setAiView('1')" class="text-[11px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-bold">ai</button>
-              <button type="button" id="ai-tab-2" onclick="setAiView('2')" class="text-[11px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-bold">cf_alpha</button>
-            </div>
+            <button type="button" id="toggle-bots-btn" onclick="toggleLocalBots()"
+              class="text-[11px] px-2.5 py-1 rounded bg-emerald-600/20 text-emerald-300 border border-emerald-500/40 font-bold">
+              ● 軍團運行中
+            </button>
           </div>
 
-          <div class="space-y-2.5">
-            <div id="ai-slot-1" class="bg-slate-950/70 rounded-xl p-3 border border-slate-800/90 space-y-1.5 text-xs">
-              <div class="flex justify-between items-center">
-                <span class="font-bold text-indigo-300">ai (#1)</span>
-                <span id="ai-online-1" class="flex items-center gap-1.5 text-slate-400">
-                  <span class="w-2 h-2 rounded-full bg-slate-500"></span>離線
-                </span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-slate-400">目前操作標的</span>
-                <span id="ai-stock-1" class="font-bold text-white text-sm">空手觀望中</span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-slate-400">方向 / 槓桿</span>
-                <span id="ai-dir-lev-1" class="font-bold text-slate-300">-</span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-slate-400">開倉均價 / 保證金</span>
-                <span id="ai-entry-margin-1" class="font-mono text-slate-300">-</span>
-              </div>
-              <div class="border-t border-slate-800 pt-1.5 flex justify-between items-center">
-                <span class="text-slate-400">AI 即時淨值</span>
-                <span id="ai-live-nw-1" class="text-sm font-extrabold text-amber-400">$10,000</span>
-              </div>
-            </div>
-
-            <div id="ai-slot-2" class="bg-slate-950/70 rounded-xl p-3 border border-slate-800/90 space-y-1.5 text-xs">
-              <div class="flex justify-between items-center">
-                <span class="font-bold text-sky-300">cf_alpha (#2)</span>
-                <span id="ai-online-2" class="flex items-center gap-1.5 text-slate-400">
-                  <span class="w-2 h-2 rounded-full bg-slate-500"></span>離線
-                </span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-slate-400">目前操作標的</span>
-                <span id="ai-stock-2" class="font-bold text-white text-sm">cf_alpha 待機中</span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-slate-400">方向 / 槓桿</span>
-                <span id="ai-dir-lev-2" class="font-bold text-slate-300">-</span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-slate-400">開倉均價 / 保證金</span>
-                <span id="ai-entry-margin-2" class="font-mono text-slate-300">-</span>
-              </div>
-              <div class="border-t border-slate-800 pt-1.5 flex justify-between items-center">
-                <span class="text-slate-400">AI 即時淨值</span>
-                <span id="ai-live-nw-2" class="text-sm font-extrabold text-amber-400">$10,000</span>
-              </div>
-            </div>
-          </div>
+          <div id="ai-cards-container" class="space-y-2 max-h-[340px] overflow-y-auto pr-1"></div>
         </div>
 
         <div class="card p-4">
@@ -247,7 +194,7 @@
             <h2 class="text-base font-bold text-white">🏆 「現在金額」即時排行榜</h2>
             <span class="text-[11px] text-slate-400">每 4 秒同步</span>
           </div>
-          <div id="leaderboard-list" class="space-y-2 max-h-[380px] overflow-y-auto pr-1">
+          <div id="leaderboard-list" class="space-y-2 max-h-[340px] overflow-y-auto pr-1">
             <div class="text-xs text-slate-500 text-center py-6">載入排行榜中...</div>
           </div>
         </div>
@@ -266,20 +213,17 @@ const STOCKS = {
   "2317": { seed: 404, name: "鴻海", base: 215.0, vol: 2.4 },
   "3481": { seed: 505, name: "群創", base: 16.5, vol: 4.2 },
 };
+const STOCK_KEYS = Object.keys(STOCKS);
 const NEWS_BIAS = [0.65, -0.65, 0.35, -0.35, 0.0];
+const RESERVED_NAMES = ["ai", "cf_alpha", "contrarian_x", "steady_bot", "chatgpt_bot"];
 
-const ANCHOR_TICK = Math.floor(Date.now() / 800) - 200;
+// 每小時整點重置錨點（4500 ticks = 3600 秒），確保瀏覽器與外部 Python/ChatGPT 價格 100% 同步
+const HOUR_TICKS = 4500;
 const priceCache = new Map();
 
-// 玩家技能狀態（冷卻 60,000 ms = 1 分鐘；AI 無法讀取此狀態）
 const SKILL_COOLDOWN_MS = 60000;
 let lastSkillUsedMs = 0;
-let activeSkillEvent = {
-  type: "NONE",       // "PUMP" | "DUMP" | "WICK" | "NONE"
-  targetStock: "ALL", // 標的代碼或 "ALL"
-  startTick: 0,
-  endTick: 0
-};
+let activeSkillEvent = { type: "NONE", targetStock: "ALL", startTick: 0, endTick: 0 };
 
 function safeGetStorage(key) {
   try { return window.localStorage.getItem(key); } catch (e) { return null; }
@@ -295,6 +239,7 @@ function appendLog(msg, cls = "text-slate-300") {
   line.className = cls;
   line.textContent = "> " + msg;
   box.appendChild(line);
+  while (box.children.length > 60) box.removeChild(box.firstChild);
   box.scrollTop = box.scrollHeight;
 }
 
@@ -323,16 +268,9 @@ function getSkillDeltaPct(stockKey, t, st) {
   if (activeSkillEvent.targetStock !== "ALL" && activeSkillEvent.targetStock !== stockKey) return 0.0;
 
   const rel = t - activeSkillEvent.startTick;
-  if (activeSkillEvent.type === "PUMP") {
-    // 連續 5 tick 拉高盤
-    return (0.014 + rel * 0.0025) * st.vol;
-  }
-  if (activeSkillEvent.type === "DUMP") {
-    // 連續 5 tick 砸盤下殺
-    return (-0.014 - rel * 0.0025) * st.vol;
-  }
+  if (activeSkillEvent.type === "PUMP") return (0.014 + rel * 0.0025) * st.vol;
+  if (activeSkillEvent.type === "DUMP") return (-0.014 - rel * 0.0025) * st.vol;
   if (activeSkillEvent.type === "WICK") {
-    // 插針：前 2 tick 急衝、第 3~4 tick 反抽回吐
     const wickCurve = [0.026, -0.032, 0.022, -0.018, 0.005];
     return (wickCurve[Math.min(rel, wickCurve.length - 1)] || 0.0) * st.vol;
   }
@@ -344,13 +282,14 @@ function getLivePrice(stockKey, tick) {
   if (priceCache.has(key)) return priceCache.get(key);
 
   const st = STOCKS[stockKey];
-  if (tick <= ANCHOR_TICK) {
+  const anchorTick = Math.floor(tick / HOUR_TICKS) * HOUR_TICKS;
+  if (tick <= anchorTick) {
     priceCache.set(key, st.base);
     return st.base;
   }
 
   let startT = tick - 1;
-  while (startT > ANCHOR_TICK && !priceCache.has(stockKey + ":" + startT)) {
+  while (startT > anchorTick && !priceCache.has(stockKey + ":" + startT)) {
     startT--;
   }
 
@@ -369,7 +308,7 @@ function getLivePrice(stockKey, tick) {
 }
 
 function getContinuousSeries(stockKey, currentTick, count = 120) {
-  const startT = Math.max(ANCHOR_TICK, currentTick - count + 1);
+  const startT = currentTick - count + 1;
   const series = [];
   for (let t = startT; t <= currentTick; t++) {
     series.push({ tick: t, price: getLivePrice(stockKey, t) });
@@ -377,26 +316,202 @@ function getContinuousSeries(stockKey, currentTick, count = 120) {
   return series;
 }
 
-async function syncSkillToBackend(skillType, targetStock, startTick, endTick) {
-  try {
-    await fetch(SUPABASE_URL + "/rest/v1/market_skills?id=eq.1", {
-      method: "PATCH",
-      headers: {
-        apikey: SUPABASE_KEY,
-        "Content-Type": "application/json",
-        Prefer: "return=minimal"
-      },
-      body: JSON.stringify({
-        skill_type: skillType,
-        target_stock: targetStock,
-        triggered_tick: startTick,
-        expires_tick: endTick,
-        updated_at: new Date().toISOString()
-      })
-    });
-  } catch (e) {}
+// ==========================================
+// 4 大不同性格 AI 軍團定義（各自獨立資金池與腦袋）
+// ==========================================
+let localBotsActive = true;
+const AI_BOTS = [
+  {
+    id: 1,
+    name: "ai",
+    persona: "🚀 順勢追高王",
+    badgeColor: "text-indigo-300",
+    cash: 10000,
+    pos: null,
+    decide(tick) {
+      // 專愛找漲勢最猛的標的 5x 重倉追多
+      let best = null;
+      for (const code of STOCK_KEYS) {
+        const s = getContinuousSeries(code, tick, 8);
+        const mom = ((s[s.length - 1].price - s[0].price) / s[0].price) * 100;
+        if (mom > 0.18 && (!best || mom > best.mom)) best = { code, dir: "LONG", lev: 5, alloc: 0.7, mom };
+      }
+      return best;
+    },
+    tp: 2.2,
+    sl: -1.8
+  },
+  {
+    id: 2,
+    name: "cf_alpha",
+    persona: "🐻 專職做空王",
+    badgeColor: "text-emerald-300",
+    cash: 10000,
+    pos: null,
+    decide(tick) {
+      // 專職放空（SHORT）：挑跌勢明確或漲多過熱的標的 4x 做空
+      let best = null;
+      for (const code of STOCK_KEYS) {
+        const s = getContinuousSeries(code, tick, 8);
+        const mom = ((s[s.length - 1].price - s[0].price) / s[0].price) * 100;
+        if ((mom < -0.14 || mom > 0.42) && (!best || Math.abs(mom) > best.score)) {
+          best = { code, dir: "SHORT", lev: 4, alloc: 0.65, score: Math.abs(mom) };
+        }
+      }
+      return best;
+    },
+    tp: 2.0,
+    sl: -1.6
+  },
+  {
+    id: 3,
+    name: "contrarian_x",
+    persona: "🔄 逆勢反指標",
+    badgeColor: "text-amber-300",
+    cash: 10000,
+    pos: null,
+    decide(tick) {
+      // 別人恐懼我貪婪：暴跌抄底做多、暴漲反手放空
+      for (const code of STOCK_KEYS) {
+        const s = getContinuousSeries(code, tick, 10);
+        const mom = ((s[s.length - 1].price - s[0].price) / s[0].price) * 100;
+        if (mom < -0.25) return { code, dir: "LONG", lev: 3, alloc: 0.55 };
+        if (mom > 0.30) return { code, dir: "SHORT", lev: 3, alloc: 0.55 };
+      }
+      return null;
+    },
+    tp: 1.8,
+    sl: -1.5
+  },
+  {
+    id: 4,
+    name: "steady_bot",
+    persona: "🛡️ 穩健存股派",
+    badgeColor: "text-sky-300",
+    cash: 10000,
+    pos: null,
+    decide(tick) {
+      // 只買 0050 / 2330，1x 現貨低槓桿穩紮穩打
+      for (const code of ["0050", "2330"]) {
+        const s = getContinuousSeries(code, tick, 12);
+        const mom = ((s[s.length - 1].price - s[0].price) / s[0].price) * 100;
+        if (mom > 0.08 && mom < 0.25) return { code, dir: "LONG", lev: 1, alloc: 0.4 };
+      }
+      return null;
+    },
+    tp: 1.4,
+    sl: -1.2
+  }
+];
+
+function getBotLiveNetWorth(bot, tick) {
+  if (!bot.pos) return bot.cash;
+  const curP = getLivePrice(bot.pos.code, tick);
+  const pnl = bot.pos.margin * ((curP - bot.pos.entryPrice) / bot.pos.entryPrice) * bot.pos.lev * (bot.pos.dir === "LONG" ? 1 : -1);
+  return Math.max(0, bot.cash + bot.pos.margin + pnl);
 }
 
+function stepAllAiBots(tick) {
+  if (!localBotsActive) return;
+
+  AI_BOTS.forEach(bot => {
+    if (bot.pos) {
+      const curP = getLivePrice(bot.pos.code, tick);
+      const pnl = bot.pos.margin * ((curP - bot.pos.entryPrice) / bot.pos.entryPrice) * bot.pos.lev * (bot.pos.dir === "LONG" ? 1 : -1);
+      const roi = (pnl / bot.pos.margin) * 100;
+
+      if (roi >= bot.tp || roi <= bot.sl || roi <= -90) {
+        bot.cash = Math.max(0, bot.cash + bot.pos.margin + pnl);
+        const bankrupt = bot.cash < 500;
+        if (bankrupt) bot.cash = 3000; // 破產紓困重生
+        appendLog(
+          `[${bot.name} ${bankrupt ? "爆倉重生" : "平倉"}] ${bot.pos.code} ${bot.pos.dir === "LONG" ? "多" : "空"} 損益 ${pnl >= 0 ? "+" : ""}$${Math.round(pnl).toLocaleString()} (${roi >= 0 ? "+" : ""}${roi.toFixed(1)}%)`,
+          pnl >= 0 ? "text-indigo-300" : "text-slate-400"
+        );
+        bot.pos = null;
+      }
+    } else if (syncRand(tick, bot.id * 97) > 0.45) {
+      const signal = bot.decide(tick);
+      if (signal && bot.cash >= 500) {
+        const entryPrice = getLivePrice(signal.code, tick);
+        const margin = bot.cash * signal.alloc;
+        bot.cash -= margin;
+        bot.pos = { code: signal.code, dir: signal.dir, lev: signal.lev, entryPrice, margin };
+        appendLog(
+          `[${bot.name} 進場] ${signal.code} ${signal.dir === "LONG" ? "做多" : "做空"} ${signal.lev}x @ ${entryPrice.toFixed(2)}`,
+          signal.dir === "LONG" ? "text-rose-300" : "text-emerald-300"
+        );
+      }
+    }
+  });
+}
+
+async function syncBotsToSupabase(tick) {
+  if (!localBotsActive) return;
+  const headers = {
+    apikey: SUPABASE_KEY,
+    "Content-Type": "application/json",
+    Prefer: "return=minimal"
+  };
+
+  for (const bot of AI_BOTS) {
+    const nw = Math.round(getBotLiveNetWorth(bot, tick));
+    const roi = Number((((nw - 10000) / 10000) * 100).toFixed(2));
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/ai_live_status?id=eq.${bot.id}`, {
+        method: "PATCH",
+        headers,
+        body: JSON.stringify({
+          stock_code: bot.pos ? bot.pos.code : "NONE",
+          stock_name: bot.pos ? `${STOCKS[bot.pos.code].name} (${bot.persona})` : `${bot.persona} 觀望中`,
+          direction: bot.pos ? bot.pos.dir : "NONE",
+          leverage: bot.pos ? bot.pos.lev : 1,
+          entry_price: bot.pos ? Number(bot.pos.entryPrice.toFixed(2)) : 0,
+          margin: bot.pos ? Math.round(bot.pos.margin) : 0,
+          net_worth: nw,
+          updated_at: new Date().toISOString()
+        })
+      });
+
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard?select=id&player_name=eq.${encodeURIComponent(bot.name)}&limit=1`, {
+        headers: { apikey: SUPABASE_KEY }
+      });
+      const rows = await res.json();
+      const lbPayload = { net_worth: nw, return_rate: roi, created_at: new Date().toISOString() };
+      if (rows && rows.length > 0) {
+        await fetch(`${SUPABASE_URL}/rest/v1/leaderboard?id=eq.${rows[0].id}`, {
+          method: "PATCH",
+          headers,
+          body: JSON.stringify(lbPayload)
+        });
+      } else {
+        await fetch(`${SUPABASE_URL}/rest/v1/leaderboard`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ player_name: bot.name, ...lbPayload })
+        });
+      }
+    } catch (e) {}
+  }
+}
+
+function toggleLocalBots() {
+  localBotsActive = !localBotsActive;
+  const btn = document.getElementById("toggle-bots-btn");
+  if (localBotsActive) {
+    btn.textContent = "● 軍團運行中";
+    btn.className = "text-[11px] px-2.5 py-1 rounded bg-emerald-600/20 text-emerald-300 border border-emerald-500/40 font-bold";
+    appendLog("[系統] 已啟動本地 4-AI 軍團。", "text-emerald-300");
+  } else {
+    btn.textContent = "○ 軍團已暫停";
+    btn.className = "text-[11px] px-2.5 py-1 rounded bg-slate-800 text-slate-400 border border-slate-700 font-bold";
+    appendLog("[系統] 已暫停本地 4-AI 軍團（僅顯示雲端外部 AI）。", "text-slate-400");
+  }
+}
+
+// ==========================================
+// 玩家技能與手動下單邏輯
+// ==========================================
 function triggerPlayerSkill(skillType) {
   const now = Date.now();
   const remainMs = SKILL_COOLDOWN_MS - (now - lastSkillUsedMs);
@@ -407,14 +522,8 @@ function triggerPlayerSkill(skillType) {
 
   const currentTick = Math.floor(now / 800);
   lastSkillUsedMs = now;
-  activeSkillEvent = {
-    type: skillType,
-    targetStock: selectedStock,
-    startTick: currentTick,
-    endTick: currentTick + 4
-  };
+  activeSkillEvent = { type: skillType, targetStock: selectedStock, startTick: currentTick, endTick: currentTick + 4 };
 
-  // 清除該標的近期快取，確保當下與接下來幾 tick 立即套用技能效果
   for (let t = currentTick; t <= currentTick + 10; t++) {
     priceCache.delete(selectedStock + ":" + t);
   }
@@ -429,8 +538,7 @@ function triggerPlayerSkill(skillType) {
     color: "#f59e0b"
   });
 
-  appendLog(`[玩家技能] 施放 ${skillLabel} 於 ${selectedStock} ${STOCKS[selectedStock].name}（AI 完全不知情）！`, "text-amber-300 font-bold");
-  syncSkillToBackend(skillType, selectedStock, currentTick, currentTick + 4);
+  appendLog(`[玩家技能] 施放 ${skillLabel} 於 ${selectedStock} ${STOCKS[selectedStock].name}（AI 軍團完全不知情）！`, "text-amber-300 font-bold");
   updateSkillUI(now, currentTick);
   renderTick();
 }
@@ -443,15 +551,8 @@ function updateSkillUI(now, currentTick) {
   const remainMs = lastSkillUsedMs > 0 ? Math.max(0, SKILL_COOLDOWN_MS - (now - lastSkillUsedMs)) : 0;
   const onCooldown = remainMs > 0;
 
-  if (cdText) {
-    if (onCooldown) {
-      cdText.textContent = `冷卻中：${Math.ceil(remainMs / 1000)}s`;
-      cdText.className = "font-mono font-bold text-amber-400";
-    } else {
-      cdText.textContent = "技能就緒（可施放）";
-      cdText.className = "font-mono font-bold text-emerald-400";
-    }
-  }
+  cdText.textContent = onCooldown ? `冷卻中：${Math.ceil(remainMs / 1000)}s` : "技能就緒（可施放）";
+  cdText.className = `font-mono font-bold ${onCooldown ? "text-amber-400" : "text-emerald-400"}`;
 
   btns.forEach(btn => {
     btn.disabled = onCooldown;
@@ -459,19 +560,17 @@ function updateSkillUI(now, currentTick) {
     btn.classList.toggle("cursor-not-allowed", onCooldown);
   });
 
-  if (activeBadge) {
-    if (
-      activeSkillEvent.type !== "NONE" &&
-      currentTick >= activeSkillEvent.startTick &&
-      currentTick <= activeSkillEvent.endTick &&
-      (activeSkillEvent.targetStock === "ALL" || activeSkillEvent.targetStock === selectedStock)
-    ) {
-      const nameMap = { PUMP: "🚀 拉高盤生效中", DUMP: "📉 砸盤生效中", WICK: "🪡 插針洗盤中" };
-      activeBadge.textContent = nameMap[activeSkillEvent.type] || "";
-      activeBadge.classList.remove("hidden");
-    } else {
-      activeBadge.classList.add("hidden");
-    }
+  if (
+    activeSkillEvent.type !== "NONE" &&
+    currentTick >= activeSkillEvent.startTick &&
+    currentTick <= activeSkillEvent.endTick &&
+    activeSkillEvent.targetStock === selectedStock
+  ) {
+    const nameMap = { PUMP: "🚀 拉高盤生效中", DUMP: "📉 砸盤生效中", WICK: "🪡 插針洗盤中" };
+    activeBadge.textContent = nameMap[activeSkillEvent.type] || "";
+    activeBadge.classList.remove("hidden");
+  } else {
+    activeBadge.classList.add("hidden");
   }
 }
 
@@ -482,36 +581,16 @@ let cash = 10000;
 let userPos = null;
 let markers = [];
 let playerName = safeGetStorage("sim_player_name") || ("Trader_" + Math.floor(1000 + Math.random() * 9000));
-if (["ai", "cf_alpha"].includes(playerName.trim().toLowerCase())) {
+if (RESERVED_NAMES.includes(playerName.trim().toLowerCase())) {
   playerName = "Trader_" + Math.floor(1000 + Math.random() * 9000);
 }
 document.getElementById("player-name-input").value = playerName;
 
-let aiAutopilotTimer = null;
-let aiAutopilotLeft = 0;
-let aiAutopilotPos = null;
-let aiAutopilotCash = 10000;
-
-function setAiView(mode) {
-  const s1 = document.getElementById("ai-slot-1");
-  const s2 = document.getElementById("ai-slot-2");
-  if (s1) s1.style.display = (mode === "both" || mode === "1") ? "block" : "none";
-  if (s2) s2.style.display = (mode === "both" || mode === "2") ? "block" : "none";
-
-  ["both", "1", "2"].forEach(k => {
-    const btn = document.getElementById("ai-tab-" + k);
-    if (!btn) return;
-    btn.className = (k === mode)
-      ? "text-[11px] px-2 py-0.5 rounded bg-indigo-600 text-white font-bold"
-      : "text-[11px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-bold";
-  });
-}
-
 function savePlayerName() {
   const raw = document.getElementById("player-name-input").value.trim();
   if (!raw) return;
-  if (["ai", "cf_alpha"].includes(raw.toLowerCase())) {
-    alert("⚠️ 官方量化機器人名稱為保留名稱，請使用其他暱稱！");
+  if (RESERVED_NAMES.includes(raw.toLowerCase())) {
+    alert("⚠️ 此為官方量化 AI 保留名稱，請使用其他暱稱！");
     document.getElementById("player-name-input").value = playerName;
     return;
   }
@@ -569,144 +648,59 @@ function closeUserPosition() {
   const pnl = userPos.margin * ((curPrice - userPos.entryPrice) / userPos.entryPrice) * userPos.lev * (userPos.dir === "LONG" ? 1 : -1);
   cash = Math.max(0, cash + userPos.margin + pnl);
   if (cash < 300) cash = 3000;
-  markers.push({
-    code: userPos.code,
-    tick: currentTick,
-    price: curPrice,
-    label: "平",
-    color: "#f59e0b"
-  });
+  markers.push({ code: userPos.code, tick: currentTick, price: curPrice, label: "平", color: "#f59e0b" });
   appendLog(`[平倉結算] ${userPos.code} @ ${curPrice.toFixed(2)} | 損益 ${pnl >= 0 ? "+" : ""}$${Math.round(pnl).toLocaleString()} | 現金 $${Math.round(cash).toLocaleString()}`, pnl >= 0 ? "text-amber-300" : "text-slate-300");
   userPos = null;
   updateUserPanel(currentTick);
   syncUserLeaderboard();
 }
 
-async function pushAiStatusAndScore(stockCode, stockName, dir, lev, entryPrice, margin, nw) {
-  const roi = Number((((nw - 10000) / 10000) * 100).toFixed(2));
-  const headers = {
-    apikey: SUPABASE_KEY,
-    "Content-Type": "application/json",
-    Prefer: "return=minimal"
-  };
-  try {
-    await fetch(SUPABASE_URL + "/rest/v1/ai_live_status?id=eq.1", {
-      method: "PATCH",
-      headers,
-      body: JSON.stringify({
-        stock_code: stockCode || "NONE",
-        stock_name: stockName || "空手觀望中",
-        direction: dir || "NONE",
-        leverage: lev || 1,
-        entry_price: Number(entryPrice || 0),
-        margin: Number(margin || 0),
-        net_worth: Math.round(nw),
-        updated_at: new Date().toISOString()
-      })
-    });
-
-    const res = await fetch(SUPABASE_URL + "/rest/v1/leaderboard?select=id&player_name=eq.ai&limit=1", { headers: { apikey: SUPABASE_KEY } });
-    const rows = await res.json();
-    const lbPayload = { net_worth: Math.round(nw), return_rate: roi, created_at: new Date().toISOString() };
-    if (rows && rows.length > 0) {
-      await fetch(SUPABASE_URL + "/rest/v1/leaderboard?id=eq." + rows[0].id, {
-        method: "PATCH",
-        headers,
-        body: JSON.stringify(lbPayload)
-      });
-    } else {
-      await fetch(SUPABASE_URL + "/rest/v1/leaderboard", {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ player_name: "ai", ...lbPayload })
-      });
-    }
-  } catch (e) {}
-}
-
-function stepAiAutopilot() {
-  const currentTick = Math.floor(Date.now() / 800);
-  const series = getContinuousSeries(selectedStock, currentTick, 12);
-  const curPrice = series[series.length - 1].price;
-  const recent = series.slice(-8).map(d => d.price);
-  const mom = recent.length >= 2 ? ((curPrice - recent[0]) / recent[0]) * 100 : 0;
-
-  if (!aiAutopilotPos) {
-    if (Math.abs(mom) >= 0.15) {
-      const dir = mom >= 0 ? "LONG" : "SHORT";
-      const margin = aiAutopilotCash * 0.5;
-      aiAutopilotCash -= margin;
-      aiAutopilotPos = { code: selectedStock, dir, lev: 3, entryPrice: curPrice, margin };
-      markers.push({
-        code: selectedStock,
-        tick: currentTick,
-        price: curPrice,
-        label: dir === "LONG" ? "AI多" : "AI空",
-        color: "#38bdf8"
-      });
-      appendLog(`[AI ${dir === "LONG" ? "做多" : "放空"}] 動能 ${mom >= 0 ? "+" : ""}${mom.toFixed(2)}% | ${selectedStock} 3x @ ${curPrice.toFixed(2)}`, "text-sky-400");
-    }
-  } else {
-    const pnl = aiAutopilotPos.margin * ((curPrice - aiAutopilotPos.entryPrice) / aiAutopilotPos.entryPrice) * aiAutopilotPos.lev * (aiAutopilotPos.dir === "LONG" ? 1 : -1);
-    const roi = (pnl / aiAutopilotPos.margin) * 100;
-    if (roi >= 1.2 || roi <= -1.0 || aiAutopilotLeft <= 1) {
-      aiAutopilotCash = Math.max(500, aiAutopilotCash + aiAutopilotPos.margin + pnl);
-      appendLog(`[AI 結算] ${aiAutopilotPos.code} @ ${curPrice.toFixed(2)} | 損益 ${pnl >= 0 ? "+" : ""}$${Math.round(pnl).toLocaleString()} (${roi >= 0 ? "+" : ""}${roi.toFixed(1)}%)`, "text-indigo-300");
-      aiAutopilotPos = null;
-    }
-  }
-
-  let liveNw = aiAutopilotCash;
-  if (aiAutopilotPos) {
-    const pnl = aiAutopilotPos.margin * ((curPrice - aiAutopilotPos.entryPrice) / aiAutopilotPos.entryPrice) * aiAutopilotPos.lev * (aiAutopilotPos.dir === "LONG" ? 1 : -1);
-    liveNw = aiAutopilotCash + aiAutopilotPos.margin + pnl;
-    pushAiStatusAndScore(aiAutopilotPos.code, STOCKS[aiAutopilotPos.code].name, aiAutopilotPos.dir, aiAutopilotPos.lev, aiAutopilotPos.entryPrice, aiAutopilotPos.margin, liveNw);
-  } else {
-    pushAiStatusAndScore("NONE", "空手觀望中", "NONE", 1, 0, 0, liveNw);
-  }
-}
-
-function stopAiAutopilot(reason = "代操結束") {
-  if (aiAutopilotTimer) {
-    clearInterval(aiAutopilotTimer);
-    aiAutopilotTimer = null;
-  }
-  if (aiAutopilotPos) {
-    const currentTick = Math.floor(Date.now() / 800);
-    const curPrice = getLivePrice(aiAutopilotPos.code, currentTick);
-    const pnl = aiAutopilotPos.margin * ((curPrice - aiAutopilotPos.entryPrice) / aiAutopilotPos.entryPrice) * aiAutopilotPos.lev * (aiAutopilotPos.dir === "LONG" ? 1 : -1);
-    aiAutopilotCash = Math.max(500, aiAutopilotCash + aiAutopilotPos.margin + pnl);
-    aiAutopilotPos = null;
-  }
-  aiAutopilotLeft = 0;
-  const btn = document.getElementById("ai-autopilot-btn");
-  btn.textContent = "🤖 AI 代操 30s";
-  btn.className = "py-2.5 rounded-full font-bold text-white bg-sky-600 hover:bg-sky-500 transition";
-  appendLog(`[AI 代操] ${reason}，目前 AI 淨值 $${Math.round(aiAutopilotCash).toLocaleString()}`, "text-slate-400");
-  pushAiStatusAndScore("NONE", "空手觀望中", "NONE", 1, 0, 0, aiAutopilotCash);
-}
+// 個人 30s 短線代操（輔助玩家帳號）
+let aiAutopilotTimer = null;
+let aiAutopilotLeft = 0;
 
 function toggleAiAutopilot() {
   if (aiAutopilotTimer) {
-    stopAiAutopilot("手動停止");
+    clearInterval(aiAutopilotTimer);
+    aiAutopilotTimer = null;
+    if (userPos) closeUserPosition();
+    const btn = document.getElementById("ai-autopilot-btn");
+    btn.textContent = "🤖 個人代操 30s";
+    btn.className = "py-2.5 rounded-full font-bold text-white bg-sky-600 hover:bg-sky-500 transition";
+    appendLog("[個人代操] 已停止。", "text-slate-400");
     return;
   }
+
   aiAutopilotLeft = 30;
-  appendLog("[AI 代操] 啟動 30 秒自動量化代操...", "text-sky-300");
-  stepAiAutopilot();
+  appendLog("[個人代操] 啟動 30 秒自動短線代操...", "text-sky-300");
   aiAutopilotTimer = setInterval(() => {
     aiAutopilotLeft -= 2;
     const btn = document.getElementById("ai-autopilot-btn");
     if (aiAutopilotLeft <= 0) {
-      stopAiAutopilot("30s 週期完成");
+      toggleAiAutopilot();
       return;
     }
     btn.textContent = `🤖 代操中 (${aiAutopilotLeft}s)`;
     btn.className = "py-2.5 rounded-full font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 transition";
-    stepAiAutopilot();
+
+    const tick = Math.floor(Date.now() / 800);
+    const s = getContinuousSeries(selectedStock, tick, 8);
+    const curP = s[s.length - 1].price;
+    const mom = ((curP - s[0].price) / s[0].price) * 100;
+
+    if (!userPos && Math.abs(mom) >= 0.14) {
+      openUserPosition(mom >= 0 ? "LONG" : "SHORT");
+    } else if (userPos) {
+      const pnl = userPos.margin * ((curP - userPos.entryPrice) / userPos.entryPrice) * userPos.lev * (userPos.dir === "LONG" ? 1 : -1);
+      const roi = (pnl / userPos.margin) * 100;
+      if (roi >= 1.2 || roi <= -1.0) closeUserPosition();
+    }
   }, 2000);
 }
 
+// ==========================================
+// 繪圖與畫面更新
+// ==========================================
 function drawRedGreenChart(series, basePrice) {
   const canvas = document.getElementById("price-chart");
   if (!canvas) return;
@@ -741,306 +735,326 @@ function drawRedGreenChart(series, basePrice) {
   ctx.fillStyle = "#64748b";
   for (let i = 0; i <= 4; i++) {
     const y = padT + (plotH / 4) * i;
-    const priceLabel = (maxP - (range / 4) * i).toFixed(2);
     ctx.beginPath();
     ctx.moveTo(padL, y);
-    ctx.lineTo(w - padR, y);
+    ctx.lineTo(padL + plotW, y);
     ctx.stroke();
-    ctx.fillText(priceLabel, w - padR + 6, y + 4);
+
+    const priceVal = maxP - (range / 4) * i;
+    ctx.fillText(priceVal.toFixed(2), padL + plotW + 6, y + 4);
   }
 
-  const firstPrice = visible[0].price;
-  const lastPrice = visible[visible.length - 1].price;
-  const isOverallUp = lastPrice >= firstPrice;
-  const lineCol = isOverallUp ? "#ef4444" : "#22c55e";
-
-  const grad = ctx.createLinearGradient(0, padT, 0, padT + plotH);
-  if (isOverallUp) {
-    grad.addColorStop(0, "rgba(239, 68, 68, 0.28)");
-    grad.addColorStop(1, "rgba(239, 68, 68, 0.0)");
-  } else {
-    grad.addColorStop(0, "rgba(34, 197, 94, 0.28)");
-    grad.addColorStop(1, "rgba(34, 197, 94, 0.0)");
-  }
-
+  const baseY = getY(basePrice);
+  ctx.save();
+  ctx.setLineDash([4, 4]);
+  ctx.strokeStyle = "rgba(148, 163, 184, 0.35)";
   ctx.beginPath();
-  visible.forEach((pt, idx) => {
-    const x = getX(idx);
-    const y = getY(Number(pt.price));
-    if (idx === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
-  });
-  ctx.lineTo(getX(visible.length - 1), padT + plotH);
-  ctx.lineTo(getX(0), padT + plotH);
-  ctx.closePath();
-  ctx.fillStyle = grad;
-  ctx.fill();
-
-  ctx.beginPath();
-  visible.forEach((pt, idx) => {
-    const x = getX(idx);
-    const y = getY(Number(pt.price));
-    if (idx === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
-  });
-  ctx.strokeStyle = lineCol;
-  ctx.lineWidth = 2.6;
-  ctx.lineJoin = "round";
+  ctx.moveTo(padL, baseY);
+  ctx.lineTo(padL + plotW, baseY);
   ctx.stroke();
+  ctx.restore();
+
+  ctx.lineWidth = 2.2;
+  ctx.lineJoin = "round";
+  for (let i = 1; i < visible.length; i++) {
+    const x1 = getX(i - 1), y1 = getY(visible[i - 1].price);
+    const x2 = getX(i), y2 = getY(visible[i].price);
+    ctx.strokeStyle = visible[i].price >= visible[i - 1].price ? "#ef4444" : "#22c55e";
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+  }
+
+  const lastIdx = visible.length - 1;
+  ctx.fillStyle = visible[lastIdx].price >= basePrice ? "#ef4444" : "#22c55e";
+  ctx.beginPath();
+  ctx.arc(getX(lastIdx), getY(visible[lastIdx].price), 4, 0, Math.PI * 2);
+  ctx.fill();
 
   const startTick = visible[0].tick;
-  const endTick = visible[visible.length - 1].tick;
-  markers
-    .filter(m => m.code === selectedStock && m.tick >= startTick && m.tick <= endTick)
-    .forEach(m => {
-      const ratio = (m.tick - startTick) / Math.max(1, endTick - startTick);
-      const mx = padL + ratio * plotW;
-      const my = getY(Number(m.price));
-      ctx.beginPath();
-      ctx.arc(mx, my, 8, 0, Math.PI * 2);
-      ctx.fillStyle = m.color;
-      ctx.fill();
-      ctx.strokeStyle = "#0b0f19";
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
+  const endTick = visible[lastIdx].tick;
+  markers.forEach(m => {
+    if (m.code !== selectedStock || m.tick < startTick || m.tick > endTick) return;
+    const idx = m.tick - startTick;
+    const mx = getX(idx), my = getY(m.price);
+    ctx.fillStyle = m.color || "#f59e0b";
+    ctx.beginPath();
+    ctx.arc(mx, my, 9, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#0f172a";
+    ctx.font = "bold 10px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(m.label, mx, my + 3.5);
+    ctx.textAlign = "left";
+  });
+}
 
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 9px sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(m.label, mx, my + 0.5);
-      ctx.textAlign = "left";
-      ctx.textBaseline = "alphabetic";
-    });
+function renderStockTabs(currentTick) {
+  const container = document.getElementById("stock-tabs");
+  if (!container) return;
+  container.innerHTML = "";
+  Object.entries(STOCKS).forEach(([code, info]) => {
+    const curP = getLivePrice(code, currentTick);
+    const diffPct = ((curP - info.base) / info.base) * 100;
+    const isUp = diffPct >= 0;
+    const isSelected = code === selectedStock;
 
-  const lastX = getX(visible.length - 1);
-  const lastY = getY(lastPrice);
-  ctx.beginPath();
-  ctx.arc(lastX, lastY, 4.5, 0, Math.PI * 2);
-  ctx.fillStyle = lineCol;
-  ctx.fill();
-  ctx.strokeStyle = "#ffffff";
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = `p-2.5 rounded-xl border text-left transition ${
+      isSelected
+        ? "bg-indigo-950/60 border-indigo-500 shadow-lg shadow-indigo-500/10"
+        : "bg-slate-900/70 border-slate-800 hover:border-slate-700"
+    }`;
+    btn.onclick = () => { selectedStock = code; renderTick(); };
+    btn.innerHTML = `
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-bold text-slate-300">${code}</span>
+        <span class="text-[11px] font-bold ${isUp ? "up-text" : "down-text"}">${isUp ? "+" : ""}${diffPct.toFixed(2)}%</span>
+      </div>
+      <div class="text-xs text-slate-400 truncate mt-0.5">${info.name}</div>
+      <div class="text-sm font-extrabold text-white mt-1 font-mono">${curP.toFixed(2)}</div>
+    `;
+    container.appendChild(btn);
+  });
+}
+
+function calcUserNetWorth(currentTick) {
+  if (!userPos) return cash;
+  const curP = getLivePrice(userPos.code, currentTick);
+  const pnl = userPos.margin * ((curP - userPos.entryPrice) / userPos.entryPrice) * userPos.lev * (userPos.dir === "LONG" ? 1 : -1);
+  return Math.max(0, cash + userPos.margin + pnl);
 }
 
 function updateUserPanel(currentTick) {
-  document.getElementById("user-cash").textContent = "$" + Math.round(cash).toLocaleString();
-  const posBadge = document.getElementById("user-pos-badge");
-  const posDetail = document.getElementById("user-pos-detail");
+  const nw = calcUserNetWorth(currentTick);
+  document.getElementById("user-cash").textContent = `$${Math.round(cash).toLocaleString()}`;
+  document.getElementById("user-net-worth").textContent = `$${Math.round(nw).toLocaleString()}`;
+
+  const badge = document.getElementById("user-pos-badge");
+  const detail = document.getElementById("user-pos-detail");
   const closeBtn = document.getElementById("close-pos-btn");
 
-  let totalNw = cash;
-  if (userPos) {
-    const curPrice = getLivePrice(userPos.code, currentTick);
-    const pnl = userPos.margin * ((curPrice - userPos.entryPrice) / userPos.entryPrice) * userPos.lev * (userPos.dir === "LONG" ? 1 : -1);
-    const roi = (pnl / userPos.margin) * 100;
-
-    if (userPos.margin + pnl <= 0) {
-      userPos = null;
-      cash = Math.max(cash, 3000);
-      totalNw = cash;
-      appendLog("💥 觸發強制平倉（爆倉），系統發放 $3,000 救濟金！", "text-rose-400");
-    } else {
-      totalNw = cash + userPos.margin + pnl;
-      const isProfit = pnl >= 0;
-      posBadge.textContent = (userPos.dir === "LONG" ? "做多 " : "做空 ") + userPos.lev + "x";
-      posBadge.className = "px-2 py-0.5 rounded font-bold " + (userPos.dir === "LONG" ? "up-bg" : "down-bg");
-      posDetail.innerHTML =
-        `<b class="text-white">${userPos.code}</b> · 進場 <span class="font-mono text-slate-200">${userPos.entryPrice.toFixed(2)}</span> → 現價 <span class="font-mono text-slate-200">${curPrice.toFixed(2)}</span> · 未實現損益 <b class="${isProfit ? "up-text" : "down-text"}">${pnl >= 0 ? "+" : ""}$${Math.round(pnl).toLocaleString()} (${roi >= 0 ? "+" : ""}${roi.toFixed(1)}%)</b>`;
-      closeBtn.disabled = false;
-      closeBtn.className = "py-2.5 rounded-full font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 cursor-pointer transition";
-    }
-  }
-
   if (!userPos) {
-    posBadge.textContent = "空手觀望";
-    posBadge.className = "px-2 py-0.5 rounded bg-slate-800 text-slate-400";
-    posDetail.textContent = "尚未進場，可手動下單或按「AI 代操 30s」。";
+    badge.textContent = "空手觀望";
+    badge.className = "px-2 py-0.5 rounded bg-slate-800 text-slate-400";
+    detail.textContent = "尚未進場，可手動下單或啟動「個人代操 30s」。";
     closeBtn.disabled = true;
-    closeBtn.className = "py-2.5 rounded-full font-bold bg-slate-800 text-slate-500 cursor-not-allowed";
-  }
-
-  document.getElementById("user-net-worth").textContent = "$" + Math.round(totalNw).toLocaleString();
-  return totalNw;
-}
-
-function renderTick() {
-  try {
-    const now = Date.now();
-    const currentTick = Math.floor(now / 800);
-    const market = getGlobalMarketState(currentTick);
-
-    document.getElementById("market-badge").textContent = market.label;
-    document.getElementById("news-ticker").textContent = market.news;
-    updateSkillUI(now, currentTick);
-
-    const tabsEl = document.getElementById("stock-tabs");
-    tabsEl.innerHTML = "";
-    Object.entries(STOCKS).forEach(([code, st]) => {
-      const cur = getLivePrice(code, currentTick);
-      const pct = ((cur - st.base) / st.base) * 100;
-      const isUp = pct >= 0;
-      const active = code === selectedStock;
-
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "p-2.5 rounded-xl border text-left transition " +
-        (active ? "bg-slate-800/95 border-indigo-500 shadow-md" : "bg-slate-900/70 border-slate-800 hover:border-slate-700");
-      btn.onclick = () => { selectedStock = code; renderTick(); };
-      btn.innerHTML =
-        '<div class="flex justify-between items-center text-xs">' +
-          '<span class="font-bold text-white">' + code + '</span>' +
-          '<span class="font-bold ' + (isUp ? "up-text" : "down-text") + '">' + (isUp ? "+" : "") + pct.toFixed(2) + '%</span>' +
-        '</div>' +
-        '<div class="text-[11px] text-slate-400 truncate">' + st.name + '</div>' +
-        '<div class="text-sm font-extrabold font-mono mt-0.5 ' + (isUp ? "up-text" : "down-text") + '">' + cur.toFixed(2) + '</div>';
-      tabsEl.appendChild(btn);
-    });
-
-    const activeSeries = getContinuousSeries(selectedStock, currentTick, 120);
-    const stInfo = STOCKS[selectedStock];
-    const latestPrice = activeSeries[activeSeries.length - 1].price;
-    const diff = latestPrice - stInfo.base;
-    const diffPct = (diff / stInfo.base) * 100;
-    const isUp = diff >= 0;
-
-    document.getElementById("chart-stock-title").textContent = selectedStock + " " + stInfo.name;
-    const priceEl = document.getElementById("chart-current-price");
-    priceEl.textContent = latestPrice.toFixed(2);
-    priceEl.className = "text-3xl font-extrabold tracking-tight font-mono " + (isUp ? "up-text" : "down-text");
-
-    const changeEl = document.getElementById("chart-price-change");
-    changeEl.textContent = (isUp ? "+" : "") + diff.toFixed(2) + " (" + (isUp ? "+" : "") + diffPct.toFixed(2) + "%)";
-    changeEl.className = "text-sm font-bold px-2 py-0.5 rounded " + (isUp ? "up-bg" : "down-bg");
-
-    drawRedGreenChart(activeSeries, stInfo.base);
-    updateUserPanel(currentTick);
-  } catch (err) {
-    console.error("renderTick error:", err);
-  }
-}
-
-function renderAiSlot(slotId, ai, idleText) {
-  const dotEl = document.getElementById("ai-online-" + slotId);
-  const stockEl = document.getElementById("ai-stock-" + slotId);
-  const dirEl = document.getElementById("ai-dir-lev-" + slotId);
-  const emEl = document.getElementById("ai-entry-margin-" + slotId);
-  const nwEl = document.getElementById("ai-live-nw-" + slotId);
-
-  if (!ai) {
-    if (dotEl) dotEl.innerHTML = '<span class="w-2 h-2 rounded-full bg-slate-500"></span><span>離線</span>';
-    if (stockEl) stockEl.textContent = idleText;
-    if (dirEl) { dirEl.textContent = "-"; dirEl.className = "font-bold text-slate-300"; }
-    if (emEl) emEl.textContent = "-";
-    return;
-  }
-
-  const updatedMs = new Date(ai.updated_at).getTime();
-  const isOnline = Date.now() - updatedMs < 20000;
-  if (dotEl) {
-    dotEl.innerHTML = isOnline
-      ? '<span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span><span class="text-emerald-400 font-bold">在線交易中</span>'
-      : '<span class="w-2 h-2 rounded-full bg-slate-500"></span><span>休眠中</span>';
-  }
-
-  if (ai.direction && ai.direction !== "NONE") {
-    if (stockEl) stockEl.textContent = (ai.stock_code ? ai.stock_code + " " : "") + (ai.stock_name || "");
-    if (dirEl) {
-      dirEl.textContent = (ai.direction === "LONG" ? "做多 LONG" : "做空 SHORT") + " · " + ai.leverage + "x";
-      dirEl.className = "font-bold " + (ai.direction === "LONG" ? "up-text" : "down-text");
-    }
-    if (emEl) emEl.textContent = Number(ai.entry_price).toFixed(2) + " / $" + Number(ai.margin).toLocaleString();
+    closeBtn.className = "py-2.5 rounded-full font-bold bg-slate-800 text-slate-500 cursor-not-allowed transition";
   } else {
-    if (stockEl) stockEl.textContent = ai.stock_name || idleText;
-    if (dirEl) { dirEl.textContent = "-"; dirEl.className = "font-bold text-slate-300"; }
-    if (emEl) emEl.textContent = "-";
-  }
-  if (nwEl) nwEl.textContent = "$" + Math.round(Number(ai.net_worth || 10000)).toLocaleString();
-}
+    const curP = getLivePrice(userPos.code, currentTick);
+    const pnl = userPos.margin * ((curP - userPos.entryPrice) / userPos.entryPrice) * userPos.lev * (userPos.dir === "LONG" ? 1 : -1);
+    const roi = (pnl / userPos.margin) * 100;
+    const isLong = userPos.dir === "LONG";
 
-async function fetchAiAndLeaderboard() {
-  const headers = { apikey: SUPABASE_KEY };
-  try {
-    const aiRes = await fetch(SUPABASE_URL + "/rest/v1/ai_live_status?id=in.(1,2)&select=*", { headers });
-    const aiRows = await aiRes.json();
-    const byId = {};
-    if (Array.isArray(aiRows)) {
-      aiRows.forEach(r => { byId[String(r.id)] = r; });
-    }
-    renderAiSlot("1", byId["1"], "空手觀望中");
-    renderAiSlot("2", byId["2"], "cf_alpha 待機中");
+    badge.textContent = `${userPos.code} ${isLong ? "做多" : "做空"} ${userPos.lev}x`;
+    badge.className = `px-2 py-0.5 rounded font-bold ${isLong ? "up-bg" : "down-bg"}`;
+    detail.innerHTML = `開倉 <b class="text-white">${userPos.entryPrice.toFixed(2)}</b> · 現價 <b class="text-white">${curP.toFixed(2)}</b> · 浮動損益 <b class="${pnl >= 0 ? "up-text" : "down-text"}">${pnl >= 0 ? "+" : ""}$${Math.round(pnl).toLocaleString()} (${roi >= 0 ? "+" : ""}${roi.toFixed(1)}%)</b>`;
 
-    const lbRes = await fetch(SUPABASE_URL + "/rest/v1/leaderboard?select=*&order=net_worth.desc&limit=20", { headers });
-    const lbRows = await lbRes.json();
-    const listEl = document.getElementById("leaderboard-list");
-    if (lbRows && lbRows.length > 0) {
-      listEl.innerHTML = lbRows.map((row, idx) => {
-        const lowerName = String(row.player_name).toLowerCase();
-        const isAi = lowerName === "ai" || lowerName === "cf_alpha";
-        const isMe = row.player_name === playerName;
-        const roi = Number(row.return_rate || 0);
-        const boxCls = isAi
-          ? "bg-indigo-950/40 border-indigo-500/40"
-          : (isMe ? "bg-slate-800/80 border-amber-500/40" : "bg-slate-900/60 border-slate-800");
-        return '<div class="flex items-center justify-between p-2.5 rounded-lg border ' + boxCls + '">' +
-          '<div class="flex items-center gap-2.5 min-w-0">' +
-            '<span class="w-5 text-xs font-extrabold ' + (idx < 3 ? "text-amber-400" : "text-slate-500") + '">#' + (idx + 1) + '</span>' +
-            '<span class="text-sm font-bold text-white truncate">' + row.player_name + '</span>' +
-            (isAi ? '<span class="ai-badge">AI</span>' : '') +
-          '</div>' +
-          '<div class="text-right shrink-0">' +
-            '<div class="text-sm font-extrabold font-mono text-white">$' + Number(row.net_worth).toLocaleString() + '</div>' +
-            '<div class="text-[11px] font-bold ' + (roi >= 0 ? "up-text" : "down-text") + '">' + (roi >= 0 ? "+" : "") + roi.toFixed(1) + '%</div>' +
-          '</div>' +
-        '</div>';
-      }).join("");
+    closeBtn.disabled = false;
+    closeBtn.className = "py-2.5 rounded-full font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 transition cursor-pointer";
+    if (roi <= -95) {
+      appendLog(`[強制平倉] ${userPos.code} 保證金不足觸發爆倉！`, "text-rose-400 font-bold");
+      closeUserPosition();
     }
-  } catch (e) {
-    console.warn("Supabase sync error:", e);
   }
 }
+
+function renderAiDashboard(currentTick, remoteRows = []) {
+  const container = document.getElementById("ai-cards-container");
+  if (!container) return;
+
+  // 合併本地 4 隻 AI 與雲端外部 AI（例如 id=5 的 chatgpt_bot）
+  const cards = AI_BOTS.map(bot => {
+    const nw = getBotLiveNetWorth(bot, currentTick);
+    return {
+      id: bot.id,
+      title: `${bot.name} · ${bot.persona}`,
+      color: bot.badgeColor,
+      online: localBotsActive,
+      hasPos: Boolean(bot.pos),
+      stockLabel: bot.pos ? `${bot.pos.code} ${STOCKS[bot.pos.code].name}` : "空手尋找機會中",
+      dir: bot.pos ? bot.pos.dir : "NONE",
+      lev: bot.pos ? bot.pos.lev : 1,
+      entry: bot.pos ? bot.pos.entryPrice : 0,
+      margin: bot.pos ? bot.pos.margin : 0,
+      netWorth: nw
+    };
+  });
+
+  // 加入外部連線 AI（id >= 5，例如 ChatGPT / Claude 外部腳本）
+  remoteRows.filter(r => r.id >= 5).forEach(r => {
+    const isOnline = r.updated_at && (Date.now() - new Date(r.updated_at).getTime() < 25000);
+    const hasPos = r.stock_code && r.stock_code !== "NONE" && r.direction && r.direction !== "NONE";
+    cards.unshift({
+      id: r.id,
+      title: `chatgpt_bot · 🧠 外部 LLM 連線`,
+      color: "text-fuchsia-300",
+      online: isOnline,
+      hasPos,
+      stockLabel: hasPos ? `${r.stock_code} ${r.stock_name || ""}` : (r.stock_name || "等待外部腳本啟動"),
+      dir: r.direction,
+      lev: r.leverage || 1,
+      entry: Number(r.entry_price || 0),
+      margin: Number(r.margin || 0),
+      netWorth: Number(r.net_worth || 10000)
+    });
+  });
+
+  container.innerHTML = cards.map(c => {
+    const roi = ((c.netWorth - 10000) / 10000) * 100;
+    const isLong = c.dir === "LONG";
+    return `
+      <div class="bg-slate-950/75 rounded-xl p-2.5 border border-slate-800/90 space-y-1 text-xs">
+        <div class="flex justify-between items-center">
+          <span class="font-bold ${c.color}">${c.title}</span>
+          <span class="flex items-center gap-1 text-[11px] ${c.online ? "text-emerald-400" : "text-slate-500"}">
+            <span class="w-1.5 h-1.5 rounded-full ${c.online ? "bg-emerald-400 animate-pulse" : "bg-slate-600"}"></span>
+            ${c.online ? "在線" : "離線"}
+          </span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-slate-300 font-semibold">${c.stockLabel}</span>
+          <span class="font-bold ${c.hasPos ? (isLong ? "up-text" : "down-text") : "text-slate-500"}">
+            ${c.hasPos ? `${isLong ? "做多" : "做空"} ${c.lev}x` : "-"}
+          </span>
+        </div>
+        <div class="border-t border-slate-800/80 pt-1 flex justify-between items-center">
+          <span class="text-slate-500 font-mono text-[11px]">
+            ${c.hasPos ? `均價 ${c.entry.toFixed(1)} / 押 $${Math.round(c.margin).toLocaleString()}` : "空手觀望"}
+          </span>
+          <span class="font-mono font-extrabold text-amber-400">
+            $${Math.round(c.netWorth).toLocaleString()}
+            <span class="text-[11px] ${roi >= 0 ? "up-text" : "down-text"}">(${roi >= 0 ? "+" : ""}${roi.toFixed(1)}%)</span>
+          </span>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+let cachedRemoteAiRows = [];
 
 async function syncUserLeaderboard() {
   const currentTick = Math.floor(Date.now() / 800);
-  const nw = Math.max(0, Math.round(updateUserPanel(currentTick)));
+  const nw = Math.round(calcUserNetWorth(currentTick));
   const roi = Number((((nw - 10000) / 10000) * 100).toFixed(2));
   const headers = {
     apikey: SUPABASE_KEY,
     "Content-Type": "application/json",
     Prefer: "return=minimal"
   };
+
   try {
-    const res = await fetch(SUPABASE_URL + "/rest/v1/leaderboard?select=id&player_name=eq." + encodeURIComponent(playerName) + "&limit=1", { headers: { apikey: SUPABASE_KEY } });
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/leaderboard?select=id&player_name=eq.${encodeURIComponent(playerName)}&limit=1`,
+      { headers: { apikey: SUPABASE_KEY } }
+    );
     const rows = await res.json();
     const payload = { net_worth: nw, return_rate: roi, created_at: new Date().toISOString() };
     if (rows && rows.length > 0) {
-      await fetch(SUPABASE_URL + "/rest/v1/leaderboard?id=eq." + rows[0].id, {
+      await fetch(`${SUPABASE_URL}/rest/v1/leaderboard?id=eq.${rows[0].id}`, {
         method: "PATCH",
         headers,
         body: JSON.stringify(payload)
       });
     } else {
-      await fetch(SUPABASE_URL + "/rest/v1/leaderboard", {
+      await fetch(`${SUPABASE_URL}/rest/v1/leaderboard`, {
         method: "POST",
         headers,
         body: JSON.stringify({ player_name: playerName, ...payload })
       });
     }
-  } catch (e) {
-    console.warn("Leaderboard upload error:", e);
-  }
+  } catch (e) {}
 }
 
-window.addEventListener("DOMContentLoaded", () => {
-  renderTick();
-  fetchAiAndLeaderboard();
-  setInterval(renderTick, 800);
-  setInterval(() => {
-    syncUserLeaderboard();
-    fetchAiAndLeaderboard();
-  }, 4000);
-});
+async function fetchLeaderboardAndAi() {
+  try {
+    const lbRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/leaderboard?select=player_name,net_worth,return_rate&order=net_worth.desc&limit=20`,
+      { headers: { apikey: SUPABASE_KEY } }
+    );
+    const lbData = await lbRes.json();
+    const listEl = document.getElementById("leaderboard-list");
+    if (Array.isArray(lbData) && listEl) {
+      listEl.innerHTML = lbData.map((row, idx) => {
+        const isBot = RESERVED_NAMES.includes((row.player_name || "").toLowerCase());
+        const isMe = row.player_name === playerName;
+        const roi = Number(row.return_rate || 0);
+        return `
+          <div class="flex items-center justify-between px-3 py-2 rounded-xl border text-xs ${
+            isMe ? "bg-indigo-950/50 border-indigo-500/60" : "bg-slate-900/70 border-slate-800/80"
+          }">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="w-5 font-mono font-bold ${idx < 3 ? "text-amber-400" : "text-slate-500"}">#${idx + 1}</span>
+              <span class="font-bold text-white truncate">${row.player_name}</span>
+              ${isBot ? '<span class="ai-badge">AI</span>' : ""}
+              ${isMe ? '<span class="text-[10px] px-1.5 py-0.5 rounded bg-indigo-600 text-white">我</span>' : ""}
+            </div>
+            <div class="text-right shrink-0">
+              <div class="font-mono font-bold text-amber-300">$${Number(row.net_worth || 0).toLocaleString()}</div>
+              <div class="font-mono text-[11px] ${roi >= 0 ? "up-text" : "down-text"}">${roi >= 0 ? "+" : ""}${roi.toFixed(1)}%</div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    const aiRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/ai_live_status?select=*&order=id.asc`,
+      { headers: { apikey: SUPABASE_KEY } }
+    );
+    const aiRows = await aiRes.json();
+    if (Array.isArray(aiRows)) {
+      cachedRemoteAiRows = aiRows;
+    }
+  } catch (e) {}
+}
+
+function renderTick() {
+  const now = Date.now();
+  const currentTick = Math.floor(now / 800);
+  const market = getGlobalMarketState(currentTick);
+
+  // 驅動 4 隻性格 AI 各自判斷進出場
+  stepAllAiBots(currentTick);
+
+  document.getElementById("market-badge").textContent = market.label;
+  document.getElementById("news-ticker").textContent = market.news;
+
+  const st = STOCKS[selectedStock];
+  const series = getContinuousSeries(selectedStock, currentTick, 120);
+  const curP = series[series.length - 1].price;
+  const diff = curP - st.base;
+  const diffPct = (diff / st.base) * 100;
+  const isUp = diff >= 0;
+
+  document.getElementById("chart-stock-title").textContent = `${selectedStock} ${st.name}`;
+  document.getElementById("chart-current-price").textContent = curP.toFixed(2);
+  const changeEl = document.getElementById("chart-price-change");
+  changeEl.textContent = `${isUp ? "+" : ""}${diff.toFixed(2)} (${isUp ? "+" : ""}${diffPct.toFixed(2)}%)`;
+  changeEl.className = `text-sm font-bold px-2 py-0.5 rounded ${isUp ? "up-bg" : "down-bg"}`;
+
+  renderStockTabs(currentTick);
+  updateSkillUI(now, currentTick);
+  updateUserPanel(currentTick);
+  renderAiDashboard(currentTick, cachedRemoteAiRows);
+  drawRedGreenChart(series, st.base);
+}
+
+renderTick();
+fetchLeaderboardAndAi();
+syncUserLeaderboard();
+syncBotsToSupabase(Math.floor(Date.now() / 800));
+
+setInterval(renderTick, 800);
+setInterval(() => {
+  const tick = Math.floor(Date.now() / 800);
+  syncUserLeaderboard();
+  syncBotsToSupabase(tick);
+  fetchLeaderboardAndAi();
+}, 4000);
 </script>
 </body>
 </html>
