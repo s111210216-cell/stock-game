@@ -789,12 +789,11 @@
         ctx.fill();
     }
 
-    async function loadLeaderboard() {let lastSubmitTime = 0;
+    let lastSubmitTime = 0;
 
     async function loadLeaderboard() {
         const tbody = document.getElementById('lb-body');
         try {
-            // 多抓幾筆在前端做同名去重，確保同名字只顯示最高分那筆
             const res = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard?select=*&net_worth=gt.10000&order=net_worth.desc&limit=50`, {
                 headers: { 'apikey': SUPABASE_KEY }
             });
@@ -858,10 +857,10 @@
             return;
         }
 
-        // 1. 檢查 10 分鐘改名限制（7676 管理者除外）
+        // 每 10 分鐘只能更改一次暱稱（7676 除外）
         const lockedName = localStorage.getItem('stock_game_locked_name');
         const lockedTime = Number(localStorage.getItem('stock_game_locked_time') || 0);
-        const RENAME_COOLDOWN = 10 * 60 * 1000; // 10 分鐘
+        const RENAME_COOLDOWN = 10 * 60 * 1000;
 
         if (playerName !== '7676' && lockedName && lockedName !== playerName && (now - lockedTime < RENAME_COOLDOWN)) {
             const remainMs = RENAME_COOLDOWN - (now - lockedTime);
@@ -880,29 +879,7 @@
         if (currentNetWorth > 999999999) {
             alert("數值異常，無法上傳！");
             return;
-       setInterval(loadLeaderboard, 15000);
-
-    function syncTickLoop() {
-        const currentTick = Math.floor(Date.now() / 800);
-        if (currentTick === lastProcessedTick) return;
-        lastProcessedTick = currentTick;
-
-        const ev = getGlobalMarketState(currentTick);
-        document.getElementById('news-text').innerText = ev.text;
-
-        const vip = isVipPlayer();
-        Object.keys(stocks).forEach(k => {
-            const st = stocks[k];
-            if (st.history.length === 0) {
-                for (let i = 59; i >= 0; i--) {
-                    st.history.push(computePriceAtTick(st, currentTick - i));
-                }
-            } else {
-                st.history.push(computePriceAtTick(st, currentTick));
-                if (st.history.length > 60) st.history.shift();
-            }
-
-            let syncedPrice = st.history[st.history.length - 1];
+        }
 
         const returnRate = Number((((currentNetWorth - INITIAL_CAPITAL) / INITIAL_CAPITAL) * 100).toFixed(2));
         const btn = document.getElementById('btn-submit-score');
@@ -910,7 +887,7 @@
         btn.innerText = "檢查榜單...";
 
         try {
-            // 2. 查詢資料庫是否已存在同名玩家，確保排行榜同名只有一個
+            // 查詢資料庫是否已存在同名玩家，同名只保留最高分
             const checkRes = await fetch(
                 `${SUPABASE_URL}/rest/v1/leaderboard?select=*&player_name=eq.${encodeURIComponent(playerName)}&order=net_worth.desc&limit=1`,
                 { headers: { 'apikey': SUPABASE_KEY } }
@@ -924,7 +901,6 @@
                     return;
                 }
 
-                // 打破自己紀錄：直接更新該筆資料（需 Supabase 有開啟 UPDATE 權限，若未開則退回新增）
                 btn.innerText = "刷新紀錄中...";
                 const patchRes = await fetch(
                     `${SUPABASE_URL}/rest/v1/leaderboard?id=eq.${bestRecord.id}`,
@@ -944,7 +920,6 @@
                 );
 
                 if (!patchRes.ok) {
-                    // 若資料表尚未開 UPDATE policy，改以新增方式寫入（前端去重仍只會顯示最高這筆）
                     await fetch(`${SUPABASE_URL}/rest/v1/leaderboard`, {
                         method: 'POST',
                         headers: {
@@ -960,7 +935,6 @@
                     });
                 }
             } else {
-                // 全新暱稱：直接新增
                 btn.innerText = "上傳中...";
                 const postRes = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard`, {
                     method: 'POST',
@@ -978,7 +952,6 @@
                 if (!postRes.ok) throw new Error('寫入資料庫失敗');
             }
 
-            // 記錄鎖定暱稱與時間
             localStorage.setItem('stock_game_player_name', playerName);
             if (!lockedName || lockedName !== playerName) {
                 localStorage.setItem('stock_game_locked_name', playerName);
@@ -1001,6 +974,25 @@
     }
 
     setInterval(loadLeaderboard, 15000);
+
+    function syncTickLoop() {
+        const currentTick = Math.floor(Date.now() / 800);
+        if (currentTick === lastProcessedTick) return;
+        lastProcessedTick = currentTick;
+
+        const ev = getGlobalMarketState(currentTick);
+        document.getElementById('news-text').innerText = ev.text;
+
+        const vip = isVipPlayer();
+        Object.keys(stocks).forEach(k => {
+            const st = stocks[k];
+            if (st.history.length === 0) {
+                for (let i = 59; i >= 0; i--) {
+                    st.history.push(computePriceAtTick(st, currentTick - i));
+                }
+            } else {
+                st.history.push(computePriceAtTick(st, currentTick));
+                if (st.history.length > 60) st.history.shift();
             }
 
             let syncedPrice = st.history[st.history.length - 1];
