@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI 量化對決交易室 | 多模型即時對戰</title>
+  <title>ChatGPT vs Gemini 雙模型量化競技室</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body {
@@ -20,15 +20,8 @@
     .down-text { color: #22c55e; }
     .up-bg { background-color: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.35); }
     .down-bg { background-color: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.35); }
-    .ai-badge {
-      background: linear-gradient(135deg, #6366f1, #a855f7);
-      color: #fff;
-      font-size: 10px;
-      padding: 2px 6px;
-      border-radius: 999px;
-      font-weight: 700;
-      letter-spacing: 0.4px;
-    }
+    .gpt-badge { background: linear-gradient(135deg, #10b981, #059669); color: #fff; font-size: 11px; padding: 2px 8px; border-radius: 999px; font-weight: 700; }
+    .gem-badge { background: linear-gradient(135deg, #6366f1, #a855f7); color: #fff; font-size: 11px; padding: 2px 8px; border-radius: 999px; font-weight: 700; }
   </style>
 </head>
 <body class="min-h-screen p-3 md:p-6">
@@ -36,31 +29,32 @@
 
     <header class="card p-4 flex flex-wrap items-center justify-between gap-4">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center text-xl">📈</div>
+        <div class="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center text-xl">⚔️</div>
         <div>
           <h1 class="text-lg md:text-xl font-bold text-white flex items-center gap-2">
-            AI 量化對決交易室
+            ChatGPT vs Gemini 雙模型量化競技室
             <span id="market-badge" class="text-xs px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">市場常態</span>
           </h1>
-          <p class="text-xs text-slate-400">全球同步 Tick 引擎 · 多性格 AI 軍團 · 支援 ChatGPT 外部連線對決</p>
+          <p class="text-xs text-slate-400">同 Tick 同步行情 · 初始 $10,000 · Supabase 統一結算排行榜</p>
         </div>
       </div>
 
       <div class="flex flex-wrap items-center gap-3">
         <div class="flex items-center gap-2 bg-slate-900/90 px-3 py-1.5 rounded-lg border border-slate-800">
-          <span class="text-xs text-slate-400">玩家暱稱</span>
+          <span class="text-xs text-slate-400">觀戰者暱稱</span>
           <input id="player-name-input" type="text" maxlength="14" placeholder="輸入暱稱"
             class="bg-transparent text-sm font-semibold text-white w-28 focus:outline-none border-b border-slate-700 focus:border-indigo-500" />
           <button type="button" onclick="savePlayerName()" class="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-2.5 py-1 rounded">套用</button>
         </div>
         <div class="bg-slate-900/90 px-3.5 py-1.5 rounded-lg border border-slate-800 text-right">
-          <div class="text-[11px] text-slate-400">我的總淨值（現在金額）</div>
+          <div class="text-[11px] text-slate-400">我的總淨值（可同場參賽）</div>
           <div id="user-net-worth" class="text-base font-bold text-amber-400">$10,000</div>
         </div>
       </div>
     </header>
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      <!-- 左側行情與盤面技能區 -->
       <div class="lg:col-span-8 space-y-4">
         <div id="stock-tabs" class="grid grid-cols-2 sm:grid-cols-5 gap-2"></div>
 
@@ -69,7 +63,7 @@
             <div>
               <div class="flex items-center gap-2">
                 <span id="chart-stock-title" class="text-xl font-bold text-white">2330 台積電</span>
-                <span class="text-xs text-emerald-400 bg-emerald-950/60 border border-emerald-700/40 px-2 py-0.5 rounded">連續走勢</span>
+                <span class="text-xs text-emerald-400 bg-emerald-950/60 border border-emerald-700/40 px-2 py-0.5 rounded">0.8s 同步 Tick</span>
                 <span id="skill-active-badge" class="hidden text-xs font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40"></span>
               </div>
               <div class="flex items-baseline gap-3 mt-1">
@@ -78,8 +72,8 @@
               </div>
             </div>
             <div class="flex items-center gap-3 text-xs text-slate-400">
-              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span>偏多走高</span>
-              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>偏空走低</span>
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span>走高</span>
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>走低</span>
               <span id="news-ticker" class="text-amber-300 font-medium">📰 市場觀望中</span>
             </div>
           </div>
@@ -88,38 +82,39 @@
             <canvas id="price-chart" style="width:100%;height:100%;display:block;"></canvas>
           </div>
 
+          <!-- 觀戰干擾技能（同步寫入 Supabase market_skills，雙模型真實承受價格波動） -->
           <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3 space-y-2">
             <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
               <div class="flex items-center gap-2">
-                <span class="font-bold text-amber-300">⚡ 玩家專屬盤面技能（AI 盲區）</span>
-                <span class="text-slate-400">作用於目前選中標的</span>
+                <span class="font-bold text-amber-300">⚡ 盤面干擾技能（雙模型盲區，真實影響成交價）</span>
               </div>
               <span id="skill-cooldown-text" class="font-mono font-bold text-emerald-400">技能就緒（可施放）</span>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <button type="button" onclick="triggerPlayerSkill('PUMP')"
                 class="skill-btn py-2 px-3 rounded-lg font-bold text-xs text-white bg-rose-600 hover:bg-rose-500 transition">
-                🚀 拉高盤（狙擊做空 AI）
+                🚀 拉高盤（軋空做空模型）
               </button>
               <button type="button" onclick="triggerPlayerSkill('DUMP')"
                 class="skill-btn py-2 px-3 rounded-lg font-bold text-xs text-white bg-emerald-600 hover:bg-emerald-500 transition">
-                📉 砸盤（收割追高 AI）
+                📉 砸盤（狙擊做多模型）
               </button>
               <button type="button" onclick="triggerPlayerSkill('WICK')"
                 class="skill-btn py-2 px-3 rounded-lg font-bold text-xs text-slate-950 bg-amber-400 hover:bg-amber-300 transition">
-                🪡 插針（瞬間劇烈洗盤）
+                🪡 插針（多空雙殺洗盤）
               </button>
             </div>
           </div>
 
-          <div id="trade-log-box" class="bg-slate-950/90 border border-slate-800 rounded-xl p-2.5 h-28 overflow-y-auto font-mono text-xs space-y-1">
-            <div class="text-slate-500">&gt; 系統就緒，4 大性格 AI 軍團已進場自由交易。</div>
+          <div id="trade-log-box" class="bg-slate-950/90 border border-slate-800 rounded-xl p-2.5 h-24 overflow-y-auto font-mono text-xs space-y-1">
+            <div class="text-slate-500">&gt; 競技場就緒，等待 dual_ai_arena.py 連線同步 ChatGPT 與 Gemini 戰績...</div>
           </div>
         </div>
 
+        <!-- 玩家親自下場操作列 -->
         <div class="card p-4 space-y-3">
           <div class="flex flex-wrap items-center justify-between gap-2">
-            <span class="text-sm font-bold text-white">交易操作與個人代操</span>
+            <span class="text-sm font-bold text-white">人類玩家下場挑戰（與雙模型同規則）</span>
             <span class="text-xs text-slate-400">可用現金：<b id="user-cash" class="text-white">$10,000</b></span>
           </div>
 
@@ -142,59 +137,91 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
-            <button type="button" onclick="openUserPosition('LONG')"
-              class="py-2.5 rounded-full font-bold text-white bg-red-600 hover:bg-red-500 transition">
-              ● 買進做多
-            </button>
-            <button type="button" onclick="openUserPosition('SHORT')"
-              class="py-2.5 rounded-full font-bold text-white bg-green-600 hover:bg-green-500 transition">
-              ● 融券做空
-            </button>
-            <button type="button" id="close-pos-btn" onclick="closeUserPosition()" disabled
-              class="py-2.5 rounded-full font-bold bg-slate-800 text-slate-500 cursor-not-allowed transition">
-              立即平倉
-            </button>
-            <button type="button" id="ai-autopilot-btn" onclick="toggleAiAutopilot()"
-              class="py-2.5 rounded-full font-bold text-white bg-sky-600 hover:bg-sky-500 transition">
-              🤖 個人代操 30s
-            </button>
+          <div class="grid grid-cols-3 gap-2 pt-1">
+            <button type="button" onclick="openUserPosition('LONG')" class="py-2.5 rounded-full font-bold text-white bg-red-600 hover:bg-red-500 transition">● 買進做多</button>
+            <button type="button" onclick="openUserPosition('SHORT')" class="py-2.5 rounded-full font-bold text-white bg-green-600 hover:bg-green-500 transition">● 融券做空</button>
+            <button type="button" id="close-pos-btn" onclick="closeUserPosition()" disabled class="py-2.5 rounded-full font-bold bg-slate-800 text-slate-500 cursor-not-allowed transition">立即平倉</button>
           </div>
 
           <div class="bg-slate-900/70 rounded-xl p-3 border border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
             <div class="flex items-center gap-2">
-              <span class="font-bold text-white">我的即時持倉：</span>
+              <span class="font-bold text-white">我的持倉：</span>
               <span id="user-pos-badge" class="px-2 py-0.5 rounded bg-slate-800 text-slate-400">空手觀望</span>
             </div>
-            <div id="user-pos-detail" class="text-slate-400">
-              尚未進場，可手動下單或啟動「個人代操 30s」。
-            </div>
+            <div id="user-pos-detail" class="text-slate-400">尚未進場，可隨時下單與 ChatGPT / Gemini 較勁。</div>
           </div>
         </div>
       </div>
 
+      <!-- 右側雙模型對決看板與統一排行榜 -->
       <div class="lg:col-span-4 space-y-4">
-        <div class="card p-4 border-indigo-500/40 relative overflow-hidden">
-          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-            <div class="flex items-center gap-2">
-              <span class="text-base font-bold text-white">🤖 AI 軍團即時看板</span>
-              <span class="ai-badge">MULTI-AI</span>
-            </div>
-            <button type="button" id="toggle-bots-btn" onclick="toggleLocalBots()"
-              class="text-[11px] px-2.5 py-1 rounded bg-emerald-600/20 text-emerald-300 border border-emerald-500/40 font-bold">
-              ● 軍團運行中
-            </button>
+        <div class="card p-4 border-indigo-500/40 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-base font-bold text-white">🤖 雙模型即時對決看板</span>
+            <span class="text-[11px] text-slate-400">Supabase 即時同步</span>
           </div>
 
-          <div id="ai-cards-container" class="space-y-2 max-h-[340px] overflow-y-auto pr-1"></div>
+          <!-- ChatGPT 戰況卡片 (id=5) -->
+          <div class="bg-slate-950/80 rounded-xl p-3 border border-emerald-500/30 space-y-1.5 text-xs">
+            <div class="flex justify-between items-center">
+              <div class="flex items-center gap-2">
+                <span class="gpt-badge">ChatGPT</span>
+                <span class="font-bold text-emerald-300">chatgpt_bot</span>
+              </div>
+              <span id="online-5" class="text-slate-500 flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-slate-600"></span>離線</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-slate-400">操作標的</span>
+              <span id="stock-5" class="font-bold text-white">等待連線中</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-slate-400">方向 / 槓桿</span>
+              <span id="dir-5" class="font-bold text-slate-300">-</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-slate-400">開倉均價 / 保證金</span>
+              <span id="entry-5" class="font-mono text-slate-300">-</span>
+            </div>
+            <div class="border-t border-slate-800 pt-1.5 flex justify-between items-center">
+              <span class="text-slate-400">即時總淨值</span>
+              <span id="nw-5" class="text-sm font-extrabold text-amber-400 font-mono">$10,000</span>
+            </div>
+          </div>
+
+          <!-- Gemini 戰況卡片 (id=6) -->
+          <div class="bg-slate-950/80 rounded-xl p-3 border border-indigo-500/30 space-y-1.5 text-xs">
+            <div class="flex justify-between items-center">
+              <div class="flex items-center gap-2">
+                <span class="gem-badge">Gemini</span>
+                <span class="font-bold text-indigo-300">gemini_bot</span>
+              </div>
+              <span id="online-6" class="text-slate-500 flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-slate-600"></span>離線</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-slate-400">操作標的</span>
+              <span id="stock-6" class="font-bold text-white">等待連線中</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-slate-400">方向 / 槓桿</span>
+              <span id="dir-6" class="font-bold text-slate-300">-</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-slate-400">開倉均價 / 保證金</span>
+              <span id="entry-6" class="font-mono text-slate-300">-</span>
+            </div>
+            <div class="border-t border-slate-800 pt-1.5 flex justify-between items-center">
+              <span class="text-slate-400">即時總淨值</span>
+              <span id="nw-6" class="text-sm font-extrabold text-amber-400 font-mono">$10,000</span>
+            </div>
+          </div>
         </div>
 
         <div class="card p-4">
           <div class="flex items-center justify-between mb-3">
-            <h2 class="text-base font-bold text-white">🏆 「現在金額」即時排行榜</h2>
-            <span class="text-[11px] text-slate-400">每 4 秒同步</span>
+            <h2 class="text-base font-bold text-white">🏆 統一結算排行榜</h2>
+            <span class="text-[11px] text-slate-400">每 3 秒更新</span>
           </div>
-          <div id="leaderboard-list" class="space-y-2 max-h-[340px] overflow-y-auto pr-1">
+          <div id="leaderboard-list" class="space-y-2 max-h-[360px] overflow-y-auto pr-1">
             <div class="text-xs text-slate-500 text-center py-6">載入排行榜中...</div>
           </div>
         </div>
@@ -213,24 +240,14 @@ const STOCKS = {
   "2317": { seed: 404, name: "鴻海", base: 215.0, vol: 2.4 },
   "3481": { seed: 505, name: "群創", base: 16.5, vol: 4.2 },
 };
-const STOCK_KEYS = Object.keys(STOCKS);
 const NEWS_BIAS = [0.65, -0.65, 0.35, -0.35, 0.0];
-const RESERVED_NAMES = ["ai", "cf_alpha", "contrarian_x", "steady_bot", "chatgpt_bot"];
-
-// 每小時整點重置錨點（4500 ticks = 3600 秒），確保瀏覽器與外部 Python/ChatGPT 價格 100% 同步
+const RESERVED_NAMES = ["chatgpt_bot", "gemini_bot"];
 const HOUR_TICKS = 4500;
 const priceCache = new Map();
 
 const SKILL_COOLDOWN_MS = 60000;
 let lastSkillUsedMs = 0;
 let activeSkillEvent = { type: "NONE", targetStock: "ALL", startTick: 0, endTick: 0 };
-
-function safeGetStorage(key) {
-  try { return window.localStorage.getItem(key); } catch (e) { return null; }
-}
-function safeSetStorage(key, val) {
-  try { window.localStorage.setItem(key, val); } catch (e) {}
-}
 
 function appendLog(msg, cls = "text-slate-300") {
   const box = document.getElementById("trade-log-box");
@@ -239,7 +256,7 @@ function appendLog(msg, cls = "text-slate-300") {
   line.className = cls;
   line.textContent = "> " + msg;
   box.appendChild(line);
-  while (box.children.length > 60) box.removeChild(box.firstChild);
+  while (box.children.length > 50) box.removeChild(box.firstChild);
   box.scrollTop = box.scrollHeight;
 }
 
@@ -253,20 +270,19 @@ function getGlobalMarketState(t) {
   const ev = syncRand(block, 777);
   const microFlip = syncRand(t, 888) > 0.32 ? 1.0 : -1.0;
 
-  if (ev < 0.12) return { bias: -1.45 * microFlip, mode: "BLACK_SWAN", label: "🦢 黑天鵝突襲", news: "⚡ 突發利空衝擊，全市場恐慌拋售！" };
-  if (ev > 0.88) return { bias: 1.45 * microFlip, mode: "SUPER_BULL", label: "🚀 超級牛市", news: "🔥 重大利多噴發，資金全面湧入！" };
+  if (ev < 0.12) return { bias: -1.45 * microFlip, label: "🦢 黑天鵝突襲", news: "⚡ 突發利空衝擊，全市場恐慌拋售！" };
+  if (ev > 0.88) return { bias: 1.45 * microFlip, label: "🚀 超級牛市", news: "🔥 重大利多噴發，資金全面湧入！" };
   const idx = Math.floor(syncRand(block, 999) * NEWS_BIAS.length);
   const b = NEWS_BIAS[idx] * microFlip;
-  if (b > 0) return { bias: b, mode: "NORMAL", label: "偏多格局", news: "📈 外資買盤回溫，市場氣氛偏多" };
-  if (b < 0) return { bias: b, mode: "NORMAL", label: "偏空格局", news: "📉 獲利賣壓浮現，短線氣氛偏空" };
-  return { bias: 0.0, mode: "NORMAL", label: "震盪整理", news: "📰 多空交戰，量能觀望整理中" };
+  if (b > 0) return { bias: b, label: "偏多格局", news: "📈 買盤回溫，短線氣氛偏多" };
+  if (b < 0) return { bias: b, label: "偏空格局", news: "📉 賣壓浮現，短線氣氛偏空" };
+  return { bias: 0.0, label: "震盪整理", news: "📰 多空交戰，量能觀望整理中" };
 }
 
 function getSkillDeltaPct(stockKey, t, st) {
   if (activeSkillEvent.type === "NONE") return 0.0;
   if (t < activeSkillEvent.startTick || t > activeSkillEvent.endTick) return 0.0;
   if (activeSkillEvent.targetStock !== "ALL" && activeSkillEvent.targetStock !== stockKey) return 0.0;
-
   const rel = t - activeSkillEvent.startTick;
   if (activeSkillEvent.type === "PUMP") return (0.014 + rel * 0.0025) * st.vol;
   if (activeSkillEvent.type === "DUMP") return (-0.014 - rel * 0.0025) * st.vol;
@@ -289,9 +305,7 @@ function getLivePrice(stockKey, tick) {
   }
 
   let startT = tick - 1;
-  while (startT > anchorTick && !priceCache.has(stockKey + ":" + startT)) {
-    startT--;
-  }
+  while (startT > anchorTick && !priceCache.has(stockKey + ":" + startT)) startT--;
 
   let p = priceCache.has(stockKey + ":" + startT) ? priceCache.get(stockKey + ":" + startT) : st.base;
   for (let t = startT + 1; t <= tick; t++) {
@@ -307,271 +321,53 @@ function getLivePrice(stockKey, tick) {
   return p;
 }
 
-function getContinuousSeries(stockKey, currentTick, count = 120) {
-  const startT = currentTick - count + 1;
+function getContinuousSeries(stockKey, currentTick, count = 100) {
   const series = [];
-  for (let t = startT; t <= currentTick; t++) {
+  for (let t = currentTick - count + 1; t <= currentTick; t++) {
     series.push({ tick: t, price: getLivePrice(stockKey, t) });
   }
   return series;
 }
 
-// ==========================================
-// 4 大不同性格 AI 軍團定義（各自獨立資金池與腦袋）
-// ==========================================
-let localBotsActive = true;
-const AI_BOTS = [
-  {
-    id: 1,
-    name: "ai",
-    persona: "🚀 順勢追高王",
-    badgeColor: "text-indigo-300",
-    cash: 10000,
-    pos: null,
-    decide(tick) {
-      // 專愛找漲勢最猛的標的 5x 重倉追多
-      let best = null;
-      for (const code of STOCK_KEYS) {
-        const s = getContinuousSeries(code, tick, 8);
-        const mom = ((s[s.length - 1].price - s[0].price) / s[0].price) * 100;
-        if (mom > 0.18 && (!best || mom > best.mom)) best = { code, dir: "LONG", lev: 5, alloc: 0.7, mom };
-      }
-      return best;
-    },
-    tp: 2.2,
-    sl: -1.8
-  },
-  {
-    id: 2,
-    name: "cf_alpha",
-    persona: "🐻 專職做空王",
-    badgeColor: "text-emerald-300",
-    cash: 10000,
-    pos: null,
-    decide(tick) {
-      // 專職放空（SHORT）：挑跌勢明確或漲多過熱的標的 4x 做空
-      let best = null;
-      for (const code of STOCK_KEYS) {
-        const s = getContinuousSeries(code, tick, 8);
-        const mom = ((s[s.length - 1].price - s[0].price) / s[0].price) * 100;
-        if ((mom < -0.14 || mom > 0.42) && (!best || Math.abs(mom) > best.score)) {
-          best = { code, dir: "SHORT", lev: 4, alloc: 0.65, score: Math.abs(mom) };
-        }
-      }
-      return best;
-    },
-    tp: 2.0,
-    sl: -1.6
-  },
-  {
-    id: 3,
-    name: "contrarian_x",
-    persona: "🔄 逆勢反指標",
-    badgeColor: "text-amber-300",
-    cash: 10000,
-    pos: null,
-    decide(tick) {
-      // 別人恐懼我貪婪：暴跌抄底做多、暴漲反手放空
-      for (const code of STOCK_KEYS) {
-        const s = getContinuousSeries(code, tick, 10);
-        const mom = ((s[s.length - 1].price - s[0].price) / s[0].price) * 100;
-        if (mom < -0.25) return { code, dir: "LONG", lev: 3, alloc: 0.55 };
-        if (mom > 0.30) return { code, dir: "SHORT", lev: 3, alloc: 0.55 };
-      }
-      return null;
-    },
-    tp: 1.8,
-    sl: -1.5
-  },
-  {
-    id: 4,
-    name: "steady_bot",
-    persona: "🛡️ 穩健存股派",
-    badgeColor: "text-sky-300",
-    cash: 10000,
-    pos: null,
-    decide(tick) {
-      // 只買 0050 / 2330，1x 現貨低槓桿穩紮穩打
-      for (const code of ["0050", "2330"]) {
-        const s = getContinuousSeries(code, tick, 12);
-        const mom = ((s[s.length - 1].price - s[0].price) / s[0].price) * 100;
-        if (mom > 0.08 && mom < 0.25) return { code, dir: "LONG", lev: 1, alloc: 0.4 };
-      }
-      return null;
-    },
-    tp: 1.4,
-    sl: -1.2
-  }
-];
-
-function getBotLiveNetWorth(bot, tick) {
-  if (!bot.pos) return bot.cash;
-  const curP = getLivePrice(bot.pos.code, tick);
-  const pnl = bot.pos.margin * ((curP - bot.pos.entryPrice) / bot.pos.entryPrice) * bot.pos.lev * (bot.pos.dir === "LONG" ? 1 : -1);
-  return Math.max(0, bot.cash + bot.pos.margin + pnl);
+async function syncSkillToBackend(skillType, targetStock, startTick, endTick) {
+  try {
+    await fetch(SUPABASE_URL + "/rest/v1/market_skills?id=eq.1", {
+      method: "PATCH",
+      headers: { apikey: SUPABASE_KEY, "Content-Type": "application/json", Prefer: "return=minimal" },
+      body: JSON.stringify({
+        skill_type: skillType,
+        target_stock: targetStock,
+        triggered_tick: startTick,
+        expires_tick: endTick,
+        updated_at: new Date().toISOString()
+      })
+    });
+  } catch (e) {}
 }
 
-function stepAllAiBots(tick) {
-  if (!localBotsActive) return;
-
-  AI_BOTS.forEach(bot => {
-    if (bot.pos) {
-      const curP = getLivePrice(bot.pos.code, tick);
-      const pnl = bot.pos.margin * ((curP - bot.pos.entryPrice) / bot.pos.entryPrice) * bot.pos.lev * (bot.pos.dir === "LONG" ? 1 : -1);
-      const roi = (pnl / bot.pos.margin) * 100;
-
-      if (roi >= bot.tp || roi <= bot.sl || roi <= -90) {
-        bot.cash = Math.max(0, bot.cash + bot.pos.margin + pnl);
-        const bankrupt = bot.cash < 500;
-        if (bankrupt) bot.cash = 3000; // 破產紓困重生
-        appendLog(
-          `[${bot.name} ${bankrupt ? "爆倉重生" : "平倉"}] ${bot.pos.code} ${bot.pos.dir === "LONG" ? "多" : "空"} 損益 ${pnl >= 0 ? "+" : ""}$${Math.round(pnl).toLocaleString()} (${roi >= 0 ? "+" : ""}${roi.toFixed(1)}%)`,
-          pnl >= 0 ? "text-indigo-300" : "text-slate-400"
-        );
-        bot.pos = null;
-      }
-    } else if (syncRand(tick, bot.id * 97) > 0.45) {
-      const signal = bot.decide(tick);
-      if (signal && bot.cash >= 500) {
-        const entryPrice = getLivePrice(signal.code, tick);
-        const margin = bot.cash * signal.alloc;
-        bot.cash -= margin;
-        bot.pos = { code: signal.code, dir: signal.dir, lev: signal.lev, entryPrice, margin };
-        appendLog(
-          `[${bot.name} 進場] ${signal.code} ${signal.dir === "LONG" ? "做多" : "做空"} ${signal.lev}x @ ${entryPrice.toFixed(2)}`,
-          signal.dir === "LONG" ? "text-rose-300" : "text-emerald-300"
-        );
-      }
-    }
-  });
-}
-
-async function syncBotsToSupabase(tick) {
-  if (!localBotsActive) return;
-  const headers = {
-    apikey: SUPABASE_KEY,
-    "Content-Type": "application/json",
-    Prefer: "return=minimal"
-  };
-
-  for (const bot of AI_BOTS) {
-    const nw = Math.round(getBotLiveNetWorth(bot, tick));
-    const roi = Number((((nw - 10000) / 10000) * 100).toFixed(2));
-    try {
-      await fetch(`${SUPABASE_URL}/rest/v1/ai_live_status?id=eq.${bot.id}`, {
-        method: "PATCH",
-        headers,
-        body: JSON.stringify({
-          stock_code: bot.pos ? bot.pos.code : "NONE",
-          stock_name: bot.pos ? `${STOCKS[bot.pos.code].name} (${bot.persona})` : `${bot.persona} 觀望中`,
-          direction: bot.pos ? bot.pos.dir : "NONE",
-          leverage: bot.pos ? bot.pos.lev : 1,
-          entry_price: bot.pos ? Number(bot.pos.entryPrice.toFixed(2)) : 0,
-          margin: bot.pos ? Math.round(bot.pos.margin) : 0,
-          net_worth: nw,
-          updated_at: new Date().toISOString()
-        })
-      });
-
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard?select=id&player_name=eq.${encodeURIComponent(bot.name)}&limit=1`, {
-        headers: { apikey: SUPABASE_KEY }
-      });
-      const rows = await res.json();
-      const lbPayload = { net_worth: nw, return_rate: roi, created_at: new Date().toISOString() };
-      if (rows && rows.length > 0) {
-        await fetch(`${SUPABASE_URL}/rest/v1/leaderboard?id=eq.${rows[0].id}`, {
-          method: "PATCH",
-          headers,
-          body: JSON.stringify(lbPayload)
-        });
-      } else {
-        await fetch(`${SUPABASE_URL}/rest/v1/leaderboard`, {
-          method: "POST",
-          headers,
-          body: JSON.stringify({ player_name: bot.name, ...lbPayload })
-        });
-      }
-    } catch (e) {}
-  }
-}
-
-function toggleLocalBots() {
-  localBotsActive = !localBotsActive;
-  const btn = document.getElementById("toggle-bots-btn");
-  if (localBotsActive) {
-    btn.textContent = "● 軍團運行中";
-    btn.className = "text-[11px] px-2.5 py-1 rounded bg-emerald-600/20 text-emerald-300 border border-emerald-500/40 font-bold";
-    appendLog("[系統] 已啟動本地 4-AI 軍團。", "text-emerald-300");
-  } else {
-    btn.textContent = "○ 軍團已暫停";
-    btn.className = "text-[11px] px-2.5 py-1 rounded bg-slate-800 text-slate-400 border border-slate-700 font-bold";
-    appendLog("[系統] 已暫停本地 4-AI 軍團（僅顯示雲端外部 AI）。", "text-slate-400");
-  }
-}
-
-// ==========================================
-// 玩家技能與手動下單邏輯
-// ==========================================
 function triggerPlayerSkill(skillType) {
   const now = Date.now();
   const remainMs = SKILL_COOLDOWN_MS - (now - lastSkillUsedMs);
   if (lastSkillUsedMs > 0 && remainMs > 0) {
-    appendLog(`技能冷卻中，還剩 ${Math.ceil(remainMs / 1000)} 秒才能再次施放。`, "text-amber-400");
+    appendLog(`技能冷卻中，還剩 ${Math.ceil(remainMs / 1000)} 秒。`, "text-amber-400");
     return;
   }
-
   const currentTick = Math.floor(now / 800);
   lastSkillUsedMs = now;
   activeSkillEvent = { type: skillType, targetStock: selectedStock, startTick: currentTick, endTick: currentTick + 4 };
+  for (let t = currentTick; t <= currentTick + 10; t++) priceCache.delete(selectedStock + ":" + t);
 
-  for (let t = currentTick; t <= currentTick + 10; t++) {
-    priceCache.delete(selectedStock + ":" + t);
-  }
-
-  const skillLabel = skillType === "PUMP" ? "🚀 拉高盤" : (skillType === "DUMP" ? "📉 砸盤" : "🪡 插針");
-  const curP = getLivePrice(selectedStock, currentTick);
+  const label = skillType === "PUMP" ? "🚀 拉高盤" : (skillType === "DUMP" ? "📉 砸盤" : "🪡 插針");
   markers.push({
     code: selectedStock,
     tick: currentTick,
-    price: curP,
+    price: getLivePrice(selectedStock, currentTick),
     label: skillType === "PUMP" ? "拉" : (skillType === "DUMP" ? "砸" : "針"),
     color: "#f59e0b"
   });
-
-  appendLog(`[玩家技能] 施放 ${skillLabel} 於 ${selectedStock} ${STOCKS[selectedStock].name}（AI 軍團完全不知情）！`, "text-amber-300 font-bold");
-  updateSkillUI(now, currentTick);
+  appendLog(`[干擾技能] 對 ${selectedStock} 施放 ${label}，已同步影響雙模型成交價！`, "text-amber-300 font-bold");
+  syncSkillToBackend(skillType, selectedStock, currentTick, currentTick + 4);
   renderTick();
-}
-
-function updateSkillUI(now, currentTick) {
-  const cdText = document.getElementById("skill-cooldown-text");
-  const btns = document.querySelectorAll(".skill-btn");
-  const activeBadge = document.getElementById("skill-active-badge");
-
-  const remainMs = lastSkillUsedMs > 0 ? Math.max(0, SKILL_COOLDOWN_MS - (now - lastSkillUsedMs)) : 0;
-  const onCooldown = remainMs > 0;
-
-  cdText.textContent = onCooldown ? `冷卻中：${Math.ceil(remainMs / 1000)}s` : "技能就緒（可施放）";
-  cdText.className = `font-mono font-bold ${onCooldown ? "text-amber-400" : "text-emerald-400"}`;
-
-  btns.forEach(btn => {
-    btn.disabled = onCooldown;
-    btn.classList.toggle("opacity-40", onCooldown);
-    btn.classList.toggle("cursor-not-allowed", onCooldown);
-  });
-
-  if (
-    activeSkillEvent.type !== "NONE" &&
-    currentTick >= activeSkillEvent.startTick &&
-    currentTick <= activeSkillEvent.endTick &&
-    activeSkillEvent.targetStock === selectedStock
-  ) {
-    const nameMap = { PUMP: "🚀 拉高盤生效中", DUMP: "📉 砸盤生效中", WICK: "🪡 插針洗盤中" };
-    activeBadge.textContent = nameMap[activeSkillEvent.type] || "";
-    activeBadge.classList.remove("hidden");
-  } else {
-    activeBadge.classList.add("hidden");
-  }
 }
 
 let selectedStock = "2330";
@@ -580,22 +376,22 @@ let selectedAlloc = 1.0;
 let cash = 10000;
 let userPos = null;
 let markers = [];
-let playerName = safeGetStorage("sim_player_name") || ("Trader_" + Math.floor(1000 + Math.random() * 9000));
-if (RESERVED_NAMES.includes(playerName.trim().toLowerCase())) {
-  playerName = "Trader_" + Math.floor(1000 + Math.random() * 9000);
-}
+let playerName = "Trader_" + Math.floor(1000 + Math.random() * 9000);
+try {
+  const saved = localStorage.getItem("sim_player_name");
+  if (saved && !RESERVED_NAMES.includes(saved.toLowerCase())) playerName = saved;
+} catch (e) {}
 document.getElementById("player-name-input").value = playerName;
 
 function savePlayerName() {
   const raw = document.getElementById("player-name-input").value.trim();
-  if (!raw) return;
-  if (RESERVED_NAMES.includes(raw.toLowerCase())) {
-    alert("⚠️ 此為官方量化 AI 保留名稱，請使用其他暱稱！");
+  if (!raw || RESERVED_NAMES.includes(raw.toLowerCase())) {
+    alert("⚠️ chatgpt_bot 與 gemini_bot 為競技模型保留名稱！");
     document.getElementById("player-name-input").value = playerName;
     return;
   }
   playerName = raw;
-  safeSetStorage("sim_player_name", playerName);
+  try { localStorage.setItem("sim_player_name", playerName); } catch (e) {}
   syncUserLeaderboard();
 }
 
@@ -603,9 +399,7 @@ document.querySelectorAll(".lev-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     selectedLev = Number(btn.dataset.lev);
     document.querySelectorAll(".lev-btn").forEach(b => {
-      b.className = b === btn
-        ? "lev-btn py-2 rounded-lg bg-indigo-600 text-white font-bold"
-        : "lev-btn py-2 rounded-lg bg-slate-800 text-slate-300 font-bold";
+      b.className = b === btn ? "lev-btn py-2 rounded-lg bg-indigo-600 text-white font-bold" : "lev-btn py-2 rounded-lg bg-slate-800 text-slate-300 font-bold";
     });
   });
 });
@@ -614,100 +408,53 @@ document.querySelectorAll(".alloc-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     selectedAlloc = Number(btn.dataset.alloc);
     document.querySelectorAll(".alloc-btn").forEach(b => {
-      b.className = b === btn
-        ? "alloc-btn py-2 rounded-lg bg-indigo-600 text-white font-bold"
-        : "alloc-btn py-2 rounded-lg bg-slate-800 text-slate-300 font-bold";
+      b.className = b === btn ? "alloc-btn py-2 rounded-lg bg-indigo-600 text-white font-bold" : "alloc-btn py-2 rounded-lg bg-slate-800 text-slate-300 font-bold";
     });
   });
 });
 
 function openUserPosition(dir) {
-  if (userPos) { appendLog("已有持倉，請先按「立即平倉」再進場。", "text-amber-400"); return; }
-  if (cash < 100) { appendLog("可用現金不足。", "text-rose-400"); return; }
-  const currentTick = Math.floor(Date.now() / 800);
-  const curPrice = getLivePrice(selectedStock, currentTick);
+  if (userPos || cash < 300) return;
+  const tick = Math.floor(Date.now() / 800);
+  const curPrice = getLivePrice(selectedStock, tick);
   const margin = cash * selectedAlloc;
+  const fee = margin * selectedLev * 0.0005;
   cash -= margin;
-  userPos = { code: selectedStock, dir, lev: selectedLev, entryPrice: curPrice, margin };
-  markers.push({
-    code: selectedStock,
-    tick: currentTick,
-    price: curPrice,
-    label: dir === "LONG" ? "B" : "S",
-    color: dir === "LONG" ? "#ef4444" : "#22c55e"
-  });
-  appendLog(`[手動${dir === "LONG" ? "做多" : "放空"}] ${selectedStock} ${selectedLev}x @ ${curPrice.toFixed(2)} | 保證金 $${Math.round(margin).toLocaleString()}`, dir === "LONG" ? "text-red-400" : "text-green-400");
-  updateUserPanel(currentTick);
+  userPos = { code: selectedStock, dir, lev: selectedLev, entryPrice: curPrice, margin: margin - fee };
+  markers.push({ code: selectedStock, tick, price: curPrice, label: dir === "LONG" ? "B" : "S", color: dir === "LONG" ? "#ef4444" : "#22c55e" });
+  appendLog(`[玩家${dir === "LONG" ? "做多" : "做空"}] ${selectedStock} ${selectedLev}x @ ${curPrice.toFixed(2)}`, dir === "LONG" ? "text-red-400" : "text-green-400");
+  renderTick();
   syncUserLeaderboard();
 }
 
 function closeUserPosition() {
   if (!userPos) return;
-  const currentTick = Math.floor(Date.now() / 800);
-  const curPrice = getLivePrice(userPos.code, currentTick);
+  const tick = Math.floor(Date.now() / 800);
+  const curPrice = getLivePrice(userPos.code, tick);
   const pnl = userPos.margin * ((curPrice - userPos.entryPrice) / userPos.entryPrice) * userPos.lev * (userPos.dir === "LONG" ? 1 : -1);
-  cash = Math.max(0, cash + userPos.margin + pnl);
+  const fee = userPos.margin * userPos.lev * 0.0005;
+  cash = Math.max(0, cash + userPos.margin + pnl - fee);
   if (cash < 300) cash = 3000;
-  markers.push({ code: userPos.code, tick: currentTick, price: curPrice, label: "平", color: "#f59e0b" });
-  appendLog(`[平倉結算] ${userPos.code} @ ${curPrice.toFixed(2)} | 損益 ${pnl >= 0 ? "+" : ""}$${Math.round(pnl).toLocaleString()} | 現金 $${Math.round(cash).toLocaleString()}`, pnl >= 0 ? "text-amber-300" : "text-slate-300");
+  markers.push({ code: userPos.code, tick, price: curPrice, label: "平", color: "#f59e0b" });
+  appendLog(`[玩家平倉] ${userPos.code} @ ${curPrice.toFixed(2)} | 淨損益 ${(pnl - fee) >= 0 ? "+" : ""}$${Math.round(pnl - fee).toLocaleString()}`, "text-amber-300");
   userPos = null;
-  updateUserPanel(currentTick);
+  renderTick();
   syncUserLeaderboard();
 }
 
-// 個人 30s 短線代操（輔助玩家帳號）
-let aiAutopilotTimer = null;
-let aiAutopilotLeft = 0;
-
-function toggleAiAutopilot() {
-  if (aiAutopilotTimer) {
-    clearInterval(aiAutopilotTimer);
-    aiAutopilotTimer = null;
-    if (userPos) closeUserPosition();
-    const btn = document.getElementById("ai-autopilot-btn");
-    btn.textContent = "🤖 個人代操 30s";
-    btn.className = "py-2.5 rounded-full font-bold text-white bg-sky-600 hover:bg-sky-500 transition";
-    appendLog("[個人代操] 已停止。", "text-slate-400");
-    return;
-  }
-
-  aiAutopilotLeft = 30;
-  appendLog("[個人代操] 啟動 30 秒自動短線代操...", "text-sky-300");
-  aiAutopilotTimer = setInterval(() => {
-    aiAutopilotLeft -= 2;
-    const btn = document.getElementById("ai-autopilot-btn");
-    if (aiAutopilotLeft <= 0) {
-      toggleAiAutopilot();
-      return;
-    }
-    btn.textContent = `🤖 代操中 (${aiAutopilotLeft}s)`;
-    btn.className = "py-2.5 rounded-full font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 transition";
-
-    const tick = Math.floor(Date.now() / 800);
-    const s = getContinuousSeries(selectedStock, tick, 8);
-    const curP = s[s.length - 1].price;
-    const mom = ((curP - s[0].price) / s[0].price) * 100;
-
-    if (!userPos && Math.abs(mom) >= 0.14) {
-      openUserPosition(mom >= 0 ? "LONG" : "SHORT");
-    } else if (userPos) {
-      const pnl = userPos.margin * ((curP - userPos.entryPrice) / userPos.entryPrice) * userPos.lev * (userPos.dir === "LONG" ? 1 : -1);
-      const roi = (pnl / userPos.margin) * 100;
-      if (roi >= 1.2 || roi <= -1.0) closeUserPosition();
-    }
-  }, 2000);
+function calcUserNetWorth(tick) {
+  if (!userPos) return cash;
+  const curP = getLivePrice(userPos.code, tick);
+  const pnl = userPos.margin * ((curP - userPos.entryPrice) / userPos.entryPrice) * userPos.lev * (userPos.dir === "LONG" ? 1 : -1);
+  return Math.max(0, cash + userPos.margin + pnl);
 }
 
-// ==========================================
-// 繪圖與畫面更新
-// ==========================================
-function drawRedGreenChart(series, basePrice) {
+function drawChart(series, basePrice) {
   const canvas = document.getElementById("price-chart");
   if (!canvas) return;
   const dpr = window.devicePixelRatio || 1;
   const rect = canvas.getBoundingClientRect();
-  const w = rect.width || canvas.parentElement.clientWidth || 700;
-  const h = rect.height || canvas.parentElement.clientHeight || 288;
+  const w = rect.width || 700, h = rect.height || 288;
   canvas.width = w * dpr;
   canvas.height = h * dpr;
   const ctx = canvas.getContext("2d");
@@ -717,280 +464,116 @@ function drawRedGreenChart(series, basePrice) {
   const visible = series.slice(-90);
   if (visible.length < 2) return;
 
-  const prices = visible.map(d => Number(d.price));
+  const prices = visible.map(d => d.price);
   const minP = Math.min(...prices, basePrice) * 0.9985;
   const maxP = Math.max(...prices, basePrice) * 1.0015;
   const range = Math.max(0.01, maxP - minP);
-
   const padL = 14, padR = 62, padT = 18, padB = 22;
-  const plotW = w - padL - padR;
-  const plotH = h - padT - padB;
-
-  const getX = idx => padL + (idx / Math.max(1, visible.length - 1)) * plotW;
+  const plotW = w - padL - padR, plotH = h - padT - padB;
+  const getX = idx => padL + (idx / (visible.length - 1)) * plotW;
   const getY = val => padT + (1 - (val - minP) / range) * plotH;
 
   ctx.strokeStyle = "rgba(148, 163, 184, 0.08)";
-  ctx.lineWidth = 1;
   ctx.font = "11px monospace";
   ctx.fillStyle = "#64748b";
   for (let i = 0; i <= 4; i++) {
     const y = padT + (plotH / 4) * i;
-    ctx.beginPath();
-    ctx.moveTo(padL, y);
-    ctx.lineTo(padL + plotW, y);
-    ctx.stroke();
-
-    const priceVal = maxP - (range / 4) * i;
-    ctx.fillText(priceVal.toFixed(2), padL + plotW + 6, y + 4);
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + plotW, y); ctx.stroke();
+    ctx.fillText((maxP - (range / 4) * i).toFixed(2), padL + plotW + 6, y + 4);
   }
-
-  const baseY = getY(basePrice);
-  ctx.save();
-  ctx.setLineDash([4, 4]);
-  ctx.strokeStyle = "rgba(148, 163, 184, 0.35)";
-  ctx.beginPath();
-  ctx.moveTo(padL, baseY);
-  ctx.lineTo(padL + plotW, baseY);
-  ctx.stroke();
-  ctx.restore();
 
   ctx.lineWidth = 2.2;
-  ctx.lineJoin = "round";
   for (let i = 1; i < visible.length; i++) {
-    const x1 = getX(i - 1), y1 = getY(visible[i - 1].price);
-    const x2 = getX(i), y2 = getY(visible[i].price);
     ctx.strokeStyle = visible[i].price >= visible[i - 1].price ? "#ef4444" : "#22c55e";
     ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
+    ctx.moveTo(getX(i - 1), getY(visible[i - 1].price));
+    ctx.lineTo(getX(i), getY(visible[i].price));
     ctx.stroke();
   }
 
-  const lastIdx = visible.length - 1;
-  ctx.fillStyle = visible[lastIdx].price >= basePrice ? "#ef4444" : "#22c55e";
-  ctx.beginPath();
-  ctx.arc(getX(lastIdx), getY(visible[lastIdx].price), 4, 0, Math.PI * 2);
-  ctx.fill();
-
-  const startTick = visible[0].tick;
-  const endTick = visible[lastIdx].tick;
+  const startTick = visible[0].tick, endTick = visible[visible.length - 1].tick;
   markers.forEach(m => {
     if (m.code !== selectedStock || m.tick < startTick || m.tick > endTick) return;
-    const idx = m.tick - startTick;
-    const mx = getX(idx), my = getY(m.price);
-    ctx.fillStyle = m.color || "#f59e0b";
-    ctx.beginPath();
-    ctx.arc(mx, my, 9, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#0f172a";
-    ctx.font = "bold 10px sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText(m.label, mx, my + 3.5);
-    ctx.textAlign = "left";
+    const mx = getX(m.tick - startTick), my = getY(m.price);
+    ctx.fillStyle = m.color;
+    ctx.beginPath(); ctx.arc(mx, my, 9, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#0f172a"; ctx.font = "bold 10px sans-serif"; ctx.textAlign = "center";
+    ctx.fillText(m.label, mx, my + 3.5); ctx.textAlign = "left";
   });
 }
-
-function renderStockTabs(currentTick) {
-  const container = document.getElementById("stock-tabs");
-  if (!container) return;
-  container.innerHTML = "";
-  Object.entries(STOCKS).forEach(([code, info]) => {
-    const curP = getLivePrice(code, currentTick);
-    const diffPct = ((curP - info.base) / info.base) * 100;
-    const isUp = diffPct >= 0;
-    const isSelected = code === selectedStock;
-
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = `p-2.5 rounded-xl border text-left transition ${
-      isSelected
-        ? "bg-indigo-950/60 border-indigo-500 shadow-lg shadow-indigo-500/10"
-        : "bg-slate-900/70 border-slate-800 hover:border-slate-700"
-    }`;
-    btn.onclick = () => { selectedStock = code; renderTick(); };
-    btn.innerHTML = `
-      <div class="flex items-center justify-between">
-        <span class="text-xs font-bold text-slate-300">${code}</span>
-        <span class="text-[11px] font-bold ${isUp ? "up-text" : "down-text"}">${isUp ? "+" : ""}${diffPct.toFixed(2)}%</span>
-      </div>
-      <div class="text-xs text-slate-400 truncate mt-0.5">${info.name}</div>
-      <div class="text-sm font-extrabold text-white mt-1 font-mono">${curP.toFixed(2)}</div>
-    `;
-    container.appendChild(btn);
-  });
-}
-
-function calcUserNetWorth(currentTick) {
-  if (!userPos) return cash;
-  const curP = getLivePrice(userPos.code, currentTick);
-  const pnl = userPos.margin * ((curP - userPos.entryPrice) / userPos.entryPrice) * userPos.lev * (userPos.dir === "LONG" ? 1 : -1);
-  return Math.max(0, cash + userPos.margin + pnl);
-}
-
-function updateUserPanel(currentTick) {
-  const nw = calcUserNetWorth(currentTick);
-  document.getElementById("user-cash").textContent = `$${Math.round(cash).toLocaleString()}`;
-  document.getElementById("user-net-worth").textContent = `$${Math.round(nw).toLocaleString()}`;
-
-  const badge = document.getElementById("user-pos-badge");
-  const detail = document.getElementById("user-pos-detail");
-  const closeBtn = document.getElementById("close-pos-btn");
-
-  if (!userPos) {
-    badge.textContent = "空手觀望";
-    badge.className = "px-2 py-0.5 rounded bg-slate-800 text-slate-400";
-    detail.textContent = "尚未進場，可手動下單或啟動「個人代操 30s」。";
-    closeBtn.disabled = true;
-    closeBtn.className = "py-2.5 rounded-full font-bold bg-slate-800 text-slate-500 cursor-not-allowed transition";
-  } else {
-    const curP = getLivePrice(userPos.code, currentTick);
-    const pnl = userPos.margin * ((curP - userPos.entryPrice) / userPos.entryPrice) * userPos.lev * (userPos.dir === "LONG" ? 1 : -1);
-    const roi = (pnl / userPos.margin) * 100;
-    const isLong = userPos.dir === "LONG";
-
-    badge.textContent = `${userPos.code} ${isLong ? "做多" : "做空"} ${userPos.lev}x`;
-    badge.className = `px-2 py-0.5 rounded font-bold ${isLong ? "up-bg" : "down-bg"}`;
-    detail.innerHTML = `開倉 <b class="text-white">${userPos.entryPrice.toFixed(2)}</b> · 現價 <b class="text-white">${curP.toFixed(2)}</b> · 浮動損益 <b class="${pnl >= 0 ? "up-text" : "down-text"}">${pnl >= 0 ? "+" : ""}$${Math.round(pnl).toLocaleString()} (${roi >= 0 ? "+" : ""}${roi.toFixed(1)}%)</b>`;
-
-    closeBtn.disabled = false;
-    closeBtn.className = "py-2.5 rounded-full font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 transition cursor-pointer";
-    if (roi <= -95) {
-      appendLog(`[強制平倉] ${userPos.code} 保證金不足觸發爆倉！`, "text-rose-400 font-bold");
-      closeUserPosition();
-    }
-  }
-}
-
-function renderAiDashboard(currentTick, remoteRows = []) {
-  const container = document.getElementById("ai-cards-container");
-  if (!container) return;
-
-  // 合併本地 4 隻 AI 與雲端外部 AI（例如 id=5 的 chatgpt_bot）
-  const cards = AI_BOTS.map(bot => {
-    const nw = getBotLiveNetWorth(bot, currentTick);
-    return {
-      id: bot.id,
-      title: `${bot.name} · ${bot.persona}`,
-      color: bot.badgeColor,
-      online: localBotsActive,
-      hasPos: Boolean(bot.pos),
-      stockLabel: bot.pos ? `${bot.pos.code} ${STOCKS[bot.pos.code].name}` : "空手尋找機會中",
-      dir: bot.pos ? bot.pos.dir : "NONE",
-      lev: bot.pos ? bot.pos.lev : 1,
-      entry: bot.pos ? bot.pos.entryPrice : 0,
-      margin: bot.pos ? bot.pos.margin : 0,
-      netWorth: nw
-    };
-  });
-
-  // 加入外部連線 AI（id >= 5，例如 ChatGPT / Claude 外部腳本）
-  remoteRows.filter(r => r.id >= 5).forEach(r => {
-    const isOnline = r.updated_at && (Date.now() - new Date(r.updated_at).getTime() < 25000);
-    const hasPos = r.stock_code && r.stock_code !== "NONE" && r.direction && r.direction !== "NONE";
-    cards.unshift({
-      id: r.id,
-      title: `chatgpt_bot · 🧠 外部 LLM 連線`,
-      color: "text-fuchsia-300",
-      online: isOnline,
-      hasPos,
-      stockLabel: hasPos ? `${r.stock_code} ${r.stock_name || ""}` : (r.stock_name || "等待外部腳本啟動"),
-      dir: r.direction,
-      lev: r.leverage || 1,
-      entry: Number(r.entry_price || 0),
-      margin: Number(r.margin || 0),
-      netWorth: Number(r.net_worth || 10000)
-    });
-  });
-
-  container.innerHTML = cards.map(c => {
-    const roi = ((c.netWorth - 10000) / 10000) * 100;
-    const isLong = c.dir === "LONG";
-    return `
-      <div class="bg-slate-950/75 rounded-xl p-2.5 border border-slate-800/90 space-y-1 text-xs">
-        <div class="flex justify-between items-center">
-          <span class="font-bold ${c.color}">${c.title}</span>
-          <span class="flex items-center gap-1 text-[11px] ${c.online ? "text-emerald-400" : "text-slate-500"}">
-            <span class="w-1.5 h-1.5 rounded-full ${c.online ? "bg-emerald-400 animate-pulse" : "bg-slate-600"}"></span>
-            ${c.online ? "在線" : "離線"}
-          </span>
-        </div>
-        <div class="flex justify-between items-center">
-          <span class="text-slate-300 font-semibold">${c.stockLabel}</span>
-          <span class="font-bold ${c.hasPos ? (isLong ? "up-text" : "down-text") : "text-slate-500"}">
-            ${c.hasPos ? `${isLong ? "做多" : "做空"} ${c.lev}x` : "-"}
-          </span>
-        </div>
-        <div class="border-t border-slate-800/80 pt-1 flex justify-between items-center">
-          <span class="text-slate-500 font-mono text-[11px]">
-            ${c.hasPos ? `均價 ${c.entry.toFixed(1)} / 押 $${Math.round(c.margin).toLocaleString()}` : "空手觀望"}
-          </span>
-          <span class="font-mono font-extrabold text-amber-400">
-            $${Math.round(c.netWorth).toLocaleString()}
-            <span class="text-[11px] ${roi >= 0 ? "up-text" : "down-text"}">(${roi >= 0 ? "+" : ""}${roi.toFixed(1)}%)</span>
-          </span>
-        </div>
-      </div>
-    `;
-  }).join("");
-}
-
-let cachedRemoteAiRows = [];
 
 async function syncUserLeaderboard() {
-  const currentTick = Math.floor(Date.now() / 800);
-  const nw = Math.round(calcUserNetWorth(currentTick));
+  const tick = Math.floor(Date.now() / 800);
+  const nw = Math.round(calcUserNetWorth(tick));
   const roi = Number((((nw - 10000) / 10000) * 100).toFixed(2));
-  const headers = {
-    apikey: SUPABASE_KEY,
-    "Content-Type": "application/json",
-    Prefer: "return=minimal"
-  };
-
+  const headers = { apikey: SUPABASE_KEY, "Content-Type": "application/json", Prefer: "return=minimal" };
   try {
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/leaderboard?select=id&player_name=eq.${encodeURIComponent(playerName)}&limit=1`,
-      { headers: { apikey: SUPABASE_KEY } }
-    );
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard?select=id&player_name=eq.${encodeURIComponent(playerName)}&limit=1`, { headers: { apikey: SUPABASE_KEY } });
     const rows = await res.json();
     const payload = { net_worth: nw, return_rate: roi, created_at: new Date().toISOString() };
     if (rows && rows.length > 0) {
-      await fetch(`${SUPABASE_URL}/rest/v1/leaderboard?id=eq.${rows[0].id}`, {
-        method: "PATCH",
-        headers,
-        body: JSON.stringify(payload)
-      });
+      await fetch(`${SUPABASE_URL}/rest/v1/leaderboard?id=eq.${rows[0].id}`, { method: "PATCH", headers, body: JSON.stringify(payload) });
     } else {
-      await fetch(`${SUPABASE_URL}/rest/v1/leaderboard`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ player_name: playerName, ...payload })
-      });
+      await fetch(`${SUPABASE_URL}/rest/v1/leaderboard`, { method: "POST", headers, body: JSON.stringify({ player_name: playerName, ...payload }) });
     }
   } catch (e) {}
 }
 
-async function fetchLeaderboardAndAi() {
+async function pollArenaState() {
   try {
-    const lbRes = await fetch(
-      `${SUPABASE_URL}/rest/v1/leaderboard?select=player_name,net_worth,return_rate&order=net_worth.desc&limit=20`,
-      { headers: { apikey: SUPABASE_KEY } }
-    );
+    // 1. 更新雙模型即時戰況卡片（id=5 ChatGPT, id=6 Gemini）
+    const aiRes = await fetch(`${SUPABASE_URL}/rest/v1/ai_live_status?id=in.(5,6)&order=id.asc`, { headers: { apikey: SUPABASE_KEY } });
+    const aiRows = await aiRes.json();
+    if (Array.isArray(aiRows)) {
+      aiRows.forEach(r => {
+        const id = r.id;
+        const isOnline = r.updated_at && (Date.now() - new Date(r.updated_at).getTime() < 20000);
+        const onlineEl = document.getElementById(`online-${id}`);
+        if (onlineEl) {
+          onlineEl.innerHTML = isOnline
+            ? '<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span><span class="text-emerald-400">競技中</span>'
+            : '<span class="w-2 h-2 rounded-full bg-slate-600"></span>離線';
+        }
+        const hasPos = r.stock_code && r.stock_code !== "NONE" && r.direction && r.direction !== "NONE";
+        document.getElementById(`stock-${id}`).textContent = hasPos ? `${r.stock_code} ${r.stock_name || ""}` : (r.stock_name || "分析行情中");
+        const dirEl = document.getElementById(`dir-${id}`);
+        if (hasPos) {
+          const isLong = r.direction === "LONG";
+          dirEl.textContent = `${isLong ? "做多 LONG" : "做空 SHORT"} · ${r.leverage}x`;
+          dirEl.className = `font-bold ${isLong ? "up-text" : "down-text"}`;
+          document.getElementById(`entry-${id}`).textContent = `${Number(r.entry_price).toFixed(2)} / $${Math.round(Number(r.margin)).toLocaleString()}`;
+        } else {
+          dirEl.textContent = "-";
+          dirEl.className = "font-bold text-slate-300";
+          document.getElementById(`entry-${id}`).textContent = "-";
+        }
+        document.getElementById(`nw-${id}`).textContent = `$${Math.round(Number(r.net_worth || 10000)).toLocaleString()}`;
+      });
+    }
+
+    // 2. 更新統一排行榜
+    const lbRes = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard?select=player_name,net_worth,return_rate&order=net_worth.desc&limit=20`, { headers: { apikey: SUPABASE_KEY } });
     const lbData = await lbRes.json();
     const listEl = document.getElementById("leaderboard-list");
     if (Array.isArray(lbData) && listEl) {
       listEl.innerHTML = lbData.map((row, idx) => {
-        const isBot = RESERVED_NAMES.includes((row.player_name || "").toLowerCase());
+        const nameLower = (row.player_name || "").toLowerCase();
+        const isGpt = nameLower === "chatgpt_bot";
+        const isGem = nameLower === "gemini_bot";
         const isMe = row.player_name === playerName;
         const roi = Number(row.return_rate || 0);
         return `
           <div class="flex items-center justify-between px-3 py-2 rounded-xl border text-xs ${
-            isMe ? "bg-indigo-950/50 border-indigo-500/60" : "bg-slate-900/70 border-slate-800/80"
+            isGpt ? "bg-emerald-950/30 border-emerald-500/40" :
+            isGem ? "bg-indigo-950/30 border-indigo-500/40" :
+            isMe ? "bg-amber-950/20 border-amber-500/40" : "bg-slate-900/70 border-slate-800/80"
           }">
             <div class="flex items-center gap-2 min-w-0">
               <span class="w-5 font-mono font-bold ${idx < 3 ? "text-amber-400" : "text-slate-500"}">#${idx + 1}</span>
               <span class="font-bold text-white truncate">${row.player_name}</span>
-              ${isBot ? '<span class="ai-badge">AI</span>' : ""}
-              ${isMe ? '<span class="text-[10px] px-1.5 py-0.5 rounded bg-indigo-600 text-white">我</span>' : ""}
+              ${isGpt ? '<span class="gpt-badge">GPT</span>' : ""}
+              ${isGem ? '<span class="gem-badge">GEM</span>' : ""}
+              ${isMe ? '<span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-500 text-slate-950 font-bold">我</span>' : ""}
             </div>
             <div class="text-right shrink-0">
               <div class="font-mono font-bold text-amber-300">$${Number(row.net_worth || 0).toLocaleString()}</div>
@@ -1000,61 +583,83 @@ async function fetchLeaderboardAndAi() {
         `;
       }).join("");
     }
-
-    const aiRes = await fetch(
-      `${SUPABASE_URL}/rest/v1/ai_live_status?select=*&order=id.asc`,
-      { headers: { apikey: SUPABASE_KEY } }
-    );
-    const aiRows = await aiRes.json();
-    if (Array.isArray(aiRows)) {
-      cachedRemoteAiRows = aiRows;
-    }
   } catch (e) {}
 }
 
 function renderTick() {
   const now = Date.now();
-  const currentTick = Math.floor(now / 800);
-  const market = getGlobalMarketState(currentTick);
-
-  // 驅動 4 隻性格 AI 各自判斷進出場
-  stepAllAiBots(currentTick);
+  const tick = Math.floor(now / 800);
+  const market = getGlobalMarketState(tick);
 
   document.getElementById("market-badge").textContent = market.label;
   document.getElementById("news-ticker").textContent = market.news;
 
+  // 更新股票分頁
+  const tabsEl = document.getElementById("stock-tabs");
+  tabsEl.innerHTML = "";
+  Object.entries(STOCKS).forEach(([code, info]) => {
+    const curP = getLivePrice(code, tick);
+    const pct = ((curP - info.base) / info.base) * 100;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = `p-2.5 rounded-xl border text-left transition ${code === selectedStock ? "bg-indigo-950/60 border-indigo-500" : "bg-slate-900/70 border-slate-800"}`;
+    btn.onclick = () => { selectedStock = code; renderTick(); };
+    btn.innerHTML = `
+      <div class="flex justify-between text-xs"><span class="font-bold text-slate-300">${code}</span><span class="font-bold ${pct >= 0 ? "up-text" : "down-text"}">${pct >= 0 ? "+" : ""}${pct.toFixed(2)}%</span></div>
+      <div class="text-xs text-slate-400 truncate mt-0.5">${info.name}</div>
+      <div class="text-sm font-extrabold text-white mt-1 font-mono">${curP.toFixed(2)}</div>
+    `;
+    tabsEl.appendChild(btn);
+  });
+
+  // 更新主圖與價格
   const st = STOCKS[selectedStock];
-  const series = getContinuousSeries(selectedStock, currentTick, 120);
+  const series = getContinuousSeries(selectedStock, tick, 100);
   const curP = series[series.length - 1].price;
   const diff = curP - st.base;
   const diffPct = (diff / st.base) * 100;
-  const isUp = diff >= 0;
-
   document.getElementById("chart-stock-title").textContent = `${selectedStock} ${st.name}`;
   document.getElementById("chart-current-price").textContent = curP.toFixed(2);
-  const changeEl = document.getElementById("chart-price-change");
-  changeEl.textContent = `${isUp ? "+" : ""}${diff.toFixed(2)} (${isUp ? "+" : ""}${diffPct.toFixed(2)}%)`;
-  changeEl.className = `text-sm font-bold px-2 py-0.5 rounded ${isUp ? "up-bg" : "down-bg"}`;
+  const chgEl = document.getElementById("chart-price-change");
+  chgEl.textContent = `${diff >= 0 ? "+" : ""}${diff.toFixed(2)} (${diffPct >= 0 ? "+" : ""}${diffPct.toFixed(2)}%)`;
+  chgEl.className = `text-sm font-bold px-2 py-0.5 rounded ${diff >= 0 ? "up-bg" : "down-bg"}`;
 
-  renderStockTabs(currentTick);
-  updateSkillUI(now, currentTick);
-  updateUserPanel(currentTick);
-  renderAiDashboard(currentTick, cachedRemoteAiRows);
-  drawRedGreenChart(series, st.base);
+  // 更新技能冷卻
+  const remain = lastSkillUsedMs > 0 ? Math.max(0, SKILL_COOLDOWN_MS - (now - lastSkillUsedMs)) : 0;
+  const cdText = document.getElementById("skill-cooldown-text");
+  cdText.textContent = remain > 0 ? `冷卻中：${Math.ceil(remain / 1000)}s` : "技能就緒（可施放）";
+  cdText.className = `font-mono font-bold ${remain > 0 ? "text-amber-400" : "text-emerald-400"}`;
+  document.querySelectorAll(".skill-btn").forEach(b => { b.disabled = remain > 0; b.classList.toggle("opacity-40", remain > 0); });
+
+  // 更新玩家狀態
+  document.getElementById("user-cash").textContent = `$${Math.round(cash).toLocaleString()}`;
+  document.getElementById("user-net-worth").textContent = `$${Math.round(calcUserNetWorth(tick)).toLocaleString()}`;
+  const closeBtn = document.getElementById("close-pos-btn");
+  if (!userPos) {
+    document.getElementById("user-pos-badge").textContent = "空手觀望";
+    document.getElementById("user-pos-badge").className = "px-2 py-0.5 rounded bg-slate-800 text-slate-400";
+    document.getElementById("user-pos-detail").textContent = "尚未進場，可隨時下單與 ChatGPT / Gemini 較勁。";
+    closeBtn.disabled = true;
+    closeBtn.className = "py-2.5 rounded-full font-bold bg-slate-800 text-slate-500 cursor-not-allowed transition";
+  } else {
+    const pNow = getLivePrice(userPos.code, tick);
+    const pnl = userPos.margin * ((pNow - userPos.entryPrice) / userPos.entryPrice) * userPos.lev * (userPos.dir === "LONG" ? 1 : -1);
+    const roi = (pnl / userPos.margin) * 100;
+    document.getElementById("user-pos-badge").textContent = `${userPos.code} ${userPos.dir === "LONG" ? "做多" : "做空"} ${userPos.lev}x`;
+    document.getElementById("user-pos-badge").className = `px-2 py-0.5 rounded font-bold ${userPos.dir === "LONG" ? "up-bg" : "down-bg"}`;
+    document.getElementById("user-pos-detail").innerHTML = `開倉 <b class="text-white">${userPos.entryPrice.toFixed(2)}</b> · 浮動損益 <b class="${pnl >= 0 ? "up-text" : "down-text"}">${pnl >= 0 ? "+" : ""}$${Math.round(pnl).toLocaleString()} (${roi >= 0 ? "+" : ""}${roi.toFixed(1)}%)</b>`;
+    closeBtn.disabled = false;
+    closeBtn.className = "py-2.5 rounded-full font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 transition cursor-pointer";
+  }
+
+  drawChart(series, st.base);
 }
 
 renderTick();
-fetchLeaderboardAndAi();
+pollArenaState();
 syncUserLeaderboard();
-syncBotsToSupabase(Math.floor(Date.now() / 800));
-
 setInterval(renderTick, 800);
-setInterval(() => {
-  const tick = Math.floor(Date.now() / 800);
-  syncUserLeaderboard();
-  syncBotsToSupabase(tick);
-  fetchLeaderboardAndAi();
-}, 4000);
+setInterval(() => { syncUserLeaderboard(); pollArenaState(); }, 3000);
 </script>
 </body>
 </html>
