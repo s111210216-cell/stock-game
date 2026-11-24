@@ -42,7 +42,7 @@
             AI 量化對決交易室
             <span id="market-badge" class="text-xs px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">市場常態</span>
           </h1>
-          <p class="text-xs text-slate-400">全球同步 Tick 引擎 · 基準線以上紅、以下綠 · 即時「現在金額」排名</p>
+          <p class="text-xs text-slate-400">全球同步 Tick 引擎 · 動態基準線（上紅下綠）· 即時「現在金額」排名</p>
         </div>
       </div>
 
@@ -77,8 +77,8 @@
               </div>
             </div>
             <div class="flex items-center gap-3 text-xs text-slate-400">
-              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span>高於基準</span>
-              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>低於基準</span>
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span>高於動態基準</span>
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>低於動態基準</span>
               <span id="news-ticker" class="text-amber-300 font-medium">📰 市場觀望中</span>
             </div>
           </div>
@@ -238,6 +238,16 @@ function getEpochSeries(stockKey, currentTick) {
   return series;
 }
 
+function getDynamicBaseSeries(series, fallbackBasePrice, win = 20) {
+  return series.map((item, idx) => {
+    const start = Math.max(0, idx - win + 1);
+    const slice = series.slice(start, idx + 1);
+    if (!slice.length) return fallbackBasePrice;
+    const sum = slice.reduce((acc, d) => acc + Number(d.price), 0);
+    return sum / slice.length;
+  });
+}
+
 let selectedStock = "2330";
 let selectedLev = 3;
 let selectedAlloc = 1.0;
@@ -308,8 +318,7 @@ function closeUserPosition() {
   syncUserLeaderboard();
 }
 
-// 以該盤基準價（basePrice）為分界：高於基準畫紅色，低於基準畫綠色
-function drawRedGreenChart(series, basePrice) {
+function drawRedGreenChart(series, fallbackBasePrice) {
   const canvas = document.getElementById("price-chart");
   if (!canvas) return;
   const dpr = window.devicePixelRatio || 1;
@@ -325,9 +334,18 @@ function drawRedGreenChart(series, basePrice) {
   const visible = series.slice(-90);
   if (visible.length < 2) return;
 
-  const prices = visible.map(d => d.price);
-  const minP = Math.min(...prices, basePrice) * 0.9985;
-  const maxP = Math.max(...prices, basePrice) * 1.0015;
+  const win = 20;
+  const dynamicBases = visible.map((_, idx) => {
+    const start = Math.max(0, idx - win + 1);
+    const slice = visible.slice(start, idx + 1);
+    if (!slice.length) return fallbackBasePrice;
+    const sum = slice.reduce((acc, item) => acc + Number(item.price), 0);
+    return sum / slice.length;
+  });
+
+  const prices = visible.map(d => Number(d.price));
+  const minP = Math.min(...prices, ...dynamicBases) * 0.9985;
+  const maxP = Math.max(...prices, ...dynamicBases) * 1.0015;
   const range = Math.max(0.01, maxP - minP);
 
   const padL = 14, padR = 62, padT = 18, padB = 22;
@@ -337,7 +355,6 @@ function drawRedGreenChart(series, basePrice) {
   const getX = idx => padL + (idx / Math.max(1, visible.length - 1)) * plotW;
   const getY = val => padT + (1 - (val - minP) / range) * plotH;
 
-  // 水平格線與價格刻度
   ctx.strokeStyle = "rgba(148, 163, 184, 0.08)";
   ctx.lineWidth = 1;
   ctx.font = "11px monospace";
@@ -352,41 +369,48 @@ function drawRedGreenChart(series, basePrice) {
     ctx.fillText(priceLabel, w - padR + 6, y + 4);
   }
 
-  // 基準線（該盤開盤/基準價，0% 分界線）
-  const baseY = getY(basePrice);
   ctx.save();
   ctx.setLineDash([5, 4]);
-  ctx.strokeStyle = "rgba(250, 204, 21, 0.7)";
-  ctx.lineWidth = 1.2;
+  ctx.strokeStyle = "rgba(250, 204, 21, 0.75)";
+  ctx.lineWidth = 1.4;
   ctx.beginPath();
-  ctx.moveTo(padL, baseY);
-  ctx.lineTo(w - padR, baseY);
+  dynamicBases.forEach((bVal, idx) => {
+    const x = getX(idx);
+    const y = getY(bVal);
+    if (idx === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
   ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.fillStyle = "#facc15";
-  ctx.font = "bold 10px sans-serif";
-  ctx.fillText("基準 " + basePrice.toFixed(2), padL + 4, Math.max(12, baseY - 5));
   ctx.restore();
 
-  // 以基準線為中心：每一段線與底面填色依「高於基準(紅) / 低於基準(綠)」決定
+  const lastBase = dynamicBases[dynamicBases.length - 1];
+  const lastBaseY = getY(lastBase);
+  ctx.fillStyle = "#facc15";
+  ctx.font = "bold 10px sans-serif";
+  ctx.fillText("動態基準 " + lastBase.toFixed(2), padL + 4, Math.max(12, lastBaseY - 5));
+
   for (let i = 1; i < visible.length; i++) {
     const p0 = Number(visible[i - 1].price);
     const p1 = Number(visible[i].price);
+    const b0 = dynamicBases[i - 1];
+    const b1 = dynamicBases[i];
+
     const x0 = getX(i - 1);
     const y0 = getY(p0);
     const x1 = getX(i);
     const y1 = getY(p1);
+    const by0 = getY(b0);
+    const by1 = getY(b1);
 
-    const midPrice = (p0 + p1) / 2;
-    const isAboveBase = midPrice >= basePrice;
+    const isAboveBase = ((p0 - b0) + (p1 - b1)) / 2 >= 0;
     const strokeCol = isAboveBase ? "#ef4444" : "#22c55e";
     const fillCol = isAboveBase ? "rgba(239, 68, 68, 0.18)" : "rgba(34, 197, 94, 0.18)";
 
     ctx.beginPath();
     ctx.moveTo(x0, y0);
     ctx.lineTo(x1, y1);
-    ctx.lineTo(x1, baseY);
-    ctx.lineTo(x0, baseY);
+    ctx.lineTo(x1, by1);
+    ctx.lineTo(x0, by0);
     ctx.closePath();
     ctx.fillStyle = fillCol;
     ctx.fill();
@@ -400,14 +424,13 @@ function drawRedGreenChart(series, basePrice) {
     ctx.stroke();
   }
 
-  // 最新價端點圓球（高於基準紅、低於基準綠）
   const last = visible[visible.length - 1];
   const lastX = getX(visible.length - 1);
   const lastY = getY(last.price);
-  const aboveBase = last.price >= basePrice;
+  const aboveLastBase = last.price >= lastBase;
   ctx.beginPath();
   ctx.arc(lastX, lastY, 4.5, 0, Math.PI * 2);
-  ctx.fillStyle = aboveBase ? "#ef4444" : "#22c55e";
+  ctx.fillStyle = aboveLastBase ? "#ef4444" : "#22c55e";
   ctx.fill();
   ctx.strokeStyle = "#ffffff";
   ctx.lineWidth = 1.5;
@@ -472,8 +495,10 @@ function renderTick() {
     tabsEl.innerHTML = "";
     Object.entries(STOCKS).forEach(([code, st]) => {
       const s = getEpochSeries(code, currentTick);
+      const dynBases = getDynamicBaseSeries(s, st.base, 20);
       const cur = s[s.length - 1].price;
-      const pct = ((cur - st.base) / st.base) * 100;
+      const curBase = dynBases[dynBases.length - 1];
+      const pct = ((cur - curBase) / curBase) * 100;
       const isUp = pct >= 0;
       const active = code === selectedStock;
 
@@ -493,10 +518,12 @@ function renderTick() {
     });
 
     const activeSeries = getEpochSeries(selectedStock, currentTick);
+    const activeBases = getDynamicBaseSeries(activeSeries, STOCKS[selectedStock].base, 20);
     const stInfo = STOCKS[selectedStock];
     const latestPrice = activeSeries[activeSeries.length - 1].price;
-    const diff = latestPrice - stInfo.base;
-    const diffPct = (diff / stInfo.base) * 100;
+    const latestBase = activeBases[activeBases.length - 1];
+    const diff = latestPrice - latestBase;
+    const diffPct = (diff / latestBase) * 100;
     const isUp = diff >= 0;
 
     document.getElementById("chart-stock-title").textContent = selectedStock + " " + stInfo.name;
