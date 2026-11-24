@@ -62,6 +62,17 @@
         border-color: #58a6ff;
     }
 
+    .sync-badge {
+        font-size: 11px;
+        background: rgba(31, 111, 235, 0.2);
+        border: 1px solid rgba(88, 166, 255, 0.4);
+        color: #58a6ff;
+        padding: 2px 8px;
+        border-radius: 6px;
+        margin-left: 8px;
+        vertical-align: middle;
+    }
+
     .price-display {
         font-family: 'JetBrains Mono', monospace;
         font-size: 28px;
@@ -277,11 +288,6 @@
     .lb-table tr:hover {
         background: rgba(255, 255, 255, 0.03);
     }
-
-    .rank-badge {
-        font-weight: 900;
-        font-size: 14px;
-    }
 </style>
 </head>
 <body>
@@ -293,6 +299,7 @@
         <div>
             <span id="stock-header" style="font-size: 20px; font-weight: 900;">0050 元大台灣50</span>
             <span id="stock-desc" style="font-size: 12px; color: #8b949e; margin-left: 8px;">穩健大盤指數</span>
+            <span class="sync-badge">🌐 全球即時同步盤</span>
         </div>
         <div>
             <span id="price-val" class="price-display up">195.00</span>
@@ -301,7 +308,7 @@
     </div>
 
     <div class="news-ticker">
-        <span id="news-text">📢 市場開盤平穩，AI 演算法正在掃描盤勢...</span>
+        <span id="news-text">📢 全球市場連線同步中...</span>
         <span id="insider-hint" style="color: #58a6ff; font-weight: bold;"></span>
     </div>
 
@@ -315,7 +322,7 @@
     </div>
 
     <div class="ai-log-box" id="ai-log">
-        <div>> [系統就緒] 可手動操盤，或點擊「🤖 電腦 AI 代操 30 秒」讓演算法自動幫你低買高賣。</div>
+        <div>> [全球同步盤就緒] 所有玩家的股價走勢、K線與突發新聞已透過世界標準時間完全同步！</div>
     </div>
 
     <div class="dashboard">
@@ -400,12 +407,42 @@
     const ctx = canvas.getContext('2d');
 
     const stocks = {
-        "0050": { code: "0050", name: "元大台灣50", desc: "穩健大盤指數 (低波動)", price: 195.00, vol: 1.1, history: Array(60).fill(195.00) },
-        "2330": { code: "2330", name: "台積電", desc: "護國神山權值王 (中波動)", price: 1050.00, vol: 1.7, history: Array(60).fill(1050.00) },
-        "2454": { code: "2454", name: "聯發科", desc: "AI 晶片旗艦 (中高波動)", price: 1320.00, vol: 2.3, history: Array(60).fill(1320.00) },
-        "2317": { code: "2317", name: "鴻海", desc: "AI 伺服器代工龍頭 (中波動)", price: 215.00, vol: 1.9, history: Array(60).fill(215.00) },
-        "3481": { code: "3481", name: "群創", desc: "面板主力飆股 (極高波動)", price: 16.50, vol: 3.4, history: Array(60).fill(16.50) }
+        "0050": { code: "0050", seed: 101, name: "元大台灣50", desc: "穩健大盤指數 (低波動)", base: 195.00, price: 195.00, vol: 1.1, history: [] },
+        "2330": { code: "2330", seed: 202, name: "台積電", desc: "護國神山權值王 (中波動)", base: 1050.00, price: 1050.00, vol: 1.7, history: [] },
+        "2454": { code: "2454", seed: 303, name: "聯發科", desc: "AI 晶片旗艦 (中高波動)", base: 1320.00, price: 1320.00, vol: 2.3, history: [] },
+        "2317": { code: "2317", seed: 404, name: "鴻海", desc: "AI 伺服器代工龍頭 (中波動)", base: 215.00, price: 215.00, vol: 1.9, history: [] },
+        "3481": { code: "3481", seed: 505, name: "群創", desc: "面板主力飆股 (極高波動)", base: 16.50, price: 16.50, vol: 3.4, history: [] }
     };
+
+    const newsEvents = [
+        { text: "🔥 利多：AI 伺服器與晶片訂單爆滿，外資大舉買超！", bias: 0.55 },
+        { text: "🚀 利多：法人調升目標價，主力大單連續敲進！", bias: 0.65 },
+        { text: "❄️ 利空：美股科技股重挫，外資提款賣超！", bias: -0.55 },
+        { text: "💥 利空：供應鏈傳砍單雜音，停損賣壓湧現！", bias: -0.65 },
+        { text: "⚖️ 盤整：市場觀望總經數據，多空狹幅震盪。", bias: 0.0 }
+    ];
+
+    function syncRand(tick, salt) {
+        let x = Math.sin(tick * 12.9898 + salt * 78.233) * 43758.5453;
+        return x - Math.floor(x);
+    }
+
+    function getGlobalMarketState(tick) {
+        const block = Math.floor(tick / 10);
+        return newsEvents[Math.floor(syncRand(block, 999) * newsEvents.length)];
+    }
+
+    function computePriceAtTick(st, tick) {
+        const epochStart = Math.floor(tick / 360) * 360;
+        let p = st.base;
+        for (let t = epochStart; t <= tick; t++) {
+            const ev = getGlobalMarketState(t);
+            const r = syncRand(t, st.seed);
+            const move = ((r - 0.5 + ev.bias * 0.35) * st.vol) / 100;
+            p = Math.max(2, p * (1 + move));
+        }
+        return p;
+    }
 
     const INITIAL_CAPITAL = 10000;
     let currentStockKey = "0050";
@@ -417,22 +454,14 @@
     let investedCash = 0;
     let shieldActive = false;
 
-    let trendBias = 0;
-    let trendTicks = 0;
     let items = [];
-
     let aiActive = false;
     let aiSecondsLeft = 0;
     let aiCountdownInterval = null;
     let aiStartEquity = 0;
 
-    const newsEvents = [
-        { text: "🔥 利多：AI 伺服器與晶片訂單爆滿，外資大舉買超！", bias: 0.55, ticks: 8 },
-        { text: "🚀 利多：法人調升目標價，主力大單連續敲進！", bias: 0.65, ticks: 6 },
-        { text: "❄️ 利空：美股科技股重挫，外資提款賣超！", bias: -0.55, ticks: 8 },
-        { text: "💥 利空：供應鏈傳砍單雜音，停損賣壓湧現！", bias: -0.65, ticks: 6 },
-        { text: "⚖️ 盤整：市場觀望總經數據，多空狹幅震盪。", bias: 0.0, ticks: 7 }
-    ];
+    let lastProcessedTick = -1;
+    let vipDrift = 0;
 
     const savedName = localStorage.getItem('stock_game_player_name');
     if (savedName) {
@@ -440,8 +469,7 @@
     }
 
     function isVipPlayer() {
-        const val = document.getElementById('player-name').value.trim();
-        return val === '7676';
+        return document.getElementById('player-name').value.trim() === '7676';
     }
 
     function getTotalNetWorth() {
@@ -472,6 +500,7 @@
             return;
         }
         currentStockKey = key;
+        vipDrift = 0;
         const s = stocks[key];
         document.getElementById('stock-header').innerText = `${s.code} ${s.name}`;
         document.getElementById('stock-desc').innerText = s.desc;
@@ -495,13 +524,12 @@
             if (!isByAI) alert("本金不足！系統發放 $3,000 救濟金！");
             cash = 3000;
         }
-        const s = stocks[currentStockKey];
         position = type;
-        entryPrice = s.price;
+        entryPrice = stocks[currentStockKey].price;
         investedCash = cash;
         cash = 0;
 
-        updateButtonStates();
+        syncActionButtons();
         updateUI();
     }
 
@@ -514,29 +542,20 @@
         investedCash = 0;
         shieldActive = false;
 
-        updateButtonStates();
+        syncActionButtons();
         updateUI();
     }
 
-    function updateButtonStates() {
+    function syncActionButtons() {
         document.getElementById('btn-long').disabled = !!position || aiActive;
         document.getElementById('btn-short').disabled = !!position || aiActive;
         document.getElementById('btn-close').disabled = !position || aiActive;
         document.getElementById('btn-ai').disabled = aiActive;
     }
 
-    function calcPnL() {
-        if (!position) return 0;
-        const s = stocks[currentStockKey];
-        const pctChange = (s.price - entryPrice) / entryPrice;
-        const direction = position === 'LONG' ? 1 : -1;
-        return investedCash * pctChange * leverage * direction;
-    }
-
     function startAI() {
-        if (aiActive) return;
-        if (position) {
-            alert("請先平倉現有部位，再交給電腦 AI 從空手開始全權操作！");
+        if (aiActive || position) {
+            alert("請先平倉目前部位再啟動 AI 代操！");
             return;
         }
         if (cash < 100) cash = 3000;
@@ -547,8 +566,9 @@
 
         document.getElementById('ai-banner').style.display = 'flex';
         document.getElementById('ai-timer').innerText = aiSecondsLeft;
-        updateButtonStates();
-        logAI(`[AI 啟動] 接管帳戶！初始資金 $${aiStartEquity.toLocaleString()}，開始掃描 ${stocks[currentStockKey].name} 盤勢...`);
+        syncActionButtons();
+
+        logAI(`[AI 啟動] 量化演算法接管帳戶！初始資金 $${aiStartEquity.toLocaleString()}`);
 
         aiCountdownInterval = setInterval(() => {
             aiSecondsLeft--;
@@ -559,83 +579,91 @@
         }, 1000);
     }
 
-    function stopAI(manualStop) {
+    function stopAI(manual) {
         if (!aiActive) return;
         clearInterval(aiCountdownInterval);
-        if (position) {
-            closePosition();
-        }
+        if (position) closePosition();
+
         aiActive = false;
         document.getElementById('ai-banner').style.display = 'none';
-        updateButtonStates();
+        syncActionButtons();
 
-        const diff = cash - aiStartEquity;
-        const sign = diff >= 0 ? '+' : '';
-        logAI(`[AI 結束] ${manualStop ? '已手動中止' : '30 秒代操完成'}！結算總資金 $${cash.toLocaleString()} (${sign}$${diff.toLocaleString()})`);
+        const profit = cash - aiStartEquity;
+        const sign = profit >= 0 ? "+" : "";
+        logAI(`[AI 結束] ${manual ? "手動中止" : "30秒期滿"}！結算資金 $${cash.toLocaleString()} (${sign}$${profit.toLocaleString()})`);
     }
 
-    function runAIDecision() {
+    function runAIStrategy(globalBias) {
         const s = stocks[currentStockKey];
-        const hist = s.history;
-        const len = hist.length;
-        const recentAvg = (hist[len-1] + hist[len-2] + hist[len-3]) / 3;
-        const pastAvg = (hist[len-4] + hist[len-5] + hist[len-6]) / 3;
-        const momentum = (recentAvg - pastAvg) / pastAvg;
+        const h = s.history;
+        const n = h.length;
+        if (n < 6) return;
+
+        const shortMA = (h[n-1] + h[n-2] + h[n-3]) / 3;
+        const longMA = (h[n-4] + h[n-5] + h[n-6]) / 3;
+        const momentum = (shortMA - longMA) / longMA;
         const vip = isVipPlayer();
-        const signalScore = vip ? (momentum * 140 + trendBias * 1.3) : (momentum * 100 + trendBias * 0.8);
+        const signal = vip ? (momentum * 140 + globalBias * 1.3) : (momentum * 100 + globalBias * 0.8);
 
         if (!position) {
             const entryThreshold = vip ? 0.15 : 0.25;
-            if (signalScore > entryThreshold) {
-                leverage = vip ? (signalScore > 0.35 ? 20 : 5) : (signalScore > 0.6 ? 5 : 1);
-                document.querySelectorAll('.lev-btn').forEach(b => b.classList.toggle('active', b.innerText.startsWith(leverage + 'x')));
+            if (signal > entryThreshold) {
+                leverage = vip ? (signal > 0.35 ? 20 : 5) : (signal > 0.6 ? 5 : 1);
+                updateLevButtonsUI();
                 openPosition('LONG', true);
-                logAI(`[AI 進場] 均線向上突破 (信號 +${signalScore.toFixed(2)})，開啟 ${leverage}x 做多 @ ${s.price.toFixed(2)}`);
-            } else if (signalScore < -entryThreshold) {
-                leverage = vip ? (signalScore < -0.35 ? 20 : 5) : (signalScore < -0.6 ? 5 : 1);
-                document.querySelectorAll('.lev-btn').forEach(b => b.classList.toggle('active', b.innerText.startsWith(leverage + 'x')));
+                logAI(`[AI 進場做多] ${s.code} ${leverage}x @ ${s.price.toFixed(2)}`);
+            } else if (signal < -entryThreshold) {
+                leverage = vip ? (signal < -0.35 ? 20 : 5) : (signal < -0.6 ? 5 : 1);
+                updateLevButtonsUI();
                 openPosition('SHORT', true);
-                logAI(`[AI 進場] 偵測空頭下殺 (信號 ${signalScore.toFixed(2)})，開啟 ${leverage}x 放空 @ ${s.price.toFixed(2)}`);
+                logAI(`[AI 進場放空] ${s.code} ${leverage}x @ ${s.price.toFixed(2)}`);
             }
         } else {
             const pnl = calcPnL();
             const roi = pnl / investedCash;
-            const tpTarget = vip ? 0.14 : 0.08;
-            const slTarget = vip ? -0.025 : -0.06;
+            const takeProfit = vip ? 0.14 : 0.08;
+            const stopLoss = vip ? -0.025 : -0.06;
 
-            if (roi >= tpTarget) {
+            if (roi >= takeProfit) {
                 closePosition();
-                logAI(`[AI 停利] 達標獲利 +$${Math.round(pnl).toLocaleString()} (+${(roi*100).toFixed(1)}%)，落袋為安！`);
-                return;
-            }
-            if (roi <= slTarget) {
+                logAI(`[AI 停利出場] 獲利 +$${Math.round(pnl).toLocaleString()} (+${(roi*100).toFixed(1)}%)`);
+            } else if (roi <= stopLoss) {
                 closePosition();
-                logAI(`[AI 停損] 觸及風控線 -$${Math.abs(Math.round(pnl)).toLocaleString()}，果斷砍倉保本！`);
-                return;
-            }
-            if (position === 'LONG' && signalScore < -0.2) {
+                logAI(`[AI 停損風控] 虧損 -$${Math.abs(Math.round(pnl)).toLocaleString()} (${(roi*100).toFixed(1)}%)`);
+            } else if ((position === 'LONG' && signal < -0.2) || (position === 'SHORT' && signal > 0.2)) {
                 closePosition();
-                logAI(`[AI 轉向] 多頭動能轉弱，平倉結算 ($${pnl >= 0 ? '+' : ''}${Math.round(pnl)})`);
-            } else if (position === 'SHORT' && signalScore > 0.2) {
-                closePosition();
-                logAI(`[AI 轉向] 空頭回補拉升，平倉結算 ($${pnl >= 0 ? '+' : ''}${Math.round(pnl)})`);
+                logAI(`[AI 趨勢反轉平倉] 結算 $${Math.round(pnl).toLocaleString()}`);
             }
         }
     }
 
+    function updateLevButtonsUI() {
+        document.querySelectorAll('.lev-btn').forEach(b => {
+            b.classList.toggle('active', b.innerText.startsWith(leverage + 'x'));
+        });
+    }
+
+    function calcPnL() {
+        if (!position) return 0;
+        const currPrice = stocks[currentStockKey].price;
+        const pctChange = (currPrice - entryPrice) / entryPrice;
+        const direction = position === 'LONG' ? 1 : -1;
+        return investedCash * pctChange * leverage * direction;
+    }
+
     function drawBox() {
         if (cash < 2000) {
-            alert("可用現金不足 $2,000（持倉中請先平倉）！");
+            alert("可用現金不足 $2,000，無法開啟盲盒！");
             return;
         }
         cash -= 2000;
         const r = isVipPlayer() ? (Math.random() * 0.55 + 0.45) : Math.random();
         if (r < 0.35) {
-            items.push({ id: Date.now(), name: "🔮 內線消息卡", type: "INSIDER" });
-            alert("抽中【🔮 內線消息卡】！使用後可直接製造並預知下一波大行情！");
+            items.push({ name: "🔮 內線消息卡", type: "INSIDER" });
+            alert("抽中【🔮 內線消息卡】！可預知下一波全球大盤新聞。");
         } else if (r < 0.70) {
-            items.push({ id: Date.now(), name: "🛡️ 防爆倉護身符", type: "SHIELD" });
-            alert("抽中【🛡️ 防爆倉護身符】！下次強制平倉時可保住 80% 本金！");
+            items.push({ name: "🛡️ 防爆倉護身符", type: "SHIELD" });
+            alert("抽中【🛡️ 防爆倉護身符】！爆倉時可保住 80% 本金。");
         } else {
             cash += 5000;
             alert("🎉 頭獎！抽中【💰 大戶空投支票】，現金直接 +$5,000！");
@@ -644,64 +672,55 @@
         updateUI();
     }
 
-    function useItem(index) {
-        const item = items[index];
-        items.splice(index, 1);
+    function useItem(idx) {
+        const item = items.splice(idx, 1)[0];
         if (item.type === "INSIDER") {
-            const bull = Math.random() > 0.5;
-            trendBias = bull ? 0.85 : -0.85;
-            trendTicks = 8;
-            document.getElementById('insider-hint').innerText = bull ? "🤫 內線：主力即將暴力拉抬！" : "🤫 內線：大戶準備倒貨下殺！";
-            setTimeout(() => { document.getElementById('insider-hint').innerText = ""; }, 6500);
+            const nextEv = getGlobalMarketState(lastProcessedTick + 10);
+            document.getElementById('insider-hint').innerText = `🤫 內線預知下一波：${nextEv.text.slice(0, 14)}...`;
+            setTimeout(() => document.getElementById('insider-hint').innerText = "", 7500);
         } else if (item.type === "SHIELD") {
             shieldActive = true;
-            alert("🛡️ 防爆倉護身符已啟動！");
+            alert("🛡️ 防爆倉護身符已啟動！下一次面臨爆倉時將自動護盤。");
         }
         renderItems();
     }
 
     function renderItems() {
-        const box = document.getElementById('items-list');
+        const list = document.getElementById('items-list');
         if (items.length === 0) {
-            box.innerHTML = `<span style="font-size: 12px; color: #6e7681;">(尚無道具)</span>`;
+            list.innerHTML = `<span style="font-size: 12px; color: #6e7681;">(尚無道具)</span>`;
             return;
         }
-        box.innerHTML = items.map((it, idx) =>
-            `<span class="item-tag" onclick="useItem(${idx})">${it.name}</span>`
+        list.innerHTML = items.map((it, i) =>
+            `<span class="item-tag" onclick="useItem(${i})">${it.name}</span>`
         ).join('');
     }
 
     function updateUI() {
         const s = stocks[currentStockKey];
-        const prev = s.history[s.history.length - 2];
-        const diffPct = ((s.price - prev) / prev) * 100;
+        const prev = s.history[s.history.length - 2] || s.price;
+        const pct = ((s.price - prev) / prev) * 100;
+
         const priceEl = document.getElementById('price-val');
         const pctEl = document.getElementById('pct-val');
-
         priceEl.innerText = s.price.toFixed(2);
-        pctEl.innerText = `(${diffPct >= 0 ? '+' : ''}${diffPct.toFixed(2)}%)`;
-
-        if (diffPct >= 0) {
-            priceEl.className = "price-display up";
-            pctEl.className = "up";
-        } else {
-            priceEl.className = "price-display down";
-            pctEl.className = "down";
-        }
+        pctEl.innerText = `(${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%)`;
+        priceEl.className = `price-display ${pct >= 0 ? 'up' : 'down'}`;
+        pctEl.className = pct >= 0 ? 'up' : 'down';
 
         document.getElementById('cash-val').innerText = `$${cash.toLocaleString()}`;
         document.getElementById('networth-preview').innerText = `目前總淨值：$${getTotalNetWorth().toLocaleString()}`;
 
         if (position) {
-            const dirText = (aiActive ? "🤖 " : "") + (position === 'LONG' ? `做多 ${leverage}x` : `放空 ${leverage}x`);
-            document.getElementById('pos-val').innerText = dirText + (shieldActive ? " 🛡️" : "");
-            document.getElementById('pos-val').style.color = position === 'LONG' ? "#ff4d4f" : "#00e676";
+            const prefix = aiActive ? "🤖 " : "";
+            document.getElementById('pos-val').innerText = `${prefix}${position === 'LONG' ? '做多' : '放空'} ${leverage}x ${shieldActive ? '🛡️' : ''}`;
+            document.getElementById('pos-val').style.color = position === 'LONG' ? '#ff4d4f' : '#00e676';
             document.getElementById('entry-val').innerText = entryPrice.toFixed(2);
 
             const pnl = Math.round(calcPnL());
             const pnlEl = document.getElementById('pnl-val');
             pnlEl.innerText = `${pnl >= 0 ? '+' : ''}$${pnl.toLocaleString()}`;
-            pnlEl.style.color = pnl >= 0 ? "#ff4d4f" : "#00e676";
+            pnlEl.style.color = pnl >= 0 ? '#ff4d4f' : '#00e676';
 
             if (investedCash + pnl <= 0) {
                 if (isVipPlayer()) {
@@ -710,14 +729,13 @@
                     cash = Math.round(investedCash * 0.8);
                     position = null;
                     shieldActive = false;
-                    updateButtonStates();
-                    alert("🛡️ 觸發爆倉線！護身符幫你保住了 80% 本金！");
+                    syncActionButtons();
+                    alert("🛡️ 防爆倉護身符發動！已為您保留 80% 本金！");
                 } else {
                     position = null;
                     investedCash = 0;
-                    updateButtonStates();
-                    if (!aiActive) alert("💥 慘遭斷頭爆倉！本金全數歸零！");
-                    else logAI("[AI 警告] 遭遇極端行情爆倉！");
+                    syncActionButtons();
+                    if (!aiActive) alert("💥 槓桿倍數過高，慘遭斷頭爆倉！");
                 }
             }
         } else {
@@ -730,119 +748,102 @@
     }
 
     function drawChart() {
-        const s = stocks[currentStockKey];
-        const hist = s.history;
+        const h = stocks[currentStockKey].history;
         const w = canvas.width;
-        const h = canvas.height;
-        ctx.clearRect(0, 0, w, h);
+        const ch = canvas.height;
+        if (h.length < 2) return;
+        ctx.clearRect(0, 0, w, ch);
+
+        const minP = Math.min(...h) * 0.996;
+        const maxP = Math.max(...h) * 1.004;
+        const range = maxP - minP || 1;
 
         ctx.strokeStyle = "#161b22";
         ctx.lineWidth = 1;
-        for (let i = 1; i < 5; i++) {
-            let y = (h / 5) * i;
-            ctx.beginPath();
-            ctx.moveTo(0, y);
-            ctx.lineTo(w, y);
-            ctx.stroke();
+        for (let i = 1; i < 4; i++) {
+            const y = (ch / 4) * i;
+            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
         }
 
-        const minP = Math.min(...hist) * 0.996;
-        const maxP = Math.max(...hist) * 1.004;
-        const range = maxP - minP || 1;
-
-        const isRising = hist[hist.length - 1] >= hist[hist.length - 2];
-        const lineColor = isRising ? "#ff4d4f" : "#00e676";
+        const isUp = h[h.length - 1] >= h[h.length - 2];
+        const lineColor = isUp ? "#ff4d4f" : "#00e676";
 
         ctx.beginPath();
         ctx.strokeStyle = lineColor;
         ctx.lineWidth = 3;
-        ctx.shadowColor = lineColor;
-        ctx.shadowBlur = 8;
-
-        hist.forEach((val, idx) => {
-            const x = (idx / (hist.length - 1)) * w;
-            const y = h - ((val - minP) / range) * (h - 30) - 15;
+        h.forEach((val, idx) => {
+            const x = (idx / (h.length - 1)) * w;
+            const y = ch - ((val - minP) / range) * (ch - 30) - 15;
             if (idx === 0) ctx.moveTo(x, y);
             else ctx.lineTo(x, y);
         });
         ctx.stroke();
-        ctx.shadowBlur = 0;
 
-        if (position && entryPrice >= minP && entryPrice <= maxP) {
-            const entryY = h - ((entryPrice - minP) / range) * (h - 30) - 15;
-            ctx.setLineDash([6, 6]);
-            ctx.strokeStyle = "#ffd700";
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            ctx.moveTo(0, entryY);
-            ctx.lineTo(w, entryY);
-            ctx.stroke();
-            ctx.setLineDash([]);
-            ctx.fillStyle = "#ffd700";
-            ctx.font = "12px JetBrains Mono";
-            ctx.fillText(`進場線 ${entryPrice.toFixed(2)}`, 10, entryY - 5);
-        }
+        ctx.lineTo(w, ch);
+        ctx.lineTo(0, ch);
+        ctx.closePath();
+        const grad = ctx.createLinearGradient(0, 0, 0, ch);
+        grad.addColorStop(0, isUp ? "rgba(255, 77, 79, 0.28)" : "rgba(0, 230, 118, 0.28)");
+        grad.addColorStop(1, "rgba(13, 17, 23, 0)");
+        ctx.fillStyle = grad;
+        ctx.fill();
     }
 
     async function loadLeaderboard() {
         const tbody = document.getElementById('lb-body');
         try {
             const res = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard?select=*&order=net_worth.desc&limit=10`, {
-                headers: {
-                    'apikey': SUPABASE_KEY
-                }
+                headers: { 'apikey': SUPABASE_KEY }
             });
-            if (!res.ok) {
-                const errText = await res.text();
-                throw new Error(`HTTP ${res.status}: ${errText}`);
-            }
+            if (!res.ok) throw new Error('讀取排行榜失敗');
             const data = await res.json();
 
-            if (data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #8b949e; padding: 16px;">目前還沒有人上榜，快輸入暱稱搶下全球第一名！</td></tr>`;
+            if (!data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #8b949e; padding: 16px;">目前尚無玩家上榜，快成為第一位股神！</td></tr>`;
                 return;
             }
 
-            tbody.innerHTML = data.map((row, index) => {
-                const rankIcons = ['🥇 1', '🥈 2', '🥉 3'];
-                const rankText = index < 3 ? rankIcons[index] : `#${index + 1}`;
+            tbody.innerHTML = data.map((row, idx) => {
+                let rankDisplay = `#${idx + 1}`;
+                if (idx === 0) rankDisplay = `🥇 1`;
+                else if (idx === 1) rankDisplay = `🥈 2`;
+                else if (idx === 2) rankDisplay = `🥉 3`;
+
                 const roi = Number(row.return_rate);
                 const roiColor = roi >= 0 ? '#ff4d4f' : '#00e676';
                 const roiSign = roi >= 0 ? '+' : '';
-                const safeName = escapeHtml(row.player_name);
                 const dateObj = new Date(row.created_at);
                 const timeStr = `${dateObj.getMonth()+1}/${dateObj.getDate()} ${String(dateObj.getHours()).padStart(2,'0')}:${String(dateObj.getMinutes()).padStart(2,'0')}`;
 
                 return `
                     <tr>
-                        <td class="rank-badge">${rankText}</td>
-                        <td style="font-weight: bold; color: #e6edf3;">${safeName}</td>
+                        <td><strong>${rankDisplay}</strong></td>
+                        <td style="font-family: 'Noto Sans TC', sans-serif; font-weight: bold;">${escapeHtml(row.player_name)}</td>
                         <td style="text-align: right; color: #ffd700; font-weight: bold;">$${Number(row.net_worth).toLocaleString()}</td>
-                        <td style="text-align: right; color: ${roiColor}; font-weight: bold;">${roiSign}${roi.toFixed(1)}%</td>
+                        <td style="text-align: right; color: ${roiColor};">${roiSign}${roi.toFixed(1)}%</td>
                         <td style="text-align: right; color: #8b949e; font-size: 12px;">${timeStr}</td>
                     </tr>
                 `;
             }).join('');
         } catch (err) {
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #ff4d4f; padding: 14px;">⚠️ 連線異常：${escapeHtml(err.message)}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #ff4d4f; padding: 16px;">⚠️ 連線失敗：${err.message}</td></tr>`;
         }
     }
 
     async function submitScore() {
         const nameInput = document.getElementById('player-name');
-        const btn = document.getElementById('btn-submit-score');
         const playerName = nameInput.value.trim();
-
         if (!playerName) {
-            alert("請先輸入你的操盤手暱稱再上傳戰績！");
+            alert("請先輸入您的操盤手暱稱再上傳戰績！");
             nameInput.focus();
             return;
         }
 
         localStorage.setItem('stock_game_player_name', playerName);
-        const netWorth = getTotalNetWorth();
-        const returnRate = Number((((netWorth - INITIAL_CAPITAL) / INITIAL_CAPITAL) * 100).toFixed(2));
+        const currentNetWorth = getTotalNetWorth();
+        const returnRate = Number((((currentNetWorth - INITIAL_CAPITAL) / INITIAL_CAPITAL) * 100).toFixed(2));
 
+        const btn = document.getElementById('btn-submit-score');
         btn.disabled = true;
         btn.innerText = "上傳中...";
 
@@ -856,19 +857,16 @@
                 },
                 body: JSON.stringify({
                     player_name: playerName,
-                    net_worth: netWorth,
+                    net_worth: currentNetWorth,
                     return_rate: returnRate
                 })
             });
 
-            if (!res.ok) {
-                const errText = await res.text();
-                throw new Error(`HTTP ${res.status}: ${errText}`);
-            }
-            logAI(`[全球排行] ${playerName} 成功上傳戰績：總淨值 $${netWorth.toLocaleString()} (${returnRate >= 0 ? '+' : ''}${returnRate}%)`);
+            if (!res.ok) throw new Error('寫入資料庫失敗');
+            logAI(`[全球排行] ${playerName} 成功上傳戰績：$${currentNetWorth.toLocaleString()} (${returnRate >= 0 ? '+' : ''}${returnRate}%)`);
             await loadLeaderboard();
         } catch (err) {
-            alert("上傳失敗：" + err.message);
+            alert("上傳失敗，請稍後再試：" + err.message);
         } finally {
             btn.disabled = false;
             btn.innerText = "🚀 上傳戰績";
@@ -876,47 +874,48 @@
     }
 
     function escapeHtml(str) {
-        return str.replace(/[&<>"']/g, m => ({
-            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-        })[m]);
+        return String(str).replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
     }
 
-    setInterval(() => {
-        if (trendTicks > 0) {
-            trendTicks--;
-            if (trendTicks === 0) trendBias = 0;
-        } else if (Math.random() < 0.14) {
-            const ev = newsEvents[Math.floor(Math.random() * newsEvents.length)];
-            trendBias = ev.bias;
-            trendTicks = ev.ticks;
-            document.getElementById('news-text').innerText = ev.text;
-        }
+    function syncTickLoop() {
+        const currentTick = Math.floor(Date.now() / 800);
+        if (currentTick === lastProcessedTick) return;
+        lastProcessedTick = currentTick;
+
+        const ev = getGlobalMarketState(currentTick);
+        document.getElementById('news-text').innerText = ev.text;
 
         const vip = isVipPlayer();
         Object.keys(stocks).forEach(k => {
             const st = stocks[k];
-            let biasFactor = (k === currentStockKey) ? trendBias : trendBias * 0.5;
-            if (vip && k === currentStockKey && position) {
-                biasFactor += (position === 'LONG' ? 0.42 : -0.42);
+            if (st.history.length === 0) {
+                for (let i = 59; i >= 0; i--) {
+                    st.history.push(computePriceAtTick(st, currentTick - i));
+                }
+            } else {
+                st.history.push(computePriceAtTick(st, currentTick));
+                if (st.history.length > 60) st.history.shift();
             }
-            const pctMove = (Math.random() - 0.5 + biasFactor * 0.38) * st.vol;
-            st.price = Math.max(2, st.price * (1 + pctMove / 100));
-            st.history.push(st.price);
-            if (st.history.length > 60) st.history.shift();
+
+            let syncedPrice = st.history[st.history.length - 1];
+            if (vip && k === currentStockKey && position) {
+                vipDrift += (position === 'LONG' ? 0.0022 : -0.0022);
+                syncedPrice = Math.max(2, syncedPrice * (1 + vipDrift));
+                st.history[st.history.length - 1] = syncedPrice;
+            }
+            st.price = syncedPrice;
         });
 
-        if (aiActive) {
-            runAIDecision();
-        }
-
+        if (aiActive) runAIStrategy(ev.bias);
         drawChart();
         updateUI();
-    }, 800);
+    }
 
     renderStockTabs();
-    drawChart();
-    updateUI();
+    syncTickLoop();
     loadLeaderboard();
+    setInterval(syncTickLoop, 200);
 </script>
+
 </body>
 </html>
