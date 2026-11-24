@@ -69,7 +69,7 @@
             <div>
               <div class="flex items-center gap-2">
                 <span id="chart-stock-title" class="text-xl font-bold text-white">2330 台積電</span>
-                <span id="chart-epoch-timer" class="text-xs text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded">週期倒數 --s</span>
+                <span class="text-xs text-emerald-400 bg-emerald-950/60 border border-emerald-700/40 px-2 py-0.5 rounded">連續走勢</span>
               </div>
               <div class="flex items-baseline gap-3 mt-1">
                 <span id="chart-current-price" class="text-3xl font-extrabold tracking-tight text-white">1050.00</span>
@@ -151,32 +151,67 @@
 
       <div class="lg:col-span-4 space-y-4">
         <div class="card p-4 border-indigo-500/40 relative overflow-hidden">
-          <div class="flex items-center justify-between mb-3">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
             <div class="flex items-center gap-2">
               <span class="text-base font-bold text-white">🤖 AI 量化即時看板</span>
-              <span class="ai-badge">AI BOT</span>
+              <span class="ai-badge">DUAL AI</span>
             </div>
-            <span id="ai-online-dot" class="flex items-center gap-1.5 text-xs text-slate-400">
-              <span class="w-2 h-2 rounded-full bg-slate-500"></span>離線
-            </span>
+            <div class="flex items-center gap-1">
+              <button type="button" id="ai-tab-both" onclick="setAiView('both')" class="text-[11px] px-2 py-0.5 rounded bg-indigo-600 text-white font-bold">全部</button>
+              <button type="button" id="ai-tab-1" onclick="setAiView('1')" class="text-[11px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-bold">ai</button>
+              <button type="button" id="ai-tab-2" onclick="setAiView('2')" class="text-[11px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-bold">cf_alpha</button>
+            </div>
           </div>
 
-          <div class="bg-slate-950/70 rounded-xl p-3 border border-slate-800/90 space-y-2 text-xs">
-            <div class="flex justify-between items-center">
-              <span class="text-slate-400">目前操作標的</span>
-              <span id="ai-stock" class="font-bold text-white text-sm">空手觀望中</span>
+          <div class="space-y-2.5">
+            <div id="ai-slot-1" class="bg-slate-950/70 rounded-xl p-3 border border-slate-800/90 space-y-1.5 text-xs">
+              <div class="flex justify-between items-center">
+                <span class="font-bold text-indigo-300">ai (#1)</span>
+                <span id="ai-online-1" class="flex items-center gap-1.5 text-slate-400">
+                  <span class="w-2 h-2 rounded-full bg-slate-500"></span>離線
+                </span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-slate-400">目前操作標的</span>
+                <span id="ai-stock-1" class="font-bold text-white text-sm">空手觀望中</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-slate-400">方向 / 槓桿</span>
+                <span id="ai-dir-lev-1" class="font-bold text-slate-300">-</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-slate-400">開倉均價 / 保證金</span>
+                <span id="ai-entry-margin-1" class="font-mono text-slate-300">-</span>
+              </div>
+              <div class="border-t border-slate-800 pt-1.5 flex justify-between items-center">
+                <span class="text-slate-400">AI 即時淨值</span>
+                <span id="ai-live-nw-1" class="text-sm font-extrabold text-amber-400">$10,000</span>
+              </div>
             </div>
-            <div class="flex justify-between items-center">
-              <span class="text-slate-400">方向 / 槓桿</span>
-              <span id="ai-dir-lev" class="font-bold text-slate-300">-</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-slate-400">開倉均價 / 保證金</span>
-              <span id="ai-entry-margin" class="font-mono text-slate-300">-</span>
-            </div>
-            <div class="border-t border-slate-800 pt-2 flex justify-between items-center">
-              <span class="text-slate-400">AI 即時淨值</span>
-              <span id="ai-live-nw" class="text-base font-extrabold text-amber-400">$10,000</span>
+
+            <div id="ai-slot-2" class="bg-slate-950/70 rounded-xl p-3 border border-slate-800/90 space-y-1.5 text-xs">
+              <div class="flex justify-between items-center">
+                <span class="font-bold text-sky-300">cf_alpha (#2)</span>
+                <span id="ai-online-2" class="flex items-center gap-1.5 text-slate-400">
+                  <span class="w-2 h-2 rounded-full bg-slate-500"></span>離線
+                </span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-slate-400">目前操作標的</span>
+                <span id="ai-stock-2" class="font-bold text-white text-sm">cf_alpha 待機中</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-slate-400">方向 / 槓桿</span>
+                <span id="ai-dir-lev-2" class="font-bold text-slate-300">-</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-slate-400">開倉均價 / 保證金</span>
+                <span id="ai-entry-margin-2" class="font-mono text-slate-300">-</span>
+              </div>
+              <div class="border-t border-slate-800 pt-1.5 flex justify-between items-center">
+                <span class="text-slate-400">AI 即時淨值</span>
+                <span id="ai-live-nw-2" class="text-sm font-extrabold text-amber-400">$10,000</span>
+              </div>
             </div>
           </div>
         </div>
@@ -206,6 +241,10 @@ const STOCKS = {
   "3481": { seed: 505, name: "群創", base: 16.5, vol: 3.4 },
 };
 const NEWS_BIAS = [0.55, 0.65, -0.55, -0.65, 0.0];
+
+// 連續走勢起點與快取（不再每 360 tick 跳回基準價）
+const ANCHOR_TICK = Math.floor(Date.now() / 800) - 200;
+const priceCache = new Map();
 
 function safeGetStorage(key) {
   try { return window.localStorage.getItem(key); } catch (e) { return null; }
@@ -241,16 +280,36 @@ function getGlobalMarketState(t) {
   return { bias: 0.0, mode: "NORMAL", label: "震盪整理", news: "📰 多空交戰，量能觀望整理中" };
 }
 
-function getEpochSeries(stockKey, currentTick) {
+function getLivePrice(stockKey, tick) {
+  const key = stockKey + ":" + tick;
+  if (priceCache.has(key)) return priceCache.get(key);
+
   const st = STOCKS[stockKey];
-  const epochStart = Math.floor(currentTick / 360) * 360;
-  let p = st.base;
-  const series = [{ tick: epochStart, price: p }];
-  for (let t = epochStart + 1; t <= currentTick; t++) {
+  if (tick <= ANCHOR_TICK) {
+    priceCache.set(key, st.base);
+    return st.base;
+  }
+
+  let startT = tick - 1;
+  while (startT > ANCHOR_TICK && !priceCache.has(stockKey + ":" + startT)) {
+    startT--;
+  }
+
+  let p = priceCache.has(stockKey + ":" + startT) ? priceCache.get(stockKey + ":" + startT) : st.base;
+  for (let t = startT + 1; t <= tick; t++) {
     const { bias } = getGlobalMarketState(t);
     const r = syncRand(t, st.seed);
     p = Math.max(2.0, p * (1.0 + ((r - 0.5 + bias * 0.35) * st.vol) / 100.0));
-    series.push({ tick: t, price: p });
+    priceCache.set(stockKey + ":" + t, p);
+  }
+  return p;
+}
+
+function getContinuousSeries(stockKey, currentTick, count = 120) {
+  const startT = Math.max(ANCHOR_TICK, currentTick - count + 1);
+  const series = [];
+  for (let t = startT; t <= currentTick; t++) {
+    series.push({ tick: t, price: getLivePrice(stockKey, t) });
   }
   return series;
 }
@@ -260,22 +319,38 @@ let selectedLev = 3;
 let selectedAlloc = 1.0;
 let cash = 10000;
 let userPos = null;
-let markers = []; // { code, tick, price, label, color }
+let markers = [];
 let playerName = safeGetStorage("sim_player_name") || ("Trader_" + Math.floor(1000 + Math.random() * 9000));
-if (playerName.trim().toLowerCase() === "ai") playerName = "Trader_" + Math.floor(1000 + Math.random() * 9000);
+if (["ai", "cf_alpha"].includes(playerName.trim().toLowerCase())) {
+  playerName = "Trader_" + Math.floor(1000 + Math.random() * 9000);
+}
 document.getElementById("player-name-input").value = playerName;
 
-// AI 代操 30s 狀態
 let aiAutopilotTimer = null;
 let aiAutopilotLeft = 0;
 let aiAutopilotPos = null;
 let aiAutopilotCash = 10000;
 
+function setAiView(mode) {
+  const s1 = document.getElementById("ai-slot-1");
+  const s2 = document.getElementById("ai-slot-2");
+  if (s1) s1.style.display = (mode === "both" || mode === "1") ? "block" : "none";
+  if (s2) s2.style.display = (mode === "both" || mode === "2") ? "block" : "none";
+
+  ["both", "1", "2"].forEach(k => {
+    const btn = document.getElementById("ai-tab-" + k);
+    if (!btn) return;
+    btn.className = (k === mode)
+      ? "text-[11px] px-2 py-0.5 rounded bg-indigo-600 text-white font-bold"
+      : "text-[11px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-bold";
+  });
+}
+
 function savePlayerName() {
   const raw = document.getElementById("player-name-input").value.trim();
   if (!raw) return;
-  if (raw.toLowerCase() === "ai") {
-    alert("⚠️ 「ai」為官方量化機器人專屬保留名稱，請使用其他暱稱！");
+  if (["ai", "cf_alpha"].includes(raw.toLowerCase())) {
+    alert("⚠️ 官方量化機器人名稱為保留名稱，請使用其他暱稱！");
     document.getElementById("player-name-input").value = playerName;
     return;
   }
@@ -310,8 +385,7 @@ function openUserPosition(dir) {
   if (userPos) { appendLog("已有持倉，請先按「立即平倉」再進場。", "text-amber-400"); return; }
   if (cash < 100) { appendLog("可用現金不足。", "text-rose-400"); return; }
   const currentTick = Math.floor(Date.now() / 800);
-  const series = getEpochSeries(selectedStock, currentTick);
-  const curPrice = series[series.length - 1].price;
+  const curPrice = getLivePrice(selectedStock, currentTick);
   const margin = cash * selectedAlloc;
   cash -= margin;
   userPos = { code: selectedStock, dir, lev: selectedLev, entryPrice: curPrice, margin };
@@ -330,8 +404,7 @@ function openUserPosition(dir) {
 function closeUserPosition() {
   if (!userPos) return;
   const currentTick = Math.floor(Date.now() / 800);
-  const series = getEpochSeries(userPos.code, currentTick);
-  const curPrice = series[series.length - 1].price;
+  const curPrice = getLivePrice(userPos.code, currentTick);
   const pnl = userPos.margin * ((curPrice - userPos.entryPrice) / userPos.entryPrice) * userPos.lev * (userPos.dir === "LONG" ? 1 : -1);
   cash = Math.max(0, cash + userPos.margin + pnl);
   if (cash < 300) cash = 3000;
@@ -348,7 +421,6 @@ function closeUserPosition() {
   syncUserLeaderboard();
 }
 
-// AI 代操 30s 控制
 async function pushAiStatusAndScore(stockCode, stockName, dir, lev, entryPrice, margin, nw) {
   const roi = Number((((nw - 10000) / 10000) * 100).toFixed(2));
   const headers = {
@@ -393,7 +465,7 @@ async function pushAiStatusAndScore(stockCode, stockName, dir, lev, entryPrice, 
 
 function stepAiAutopilot() {
   const currentTick = Math.floor(Date.now() / 800);
-  const series = getEpochSeries(selectedStock, currentTick);
+  const series = getContinuousSeries(selectedStock, currentTick, 12);
   const curPrice = series[series.length - 1].price;
   const recent = series.slice(-8).map(d => d.price);
   const mom = recent.length >= 2 ? ((curPrice - recent[0]) / recent[0]) * 100 : 0;
@@ -440,8 +512,7 @@ function stopAiAutopilot(reason = "代操結束") {
   }
   if (aiAutopilotPos) {
     const currentTick = Math.floor(Date.now() / 800);
-    const series = getEpochSeries(aiAutopilotPos.code, currentTick);
-    const curPrice = series[series.length - 1].price;
+    const curPrice = getLivePrice(aiAutopilotPos.code, currentTick);
     const pnl = aiAutopilotPos.margin * ((curPrice - aiAutopilotPos.entryPrice) / aiAutopilotPos.entryPrice) * aiAutopilotPos.lev * (aiAutopilotPos.dir === "LONG" ? 1 : -1);
     aiAutopilotCash = Math.max(500, aiAutopilotCash + aiAutopilotPos.margin + pnl);
     aiAutopilotPos = null;
@@ -475,7 +546,6 @@ function toggleAiAutopilot() {
   }, 2000);
 }
 
-// 順暢趨勢紅綠圖表 + 進出場標記圓點
 function drawRedGreenChart(series, basePrice) {
   const canvas = document.getElementById("price-chart");
   if (!canvas) return;
@@ -557,7 +627,6 @@ function drawRedGreenChart(series, basePrice) {
   ctx.lineJoin = "round";
   ctx.stroke();
 
-  // 繪製交易標記圓點（B / S / 平 / AI）
   const startTick = visible[0].tick;
   const endTick = visible[visible.length - 1].tick;
   markers
@@ -583,7 +652,6 @@ function drawRedGreenChart(series, basePrice) {
       ctx.textBaseline = "alphabetic";
     });
 
-  // 最新價端點
   const lastX = getX(visible.length - 1);
   const lastY = getY(lastPrice);
   ctx.beginPath();
@@ -603,8 +671,7 @@ function updateUserPanel(currentTick) {
 
   let totalNw = cash;
   if (userPos) {
-    const series = getEpochSeries(userPos.code, currentTick);
-    const curPrice = series[series.length - 1].price;
+    const curPrice = getLivePrice(userPos.code, currentTick);
     const pnl = userPos.margin * ((curPrice - userPos.entryPrice) / userPos.entryPrice) * userPos.lev * (userPos.dir === "LONG" ? 1 : -1);
     const roi = (pnl / userPos.margin) * 100;
 
@@ -641,17 +708,14 @@ function renderTick() {
   try {
     const currentTick = Math.floor(Date.now() / 800);
     const market = getGlobalMarketState(currentTick);
-    const remainTicks = 360 - (currentTick % 360);
 
     document.getElementById("market-badge").textContent = market.label;
     document.getElementById("news-ticker").textContent = market.news;
-    document.getElementById("chart-epoch-timer").textContent = "週期重置倒數 " + Math.ceil(remainTicks * 0.8) + "s";
 
     const tabsEl = document.getElementById("stock-tabs");
     tabsEl.innerHTML = "";
     Object.entries(STOCKS).forEach(([code, st]) => {
-      const s = getEpochSeries(code, currentTick);
-      const cur = s[s.length - 1].price;
+      const cur = getLivePrice(code, currentTick);
       const pct = ((cur - st.base) / st.base) * 100;
       const isUp = pct >= 0;
       const active = code === selectedStock;
@@ -671,7 +735,7 @@ function renderTick() {
       tabsEl.appendChild(btn);
     });
 
-    const activeSeries = getEpochSeries(selectedStock, currentTick);
+    const activeSeries = getContinuousSeries(selectedStock, currentTick, 120);
     const stInfo = STOCKS[selectedStock];
     const latestPrice = activeSeries[activeSeries.length - 1].price;
     const diff = latestPrice - stInfo.base;
@@ -694,42 +758,63 @@ function renderTick() {
   }
 }
 
+function renderAiSlot(slotId, ai, idleText) {
+  const dotEl = document.getElementById("ai-online-" + slotId);
+  const stockEl = document.getElementById("ai-stock-" + slotId);
+  const dirEl = document.getElementById("ai-dir-lev-" + slotId);
+  const emEl = document.getElementById("ai-entry-margin-" + slotId);
+  const nwEl = document.getElementById("ai-live-nw-" + slotId);
+
+  if (!ai) {
+    if (dotEl) dotEl.innerHTML = '<span class="w-2 h-2 rounded-full bg-slate-500"></span><span>離線</span>';
+    if (stockEl) stockEl.textContent = idleText;
+    if (dirEl) { dirEl.textContent = "-"; dirEl.className = "font-bold text-slate-300"; }
+    if (emEl) emEl.textContent = "-";
+    return;
+  }
+
+  const updatedMs = new Date(ai.updated_at).getTime();
+  const isOnline = Date.now() - updatedMs < 20000;
+  if (dotEl) {
+    dotEl.innerHTML = isOnline
+      ? '<span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span><span class="text-emerald-400 font-bold">在線交易中</span>'
+      : '<span class="w-2 h-2 rounded-full bg-slate-500"></span><span>休眠中</span>';
+  }
+
+  if (ai.direction && ai.direction !== "NONE") {
+    if (stockEl) stockEl.textContent = (ai.stock_code ? ai.stock_code + " " : "") + (ai.stock_name || "");
+    if (dirEl) {
+      dirEl.textContent = (ai.direction === "LONG" ? "做多 LONG" : "做空 SHORT") + " · " + ai.leverage + "x";
+      dirEl.className = "font-bold " + (ai.direction === "LONG" ? "up-text" : "down-text");
+    }
+    if (emEl) emEl.textContent = Number(ai.entry_price).toFixed(2) + " / $" + Number(ai.margin).toLocaleString();
+  } else {
+    if (stockEl) stockEl.textContent = ai.stock_name || idleText;
+    if (dirEl) { dirEl.textContent = "-"; dirEl.className = "font-bold text-slate-300"; }
+    if (emEl) emEl.textContent = "-";
+  }
+  if (nwEl) nwEl.textContent = "$" + Math.round(Number(ai.net_worth || 10000)).toLocaleString();
+}
+
 async function fetchAiAndLeaderboard() {
   const headers = { apikey: SUPABASE_KEY };
   try {
-    const aiRes = await fetch(SUPABASE_URL + "/rest/v1/ai_live_status?id=eq.1&select=*", { headers });
+    const aiRes = await fetch(SUPABASE_URL + "/rest/v1/ai_live_status?id=in.(1,2)&select=*", { headers });
     const aiRows = await aiRes.json();
-    if (aiRows && aiRows.length > 0) {
-      const ai = aiRows[0];
-      const updatedMs = new Date(ai.updated_at).getTime();
-      const isOnline = Date.now() - updatedMs < 15000;
-
-      const dotEl = document.getElementById("ai-online-dot");
-      dotEl.innerHTML = isOnline
-        ? '<span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span><span class="text-emerald-400 font-bold">在線交易中</span>'
-        : '<span class="w-2 h-2 rounded-full bg-slate-500"></span><span>休眠中</span>';
-
-      if (ai.direction && ai.direction !== "NONE") {
-        document.getElementById("ai-stock").textContent = ai.stock_code + " " + ai.stock_name;
-        const dirEl = document.getElementById("ai-dir-lev");
-        dirEl.textContent = (ai.direction === "LONG" ? "做多 LONG" : "做空 SHORT") + " · " + ai.leverage + "x";
-        dirEl.className = "font-bold " + (ai.direction === "LONG" ? "up-text" : "down-text");
-        document.getElementById("ai-entry-margin").textContent = Number(ai.entry_price).toFixed(2) + " / $" + Number(ai.margin).toLocaleString();
-      } else {
-        document.getElementById("ai-stock").textContent = "空手觀望中";
-        document.getElementById("ai-dir-lev").textContent = "-";
-        document.getElementById("ai-dir-lev").className = "font-bold text-slate-300";
-        document.getElementById("ai-entry-margin").textContent = "-";
-      }
-      document.getElementById("ai-live-nw").textContent = "$" + Math.round(Number(ai.net_worth || 10000)).toLocaleString();
+    const byId = {};
+    if (Array.isArray(aiRows)) {
+      aiRows.forEach(r => { byId[String(r.id)] = r; });
     }
+    renderAiSlot("1", byId["1"], "空手觀望中");
+    renderAiSlot("2", byId["2"], "cf_alpha 待機中");
 
     const lbRes = await fetch(SUPABASE_URL + "/rest/v1/leaderboard?select=*&order=net_worth.desc&limit=20", { headers });
     const lbRows = await lbRes.json();
     const listEl = document.getElementById("leaderboard-list");
     if (lbRows && lbRows.length > 0) {
       listEl.innerHTML = lbRows.map((row, idx) => {
-        const isAi = String(row.player_name).toLowerCase() === "ai";
+        const lowerName = String(row.player_name).toLowerCase();
+        const isAi = lowerName === "ai" || lowerName === "cf_alpha";
         const isMe = row.player_name === playerName;
         const roi = Number(row.return_rate || 0);
         const boxCls = isAi
