@@ -1,343 +1,259 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>⚡ 全球同步量化交易室 v6.0 (公平競技版)</title>
-<style>
-  :root{--bg:#0d1117;--panel:#161b22;--border:#30363d;--text:#c9d1d9;--up:#ff4d4f;--down:#00e676;--gold:#ffd700;--accent:#58a6ff}
-  *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
-  body{background:var(--bg);color:var(--text);padding:12px;max-width:960px;margin:0 auto;font-size:14px}
-  .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px}
-  .flex{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
-  .badge{padding:3px 8px;border-radius:6px;font-size:12px;font-weight:700}
-  .bg-up{background:rgba(255,77,79,.15);color:var(--up);border:1px solid var(--up)}
-  .bg-down{background:rgba(0,230,118,.15);color:var(--down);border:1px solid var(--down)}
-  .bg-gold{background:rgba(255,215,0,.15);color:var(--gold);border:1px solid var(--gold)}
-  .bg-ai{background:rgba(88,166,255,.15);color:var(--accent);border:1px solid var(--accent)}
-  .stocks{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px;margin-bottom:10px}
-  .stk{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:10px;cursor:pointer;transition:.15s}
-  .stk.active{border-color:var(--accent);background:#1c2331}
-  .price{font-size:18px;font-weight:800;margin-top:4px}
-  .up{color:var(--up)}.down{color:var(--down)}
-  canvas{width:100%;height:200px;background:#090c10;border-radius:8px;border:1px solid var(--border);display:block}
-  .btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
-  button{border:none;border-radius:8px;padding:10px 12px;font-weight:700;cursor:pointer;font-size:14px;color:#fff;transition:.15s}
-  button:active{transform:scale(.98)}
-  .btn-long{background:#d9363e}.btn-short{background:#00b359;color:#000}
-  .btn-close{background:#d48806;width:100%;margin-top:8px}.btn-sub{background:#21262d;border:1px solid var(--border);color:var(--text)}
-  .lev-row{display:flex;gap:6px;margin:8px 0}
-  .lev-btn{flex:1;padding:6px;background:#21262d;border:1px solid var(--border);color:var(--text)}
-  .lev-btn.active{background:var(--accent);color:#000;border-color:var(--accent)}
-  .prog-bg{width:100%;height:8px;background:#21262d;border-radius:4px;overflow:hidden;margin-top:6px}
-  .prog-bar{height:100%;transition:width .3s,background .3s}
-  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
-  th,td{padding:8px 6px;border-bottom:1px solid var(--border);text-align:left}
-  .rank-buffett{color:#ffd700;font-weight:800}.rank-god{color:#ff7b72;font-weight:700}
-  .rank-wolf{color:#79c0ff}.rank-whale{color:#7ee787}.rank-rookie{color:#8b949e}
-  input{background:#0d1117;border:1px solid var(--border);color:#fff;padding:8px 10px;border-radius:6px;font-size:14px}
-  .ai-live-box{border:1px solid #388bfd66;background:linear-gradient(135deg,#161b22 0%,#132035 100%)}
-  @media(max-width:600px){.stocks{grid-template-columns:repeat(2,1fr)}canvas{height:170px}}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 量化對決交易室 | 即時行情與排行榜</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background-color: #0b0f19;
+      color: #e2e8f0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", sans-serif;
+    }
+    .card {
+      background: #131a2a;
+      border: 1px solid #1e293b;
+      border-radius: 14px;
+    }
+    .up-text { color: #ef4444; }
+    .down-text { color: #22c55e; }
+    .up-bg { background-color: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.35); }
+    .down-bg { background-color: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.35); }
+    .ai-badge {
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      color: #fff;
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+  </style>
 </head>
-<body>
+<body class="min-h-screen p-3 md:p-6">
+  <div class="max-w-7xl mx-auto space-y-4">
 
-<div class="card flex">
-  <div>
-    <div style="font-size:12px;color:#8b949e">總淨值 (USD) · 每日 UTC+8 零點重置</div>
-    <div id="netWorth" style="font-size:24px;font-weight:900;color:#fff">$10,000</div>
-  </div>
-  <div style="text-align:right">
-    <span id="marketEvent" class="badge bg-gold">🌐 市場平穩波動</span>
-    <div id="cashInfo" style="font-size:12px;color:#8b949e;margin-top:4px">可用現金: $10,000</div>
-  </div>
-</div>
+    <!-- 頂部狀態列 -->
+    <header class="card p-4 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center text-xl">📈</div>
+        <div>
+          <h1 class="text-lg md:text-xl font-bold text-white flex items-center gap-2">
+            AI 量化對決交易室
+            <span id="market-badge" class="text-xs px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">市場常態</span>
+          </h1>
+          <p class="text-xs text-slate-400">全球同步 Tick 引擎 · 台股紅漲綠跌 · 即時「現在金額」排名</p>
+        </div>
+      </div>
 
-<!-- 新增：公開透明的官方 AI 實盤持倉看板 -->
-<div class="card ai-live-box">
-  <div class="flex">
-    <div style="font-weight:800;color:#58a6ff">🤖 官方量化 AI 實盤持倉（全服公開）</div>
-    <span id="aiOnlineTag" class="badge bg-ai">偵測連線中...</span>
-  </div>
-  <div id="aiLiveDetail" style="margin-top:8px;font-size:13px;line-height:1.6;color:#c9d1d9">
-    正在讀取 AI 即時部位數據...
-  </div>
-</div>
+      <div class="flex flex-wrap items-center gap-3">
+        <div class="flex items-center gap-2 bg-slate-900/90 px-3 py-1.5 rounded-lg border border-slate-800">
+          <span class="text-xs text-slate-400">玩家暱稱</span>
+          <input id="player-name-input" type="text" maxlength="14" placeholder="輸入暱稱"
+            class="bg-transparent text-sm font-semibold text-white w-28 focus:outline-none border-b border-slate-700 focus:border-indigo-500" />
+          <button onclick="savePlayerName()" class="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-2.5 py-1 rounded">套用</button>
+        </div>
+        <div class="bg-slate-900/90 px-3.5 py-1.5 rounded-lg border border-slate-800 text-right">
+          <div class="text-[11px] text-slate-400">我的總淨值（現在金額）</div>
+          <div id="user-net-worth" class="text-base font-bold text-amber-400">$10,000</div>
+        </div>
+      </div>
+    </header>
 
-<div class="stocks" id="stockList"></div>
+    <!-- 主內容區 -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
 
-<div class="card">
-  <div class="flex" style="margin-bottom:8px">
-    <strong id="chartTitle">3481 群創 · 即時走勢</strong>
-    <span id="liqPriceTag" style="font-size:12px;color:#8b949e">無持倉</span>
-  </div>
-  <canvas id="chart"></canvas>
-  <div id="posBox" style="display:none;margin-top:10px;padding:10px;background:#0d1117;border-radius:8px;border:1px solid var(--border)">
-    <div class="flex">
-      <span id="posDesc" style="font-weight:700"></span>
-      <span id="posPnl" style="font-weight:800"></span>
+      <!-- 左側：走勢圖與下單區 (8欄) -->
+      <div class="lg:col-span-8 space-y-4">
+
+        <!-- 股票切換標籤 -->
+        <div id="stock-tabs" class="grid grid-cols-2 sm:grid-cols-5 gap-2"></div>
+
+        <!-- 走勢圖卡片 -->
+        <div class="card p-4 space-y-3">
+          <div class="flex flex-wrap items-end justify-between gap-2">
+            <div>
+              <div class="flex items-center gap-2">
+                <span id="chart-stock-title" class="text-xl font-bold text-white">2330 台積電</span>
+                <span id="chart-epoch-timer" class="text-xs text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded">週期倒數 --s</span>
+              </div>
+              <div class="flex items-baseline gap-3 mt-1">
+                <span id="chart-current-price" class="text-3xl font-extrabold tracking-tight text-white">1050.00</span>
+                <span id="chart-price-change" class="text-sm font-bold px-2 py-0.5 rounded up-bg">+0.00 (+0.00%)</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 text-xs text-slate-400">
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span>上漲</span>
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>下跌</span>
+              <span id="news-ticker" class="text-amber-300 font-medium">📰 市場觀望中</span>
+            </div>
+          </div>
+
+          <!-- Canvas 紅綠分段走勢圖 -->
+          <div class="relative w-full h-72 bg-slate-950/70 rounded-xl border border-slate-800/80 overflow-hidden">
+            <canvas id="price-chart" class="w-full h-full block"></canvas>
+          </div>
+        </div>
+
+        <!-- 玩家交易下單與持倉面板 -->
+        <div class="card p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-bold text-white">手動交易下單</span>
+              <span class="text-xs text-slate-400">可用現金：<b id="user-cash" class="text-white">$10,000</b></span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div>
+                <label class="text-slate-400 block mb-1">槓桿倍數</label>
+                <div class="grid grid-cols-3 gap-1" id="lev-buttons">
+                  <button data-lev="1" class="lev-btn py-1.5 rounded bg-slate-800 text-slate-300 font-bold">1x</button>
+                  <button data-lev="3" class="lev-btn py-1.5 rounded bg-indigo-600 text-white font-bold">3x</button>
+                  <button data-lev="5" class="lev-btn py-1.5 rounded bg-slate-800 text-slate-300 font-bold">5x</button>
+                </div>
+              </div>
+              <div>
+                <label class="text-slate-400 block mb-1">投入比例</label>
+                <div class="grid grid-cols-3 gap-1" id="alloc-buttons">
+                  <button data-alloc="0.25" class="alloc-btn py-1.5 rounded bg-slate-800 text-slate-300 font-bold">25%</button>
+                  <button data-alloc="0.5" class="alloc-btn py-1.5 rounded bg-slate-800 text-slate-300 font-bold">50%</button>
+                  <button data-alloc="1" class="alloc-btn py-1.5 rounded bg-indigo-600 text-white font-bold">100%</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 pt-1">
+              <button onclick="openUserPosition('LONG')"
+                class="py-2.5 rounded-lg font-bold text-white bg-red-600 hover:bg-red-500 transition shadow-lg shadow-red-950/40">
+                買進做多 (LONG)
+              </button>
+              <button onclick="openUserPosition('SHORT')"
+                class="py-2.5 rounded-lg font-bold text-white bg-green-600 hover:bg-green-500 transition shadow-lg shadow-green-950/40">
+                融券做空 (SHORT)
+              </button>
+            </div>
+          </div>
+
+          <!-- 玩家目前持倉 -->
+          <div class="bg-slate-900/70 rounded-xl p-3.5 border border-slate-800 flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-bold text-white">我的即時持倉</span>
+              <span id="user-pos-badge" class="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-400">空手觀望中</span>
+            </div>
+            <div id="user-pos-detail" class="my-2 text-xs text-slate-400 space-y-1">
+              <div>點擊左側「買進做多」或「融券做空」進場對決。</div>
+            </div>
+            <button id="close-pos-btn" onclick="closeUserPosition()" disabled
+              class="w-full py-2 rounded-lg text-xs font-bold bg-slate-800 text-slate-500 cursor-not-allowed transition">
+              市價平倉結算
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右側：AI 即時持倉看板 & 排行榜 (4欄) -->
+      <div class="lg:col-span-4 space-y-4">
+
+        <!-- AI 即時持倉看板 -->
+        <div class="card p-4 border-indigo-500/40 relative overflow-hidden">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <span class="text-base font-bold text-white">🤖 AI 量化即時看板</span>
+              <span class="ai-badge">AI BOT</span>
+            </div>
+            <span id="ai-online-dot" class="flex items-center gap-1.5 text-xs text-slate-400">
+              <span class="w-2 h-2 rounded-full bg-slate-500"></span>離線
+            </span>
+          </div>
+
+          <div class="bg-slate-950/70 rounded-xl p-3 border border-slate-800/90 space-y-2 text-xs">
+            <div class="flex justify-between items-center">
+              <span class="text-slate-400">目前操作標的</span>
+              <span id="ai-stock" class="font-bold text-white text-sm">空手觀望中</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-slate-400">方向 / 槓桿</span>
+              <span id="ai-dir-lev" class="font-bold text-slate-300">-</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-slate-400">開倉均價 / 保證金</span>
+              <span id="ai-entry-margin" class="font-mono text-slate-300">-</span>
+            </div>
+            <div class="border-t border-slate-800 pt-2 flex justify-between items-center">
+              <span class="text-slate-400">AI 即時淨值</span>
+              <span id="ai-live-nw" class="text-base font-extrabold text-amber-400">$10,000</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 「現在金額」即時排行榜 -->
+        <div class="card p-4">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-base font-bold text-white">🏆 「現在金額」即時排行榜</h2>
+            <span class="text-[11px] text-slate-400">每 4 秒同步</span>
+          </div>
+          <div id="leaderboard-list" class="space-y-2 max-h-[380px] overflow-y-auto pr-1">
+            <div class="text-xs text-slate-500 text-center py-6">載入排行榜中...</div>
+          </div>
+        </div>
+
+      </div>
     </div>
-    <div style="font-size:11px;color:#8b949e;margin-top:4px">保證金安全度（歸零即強制平倉）</div>
-    <div class="prog-bg"><div id="safetyBar" class="prog-bar" style="width:100%;background:#00e676"></div></div>
-    <button class="btn-close" onclick="closePosition()">💰 立即市價平倉結算</button>
   </div>
-  <div id="orderBox">
-    <div class="lev-row">
-      <button class="lev-btn active" onclick="setLev(1,this)">1x 現貨</button>
-      <button class="lev-btn" onclick="setLev(5,this)">5x 槓桿</button>
-      <button class="lev-btn" onclick="setLev(10,this)">10x 槓桿</button>
-      <button class="lev-btn" onclick="setLev(20,this)">20x 極限</button>
-    </div>
-    <div class="btns">
-      <button class="btn-long" onclick="openPosition('LONG')">📈 全倉做多 (看漲)</button>
-      <button class="btn-short" onclick="openPosition('SHORT')">📉 全倉放空 (看跌)</button>
-    </div>
-  </div>
-</div>
-
-<div class="card">
-  <div class="flex">
-    <strong>🏆 全球股神榜 (TOP 10)</strong>
-    <button class="btn-sub" style="padding:4px 10px;font-size:12px" onclick="loadLeaderboard();loadAiLiveStatus()">🔄 刷新</button>
-  </div>
-  <div class="flex" style="margin-top:8px">
-    <input id="playerName" placeholder="輸入你的大名上榜..." maxlength="14" style="flex:1">
-    <button class="btn-sub" onclick="submitScore(true)">📤 手動上傳戰績</button>
-  </div>
-  <table>
-    <thead><tr><th>#</th><th>玩家</th><th>段位</th><th>總淨值</th><th>報酬率</th></tr></thead>
-    <tbody id="lbBody"><tr><td colspan="5" style="text-align:center;color:#8b949e">載入中...</td></tr></tbody>
-  </table>
-</div>
 
 <script>
-const SUPABASE_URL="https://mkdfrrmvchuovqafwyvd.supabase.co";
-const SUPABASE_KEY="sb_publishable_HAlAC8PR6fT4sOKIttqqJw_jHdLECaj";
-const STOCKS={
-  "0050":{seed:101,name:"元大台灣50",base:195.0,vol:1.1},
-  "2330":{seed:202,name:"台積電",base:1050.0,vol:1.7},
-  "2454":{seed:303,name:"聯發科",base:1320.0,vol:2.3},
-  "2317":{seed:404,name:"鴻海",base:215.0,vol:1.9},
-  "3481":{seed:505,name:"群創",base:16.5,vol:3.4}
+const SUPABASE_URL = "https://mkdfrrmvchuovqafwyvd.supabase.co";
+const SUPABASE_KEY = "sb_publishable_HAlAC8PR6fT4sOKIttqqJw_jHdLECaj";
+
+const STOCKS = {
+  "0050": { seed: 101, name: "元大台灣50", base: 195.0, vol: 1.1 },
+  "2330": { seed: 202, name: "台積電", base: 1050.0, vol: 1.7 },
+  "2454": { seed: 303, name: "聯發科", base: 1320.0, vol: 2.3 },
+  "2317": { seed: 404, name: "鴻海", base: 215.0, vol: 1.9 },
+  "3481": { seed: 505, name: "群創", base: 16.5, vol: 3.4 },
 };
-const NEWS_BIAS=[0.55,0.65,-0.55,-0.65,0.0];
+const NEWS_BIAS = [0.55, 0.65, -0.55, -0.65, 0.0];
 
-function syncRand(t,s){const x=Math.sin(t*12.9898+s*78.233)*43758.5453;return x-Math.floor(x);}
-
-// 公平競技版：取消固定周期，改用每 8 tick 全球同步偽隨機事件（無人能預知未來）
-function getGlobalMarketState(t){
-  const block=Math.floor(t/8);
-  const ev=syncRand(block,777);
-  if(ev<0.09)return{bias:-1.55,mode:"BLACK_SWAN",label:"🚨 突發黑天鵝閃崩"};
-  if(ev>0.91)return{bias:1.55,mode:"SUPER_BULL",label:"🚀 央行突襲降息狂潮"};
-  const idx=Math.floor(syncRand(block,999)*NEWS_BIAS.length);
-  const b=NEWS_BIAS[idx];
-  return{bias:b,mode:"NORMAL",label:b>0?"📈 市場偏多氛圍":b<0?"📉 市場偏空整理":"🌐 市場平穩波動"};
+// 與 Python 完全一致的偽隨機與全球市場狀態引擎
+function syncRand(t, s) {
+  const x = Math.sin(t * 12.9898 + s * 78.233) * 43758.5453;
+  return x - Math.floor(x);
 }
 
-function getPriceAtTick(code,tick){
-  const st=STOCKS[code],ep=Math.floor(tick/360)*360;
-  let p=st.base;
-  for(let t=ep;t<=tick;t++){
-    const {bias}=getGlobalMarketState(t);
-    const r=syncRand(t,st.seed);
-    p=Math.max(2.0,p*(1+((r-0.5+bias*0.35)*st.vol)/100));
+function getGlobalMarketState(t) {
+  const block = Math.floor(t / 8);
+  const ev = syncRand(block, 777);
+  if (ev < 0.09) return { bias: -1.55, mode: "BLACK_SWAN", label: "🦢 黑天鵝突襲", news: "⚡ 突發利空衝擊，全市場恐慌拋售！" };
+  if (ev > 0.91) return { bias: 1.55, mode: "SUPER_BULL", label: "🚀 超級牛市", news: "🔥 重大利多噴發，資金全面湧入！" };
+  const idx = Math.floor(syncRand(block, 999) * NEWS_BIAS.length);
+  const b = NEWS_BIAS[idx];
+  if (b > 0) return { bias: b, mode: "NORMAL", label: "偏多格局", news: "📈 外資買盤回溫，市場氣氛偏多" };
+  if (b < 0) return { bias: b, mode: "NORMAL", label: "偏空格局", news: "📉 獲利賣壓浮現，短線氣氛偏空" };
+  return { bias: 0.0, mode: "NORMAL", label: "震盪整理", news: "📰 多空交戰，量能觀望整理中" };
+}
+
+function getEpochSeries(stockKey, currentTick) {
+  const st = STOCKS[stockKey];
+  const epochStart = Math.floor(currentTick / 360) * 360;
+  let p = st.base;
+  const series = [{ tick: epochStart, price: p }];
+  for (let t = epochStart + 1; t <= currentTick; t++) {
+    const { bias } = getGlobalMarketState(t);
+    const r = syncRand(t, st.seed);
+    p = Math.max(2.0, p * (1.0 + ((r - 0.5 + bias * 0.35) * st.vol) / 100.0));
+    series.push({ tick: t, price: p });
   }
-  return p;
+  return series;
 }
 
-let state=JSON.parse(localStorage.getItem("qt_v6")||"null")||{cash:10000,pos:null,lev:1,sel:"3481",name:"",lastRename:0,dayKey:""};
-const todayKey=new Date(Date.now()+8*3600*1000).toISOString().slice(0,10);
-if(state.dayKey!==todayKey){state.cash=10000;state.pos=null;state.dayKey=todayKey;}
-document.getElementById("playerName").value=state.name||"";
-let prices={},history=[];
-
-function saveState(){localStorage.setItem("qt_v6",JSON.stringify(state));}
-function setLev(l,el){state.lev=l;document.querySelectorAll(".lev-btn").forEach(b=>b.classList.remove("active"));el.classList.add("active");saveState();}
-
-function openPosition(dir){
-  if(state.pos||state.cash<100)return;
-  const p=prices[state.sel];
-  state.pos={code:state.sel,dir,entry:p,margin:state.cash,lev:state.lev};
-  state.cash=0;saveState();render();
-}
-
-function closePosition(){
-  if(!state.pos)return;
-  const p=prices[state.pos.code];
-  const pnl=state.pos.margin*((p-state.pos.entry)/state.pos.entry)*state.pos.lev*(state.pos.dir==="LONG"?1:-1);
-  state.cash=Math.max(0,state.pos.margin+pnl);
-  state.pos=null;saveState();render();submitScore(false);
-}
-
-function getRankBadge(nw,name=""){
-  if(String(name).trim().toLowerCase()==="ai")return{label:"🤖 官方量化AI",cls:"rank-buffett"};
-  if(nw>=1e6)return{label:"💎 巴菲特本尊",cls:"rank-buffett"};
-  if(nw>=5e5)return{label:"👑 少年股神",cls:"rank-god"};
-  if(nw>=1e5)return{label:"🐺 華爾街之狼",cls:"rank-wolf"};
-  if(nw>=3e4)return{label:"🔥 當沖大戶",cls:"rank-whale"};
-  return{label:"🌱 菜鳥散戶",cls:"rank-rookie"};
-}
-
-let lastSubmit=0;
-async function submitScore(manual){
-  const rawName=document.getElementById("playerName").value.trim();
-  if(!rawName){if(manual)alert("請先輸入玩家暱稱！");return;}
-  if(rawName.toLowerCase()==="ai"){if(manual)alert("「ai」為官方量化機器人專用保留代號！");return;}
-  if(rawName!=="7676"&&state.name&&state.name!==rawName&&Date.now()-state.lastRename<600000){
-    if(manual)alert("每 10 分鐘僅能更改一次暱稱！");return;
-  }
-  if(state.name!==rawName){state.name=rawName;state.lastRename=Date.now();saveState();}
-  const nw=calcNetWorth();
-  if(nw<=10000&&!manual)return;
-  if(!manual&&Date.now()-lastSubmit<15000)return;
-  lastSubmit=Date.now();
-  const roi=Number((((nw-10000)/10000)*100).toFixed(2));
-  const h={"apikey":SUPABASE_KEY,"Content-Type":"application/json","Prefer":"return=minimal"};
-  try{
-    const res=await fetch(`${SUPABASE_URL}/rest/v1/leaderboard?select=*&player_name=eq.${encodeURIComponent(rawName)}&order=net_worth.desc&limit=1`,{headers:{"apikey":SUPABASE_KEY}});
-    const rows=await res.json();
-    if(rows&&rows.length>0){
-      if(nw>Number(rows[0].net_worth)){
-        await fetch(`${SUPABASE_URL}/rest/v1/leaderboard?id=eq.${rows[0].id}`,{method:"PATCH",headers:h,body:JSON.stringify({net_worth:Math.round(nw),return_rate:roi,created_at:new Date().toISOString()})});
-      }
-    }else{
-      await fetch(`${SUPABASE_URL}/rest/v1/leaderboard`,{method:"POST",headers:h,body:JSON.stringify({player_name:rawName,net_worth:Math.round(nw),return_rate:roi})});
-    }
-    loadLeaderboard();
-    if(manual)alert("✅ 戰績已同步至全球排行榜！");
-  }catch(e){}
-}
-
-async function loadLeaderboard(){
-  try{
-    const res=await fetch(`${SUPABASE_URL}/rest/v1/leaderboard?select=*&order=net_worth.desc&limit=10`,{headers:{"apikey":SUPABASE_KEY}});
-    const rows=await res.json();
-    document.getElementById("lbBody").innerHTML=rows.map((r,i)=>{
-      const nw=Number(r.net_worth),bg=getRankBadge(nw,r.player_name);
-      return `<tr><td>${i+1}</td><td><strong>${r.player_name}</strong></td><td class="${bg.cls}">${bg.label}</td><td>$${nw.toLocaleString()}</td><td class="${r.return_rate>=0?'up':'down'}">${r.return_rate>=0?'+':''}${r.return_rate}%</td></tr>`;
-    }).join("");
-  }catch(e){}
-}
-
-// 讀取官方 AI 即時持倉並計算實時浮動損益
-let aiCache=null;
-async function loadAiLiveStatus(){
-  try{
-    const res=await fetch(`${SUPABASE_URL}/rest/v1/ai_live_status?id=eq.1&select=*`,{headers:{"apikey":SUPABASE_KEY}});
-    const rows=await res.json();
-    if(rows&&rows.length>0)aiCache=rows[0];
-  }catch(e){}
-}
-
-function renderAiLiveBox(){
-  if(!aiCache)return;
-  const ageSec=(Date.now()-new Date(aiCache.updated_at).getTime())/1000;
-  const online=ageSec<25;
-  const tag=document.getElementById("aiOnlineTag");
-  tag.textContent=online?"🟢 實盤連線操盤中":"⚪ 離線休眠中";
-  tag.className="badge "+(online?"bg-down":"bg-ai");
-  const box=document.getElementById("aiLiveDetail");
-  if(!aiCache.direction||aiCache.direction==="NONE"){
-    box.innerHTML=`目前狀態：<strong>空手觀望中（尋找均線動能訊號）</strong> ｜ 帳戶淨值：<strong style="color:#ffd700">$${Number(aiCache.net_worth).toLocaleString()}</strong>`;
-  }else{
-    const curP=prices[aiCache.stock_code]||Number(aiCache.entry_price);
-    const entry=Number(aiCache.entry_price);
-    const margin=Number(aiCache.margin);
-    const lev=Number(aiCache.leverage);
-    const pnl=margin*((curP-entry)/entry)*lev*(aiCache.direction==="LONG"?1:-1);
-    const roi=(pnl/margin)*100;
-    const dirTxt=aiCache.direction==="LONG"?`<span class="up">📈 做多 ${lev}x</span>`:`<span class="down">📉 放空 ${lev}x</span>`;
-    box.innerHTML=`持有標的：<strong>${aiCache.stock_code} ${aiCache.stock_name}</strong> ｜ 方向：${dirTxt} ｜ 開倉價：<strong>${entry.toFixed(2)}</strong>（現價 ${curP.toFixed(2)}）<br>即時浮動損益：<strong class="${pnl>=0?'up':'down'}">${pnl>=0?'+':''}$${Math.round(pnl).toLocaleString()} (${roi>=0?'+':''}${roi.toFixed(1)}%)</strong> ｜ 總淨值：<strong style="color:#ffd700">$${Math.round(Number(aiCache.net_worth)+pnl).toLocaleString()}</strong>`;
-  }
-}
-
-function calcNetWorth(){
-  if(!state.pos)return state.cash;
-  const p=prices[state.pos.code];
-  const pnl=state.pos.margin*((p-state.pos.entry)/state.pos.entry)*state.pos.lev*(state.pos.dir==="LONG"?1:-1);
-  return Math.max(0,state.cash+state.pos.margin+pnl);
-}
-
-function render(){
-  const nw=calcNetWorth();
-  document.getElementById("netWorth").textContent="$"+Math.round(nw).toLocaleString();
-  document.getElementById("cashInfo").textContent="可用現金: $"+Math.round(state.cash).toLocaleString();
-
-  document.getElementById("stockList").innerHTML=Object.keys(STOCKS).map(k=>{
-    const p=prices[k]||STOCKS[k].base,prev=getPriceAtTick(k,lastTick-1);
-    const diff=((p-prev)/prev)*100;
-    return `<div class="stk ${state.sel===k?'active':''}" onclick="selectStock('${k}')">
-      <div class="flex"><span style="font-weight:700">${k} ${STOCKS[k].name}</span><span class="${diff>=0?'up':'down'}" style="font-size:12px">${diff>=0?'+':''}${diff.toFixed(2)}%</span></div>
-      <div class="price ${diff>=0?'up':'down'}">${p.toFixed(2)}</div>
-    </div>`;
-  }).join("");
-
-  document.getElementById("chartTitle").textContent=`${state.sel} ${STOCKS[state.sel].name} · 即時走勢`;
-  const posBox=document.getElementById("posBox"),orderBox=document.getElementById("orderBox");
-  if(state.pos){
-    posBox.style.display="block";orderBox.style.display="none";
-    const p=prices[state.pos.code];
-    const pnl=state.pos.margin*((p-state.pos.entry)/state.pos.entry)*state.pos.lev*(state.pos.dir==="LONG"?1:-1);
-    const safety=Math.max(0,Math.min(100,((state.pos.margin+pnl)/state.pos.margin)*100));
-    const liqP=state.pos.dir==="LONG"?state.pos.entry*(1-1/state.pos.lev):state.pos.entry*(1+1/state.pos.lev);
-    document.getElementById("liqPriceTag").innerHTML=`強平預警價: <strong style="color:#ff4d4f">${liqP.toFixed(2)}</strong>`;
-    document.getElementById("posDesc").innerHTML=`${state.pos.code} ${state.pos.dir==="LONG"?'📈做多':'📉放空'} ${state.pos.lev}x @ ${state.pos.entry.toFixed(2)}`;
-    document.getElementById("posPnl").innerHTML=`<span class="${pnl>=0?'up':'down'}">${pnl>=0?'+':''}$${Math.round(pnl).toLocaleString()}</span>`;
-    const bar=document.getElementById("safetyBar");
-    bar.style.width=safety+"%";bar.style.background=safety>50?"#00e676":safety>25?"#ffd700":"#ff4d4f";
-  }else{
-    posBox.style.display="none";orderBox.style.display="block";
-    document.getElementById("liqPriceTag").textContent="空手觀望中";
-  }
-  drawChart();renderAiLiveBox();
-}
-
-function selectStock(k){state.sel=k;history=[];for(let i=45;i>=0;i--)history.push(getPriceAtTick(k,lastTick-i));render();}
-
-function drawChart(){
-  const c=document.getElementById("chart"),ctx=c.getContext("2d");
-  c.width=c.clientWidth*2;c.height=c.clientHeight*2;ctx.scale(2,2);
-  const w=c.clientWidth,h=c.clientHeight;
-  ctx.clearRect(0,0,w,h);
-  if(history.length<2)return;
-  const min=Math.min(...history)*0.998,max=Math.max(...history)*1.002;
-  ctx.strokeStyle="#58a6ff";ctx.lineWidth=2;ctx.beginPath();
-  history.forEach((v,i)=>{
-    const x=(i/(history.length-1))*w,y=h-((v-min)/(max-min))*h;
-    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
-  });
-  ctx.stroke();
-}
-
-let lastTick=-1;
-setInterval(()=>{
-  const tick=Math.floor(Date.now()/800);
-  if(tick===lastTick)return;
-  lastTick=tick;
-  const ev=getGlobalMarketState(tick);
-  const evEl=document.getElementById("marketEvent");
-  evEl.textContent=ev.label;
-  evEl.className="badge "+(ev.mode==="BLACK_SWAN"?"bg-up":ev.mode==="SUPER_BULL"?"bg-down":"bg-gold");
-
-  Object.keys(STOCKS).forEach(k=>prices[k]=getPriceAtTick(k,tick));
-  if(history.length===0){for(let i=45;i>=0;i--)history.push(getPriceAtTick(state.sel,tick-i));}
-  else{history.push(prices[state.sel]);if(history.length>46)history.shift();}
-
-  if(state.pos){
-    const p=prices[state.pos.code];
-    const pnl=state.pos.margin*((p-state.pos.entry)/state.pos.entry)*state.pos.lev*(state.pos.dir==="LONG"?1:-1);
-    if(state.pos.margin+pnl<=0){
-      alert(`💥 慘遭強制平倉！系統發放 $3,000 東山再起救濟金。`);
-      state.pos=null;state.cash=3000;saveState();
-    }
-  }
-  render();
-  if(tick%20===0)submitScore(false);
-  if(tick%6===0)loadAiLiveStatus();
-},200);
-
-loadLeaderboard();loadAiLiveStatus();
-</script>
-</body>
-</html>
+// 玩家狀態
+let selectedStock = "2330";
+let selectedLev = 3;
+let selectedAlloc = 1.0;
+let cash = 10000;
+let userPos = null; // { code, dir, lev, entryPrice, margin }
+let playerName = localStorage.getItem("sim_player_name") || ("Trader_" + Math.floor(1000 + Math.random() * 9000));
+if (playerName.trim().toLowerCase() === "ai") playerName = "Trader_" + Math.floor(1000 + Math.random() * 9
