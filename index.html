@@ -29,14 +29,11 @@
       font-weight: 700;
       letter-spacing: 0.5px;
     }
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
   </style>
 </head>
 <body class="min-h-screen p-3 md:p-6">
   <div class="max-w-7xl mx-auto space-y-4">
 
-    <!-- 頂部狀態列 -->
     <header class="card p-4 flex flex-wrap items-center justify-between gap-4">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center text-xl">📈</div>
@@ -54,7 +51,7 @@
           <span class="text-xs text-slate-400">玩家暱稱</span>
           <input id="player-name-input" type="text" maxlength="14" placeholder="輸入暱稱"
             class="bg-transparent text-sm font-semibold text-white w-28 focus:outline-none border-b border-slate-700 focus:border-indigo-500" />
-          <button onclick="savePlayerName()" class="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-2.5 py-1 rounded">套用</button>
+          <button type="button" onclick="savePlayerName()" class="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-2.5 py-1 rounded">套用</button>
         </div>
         <div class="bg-slate-900/90 px-3.5 py-1.5 rounded-lg border border-slate-800 text-right">
           <div class="text-[11px] text-slate-400">我的總淨值（現在金額）</div>
@@ -63,16 +60,10 @@
       </div>
     </header>
 
-    <!-- 主內容區 -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-
-      <!-- 左側：走勢圖與下單區 (8欄) -->
       <div class="lg:col-span-8 space-y-4">
-
-        <!-- 股票切換標籤 -->
         <div id="stock-tabs" class="grid grid-cols-2 sm:grid-cols-5 gap-2"></div>
 
-        <!-- 走勢圖卡片 -->
         <div class="card p-4 space-y-3">
           <div class="flex flex-wrap items-end justify-between gap-2">
             <div>
@@ -92,13 +83,11 @@
             </div>
           </div>
 
-          <!-- Canvas 紅綠分段走勢圖 -->
           <div class="relative w-full h-72 bg-slate-950/70 rounded-xl border border-slate-800/80 overflow-hidden">
-            <canvas id="price-chart" class="w-full h-full block"></canvas>
+            <canvas id="price-chart" style="width:100%;height:100%;display:block;"></canvas>
           </div>
         </div>
 
-        <!-- 玩家交易下單與持倉面板 -->
         <div class="card p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="space-y-3">
             <div class="flex items-center justify-between">
@@ -110,34 +99,33 @@
               <div>
                 <label class="text-slate-400 block mb-1">槓桿倍數</label>
                 <div class="grid grid-cols-3 gap-1" id="lev-buttons">
-                  <button data-lev="1" class="lev-btn py-1.5 rounded bg-slate-800 text-slate-300 font-bold">1x</button>
-                  <button data-lev="3" class="lev-btn py-1.5 rounded bg-indigo-600 text-white font-bold">3x</button>
-                  <button data-lev="5" class="lev-btn py-1.5 rounded bg-slate-800 text-slate-300 font-bold">5x</button>
+                  <button type="button" data-lev="1" class="lev-btn py-1.5 rounded bg-slate-800 text-slate-300 font-bold">1x</button>
+                  <button type="button" data-lev="3" class="lev-btn py-1.5 rounded bg-indigo-600 text-white font-bold">3x</button>
+                  <button type="button" data-lev="5" class="lev-btn py-1.5 rounded bg-slate-800 text-slate-300 font-bold">5x</button>
                 </div>
               </div>
               <div>
                 <label class="text-slate-400 block mb-1">投入比例</label>
                 <div class="grid grid-cols-3 gap-1" id="alloc-buttons">
-                  <button data-alloc="0.25" class="alloc-btn py-1.5 rounded bg-slate-800 text-slate-300 font-bold">25%</button>
-                  <button data-alloc="0.5" class="alloc-btn py-1.5 rounded bg-slate-800 text-slate-300 font-bold">50%</button>
-                  <button data-alloc="1" class="alloc-btn py-1.5 rounded bg-indigo-600 text-white font-bold">100%</button>
+                  <button type="button" data-alloc="0.25" class="alloc-btn py-1.5 rounded bg-slate-800 text-slate-300 font-bold">25%</button>
+                  <button type="button" data-alloc="0.5" class="alloc-btn py-1.5 rounded bg-slate-800 text-slate-300 font-bold">50%</button>
+                  <button type="button" data-alloc="1" class="alloc-btn py-1.5 rounded bg-indigo-600 text-white font-bold">100%</button>
                 </div>
               </div>
             </div>
 
             <div class="grid grid-cols-2 gap-2 pt-1">
-              <button onclick="openUserPosition('LONG')"
-                class="py-2.5 rounded-lg font-bold text-white bg-red-600 hover:bg-red-500 transition shadow-lg shadow-red-950/40">
+              <button type="button" onclick="openUserPosition('LONG')"
+                class="py-2.5 rounded-lg font-bold text-white bg-red-600 hover:bg-red-500 transition">
                 買進做多 (LONG)
               </button>
-              <button onclick="openUserPosition('SHORT')"
-                class="py-2.5 rounded-lg font-bold text-white bg-green-600 hover:bg-green-500 transition shadow-lg shadow-green-950/40">
+              <button type="button" onclick="openUserPosition('SHORT')"
+                class="py-2.5 rounded-lg font-bold text-white bg-green-600 hover:bg-green-500 transition">
                 融券做空 (SHORT)
               </button>
             </div>
           </div>
 
-          <!-- 玩家目前持倉 -->
           <div class="bg-slate-900/70 rounded-xl p-3.5 border border-slate-800 flex flex-col justify-between">
             <div class="flex items-center justify-between">
               <span class="text-sm font-bold text-white">我的即時持倉</span>
@@ -146,7 +134,7 @@
             <div id="user-pos-detail" class="my-2 text-xs text-slate-400 space-y-1">
               <div>點擊左側「買進做多」或「融券做空」進場對決。</div>
             </div>
-            <button id="close-pos-btn" onclick="closeUserPosition()" disabled
+            <button type="button" id="close-pos-btn" onclick="closeUserPosition()" disabled
               class="w-full py-2 rounded-lg text-xs font-bold bg-slate-800 text-slate-500 cursor-not-allowed transition">
               市價平倉結算
             </button>
@@ -154,10 +142,7 @@
         </div>
       </div>
 
-      <!-- 右側：AI 即時持倉看板 & 排行榜 (4欄) -->
       <div class="lg:col-span-4 space-y-4">
-
-        <!-- AI 即時持倉看板 -->
         <div class="card p-4 border-indigo-500/40 relative overflow-hidden">
           <div class="flex items-center justify-between mb-3">
             <div class="flex items-center gap-2">
@@ -189,7 +174,6 @@
           </div>
         </div>
 
-        <!-- 「現在金額」即時排行榜 -->
         <div class="card p-4">
           <div class="flex items-center justify-between mb-3">
             <h2 class="text-base font-bold text-white">🏆 「現在金額」即時排行榜</h2>
@@ -199,7 +183,6 @@
             <div class="text-xs text-slate-500 text-center py-6">載入排行榜中...</div>
           </div>
         </div>
-
       </div>
     </div>
   </div>
@@ -217,7 +200,13 @@ const STOCKS = {
 };
 const NEWS_BIAS = [0.55, 0.65, -0.55, -0.65, 0.0];
 
-// 與 Python 完全一致的偽隨機與全球市場狀態引擎
+function safeGetStorage(key) {
+  try { return window.localStorage.getItem(key); } catch (e) { return null; }
+}
+function safeSetStorage(key, val) {
+  try { window.localStorage.setItem(key, val); } catch (e) {}
+}
+
 function syncRand(t, s) {
   const x = Math.sin(t * 12.9898 + s * 78.233) * 43758.5453;
   return x - Math.floor(x);
@@ -249,11 +238,371 @@ function getEpochSeries(stockKey, currentTick) {
   return series;
 }
 
-// 玩家狀態
 let selectedStock = "2330";
 let selectedLev = 3;
 let selectedAlloc = 1.0;
 let cash = 10000;
-let userPos = null; // { code, dir, lev, entryPrice, margin }
-let playerName = localStorage.getItem("sim_player_name") || ("Trader_" + Math.floor(1000 + Math.random() * 9000));
-if (playerName.trim().toLowerCase() === "ai") playerName = "Trader_" + Math.floor(1000 + Math.random() * 9
+let userPos = null;
+let playerName = safeGetStorage("sim_player_name") || ("Trader_" + Math.floor(1000 + Math.random() * 9000));
+if (playerName.trim().toLowerCase() === "ai") playerName = "Trader_" + Math.floor(1000 + Math.random() * 9000);
+document.getElementById("player-name-input").value = playerName;
+
+function savePlayerName() {
+  const raw = document.getElementById("player-name-input").value.trim();
+  if (!raw) return;
+  if (raw.toLowerCase() === "ai") {
+    alert("⚠️ 「ai」為官方量化機器人專屬保留名稱，請使用其他暱稱！");
+    document.getElementById("player-name-input").value = playerName;
+    return;
+  }
+  playerName = raw;
+  safeSetStorage("sim_player_name", playerName);
+  syncUserLeaderboard();
+}
+
+document.querySelectorAll(".lev-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    selectedLev = Number(btn.dataset.lev);
+    document.querySelectorAll(".lev-btn").forEach(b => {
+      b.className = b === btn
+        ? "lev-btn py-1.5 rounded bg-indigo-600 text-white font-bold"
+        : "lev-btn py-1.5 rounded bg-slate-800 text-slate-300 font-bold";
+    });
+  });
+});
+
+document.querySelectorAll(".alloc-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    selectedAlloc = Number(btn.dataset.alloc);
+    document.querySelectorAll(".alloc-btn").forEach(b => {
+      b.className = b === btn
+        ? "alloc-btn py-1.5 rounded bg-indigo-600 text-white font-bold"
+        : "alloc-btn py-1.5 rounded bg-slate-800 text-slate-300 font-bold";
+    });
+  });
+});
+
+function openUserPosition(dir) {
+  if (userPos) { alert("請先平倉目前持倉再建立新倉位！"); return; }
+  if (cash < 100) { alert("可用現金不足！"); return; }
+  const currentTick = Math.floor(Date.now() / 800);
+  const series = getEpochSeries(selectedStock, currentTick);
+  const curPrice = series[series.length - 1].price;
+  const margin = cash * selectedAlloc;
+  cash -= margin;
+  userPos = { code: selectedStock, dir, lev: selectedLev, entryPrice: curPrice, margin };
+  updateUserPanel(currentTick);
+  syncUserLeaderboard();
+}
+
+function closeUserPosition() {
+  if (!userPos) return;
+  const currentTick = Math.floor(Date.now() / 800);
+  const series = getEpochSeries(userPos.code, currentTick);
+  const curPrice = series[series.length - 1].price;
+  const pnl = userPos.margin * ((curPrice - userPos.entryPrice) / userPos.entryPrice) * userPos.lev * (userPos.dir === "LONG" ? 1 : -1);
+  cash = Math.max(0, cash + userPos.margin + pnl);
+  if (cash < 300) cash = 3000;
+  userPos = null;
+  updateUserPanel(currentTick);
+  syncUserLeaderboard();
+}
+
+function drawRedGreenChart(series, basePrice) {
+  const canvas = document.getElementById("price-chart");
+  if (!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const w = rect.width || canvas.parentElement.clientWidth || 700;
+  const h = rect.height || canvas.parentElement.clientHeight || 288;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  const ctx = canvas.getContext("2d");
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, w, h);
+
+  const visible = series.slice(-90);
+  if (visible.length < 2) return;
+
+  const prices = visible.map(d => d.price);
+  const minP = Math.min(...prices, basePrice) * 0.9985;
+  const maxP = Math.max(...prices, basePrice) * 1.0015;
+  const range = Math.max(0.01, maxP - minP);
+
+  const padL = 14, padR = 58, padT = 18, padB = 22;
+  const plotW = w - padL - padR;
+  const plotH = h - padT - padB;
+
+  const getX = idx => padL + (idx / Math.max(1, visible.length - 1)) * plotW;
+  const getY = val => padT + (1 - (val - minP) / range) * plotH;
+
+  ctx.strokeStyle = "rgba(148, 163, 184, 0.08)";
+  ctx.lineWidth = 1;
+  ctx.font = "11px monospace";
+  ctx.fillStyle = "#64748b";
+  for (let i = 0; i <= 4; i++) {
+    const y = padT + (plotH / 4) * i;
+    const priceLabel = (maxP - (range / 4) * i).toFixed(2);
+    ctx.beginPath();
+    ctx.moveTo(padL, y);
+    ctx.lineTo(w - padR, y);
+    ctx.stroke();
+    ctx.fillText(priceLabel, w - padR + 6, y + 4);
+  }
+
+  const baseY = getY(basePrice);
+  ctx.save();
+  ctx.setLineDash([4, 4]);
+  ctx.strokeStyle = "rgba(250, 204, 21, 0.45)";
+  ctx.beginPath();
+  ctx.moveTo(padL, baseY);
+  ctx.lineTo(w - padR, baseY);
+  ctx.stroke();
+  ctx.restore();
+
+  for (let i = 1; i < visible.length; i++) {
+    const p0 = Number(visible[i - 1].price);
+    const p1 = Number(visible[i].price);
+    const x0 = getX(i - 1);
+    const y0 = getY(p0);
+    const x1 = getX(i);
+    const y1 = getY(p1);
+
+    const isUp = p1 >= p0;
+    const strokeCol = isUp ? "#ef4444" : "#22c55e";
+    const fillCol = isUp ? "rgba(239, 68, 68, 0.16)" : "rgba(34, 197, 94, 0.16)";
+
+    ctx.beginPath();
+    ctx.moveTo(x0, y0);
+    ctx.lineTo(x1, y1);
+    ctx.lineTo(x1, padT + plotH);
+    ctx.lineTo(x0, padT + plotH);
+    ctx.closePath();
+    ctx.fillStyle = fillCol;
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(x0, y0);
+    ctx.lineTo(x1, y1);
+    ctx.strokeStyle = strokeCol;
+    ctx.lineWidth = 2.4;
+    ctx.lineCap = "round";
+    ctx.stroke();
+  }
+
+  const last = visible[visible.length - 1];
+  const lastX = getX(visible.length - 1);
+  const lastY = getY(last.price);
+  const overallUp = last.price >= basePrice;
+  ctx.beginPath();
+  ctx.arc(lastX, lastY, 4.5, 0, Math.PI * 2);
+  ctx.fillStyle = overallUp ? "#ef4444" : "#22c55e";
+  ctx.fill();
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+}
+
+function updateUserPanel(currentTick) {
+  document.getElementById("user-cash").textContent = "$" + Math.round(cash).toLocaleString();
+  const posBadge = document.getElementById("user-pos-badge");
+  const posDetail = document.getElementById("user-pos-detail");
+  const closeBtn = document.getElementById("close-pos-btn");
+
+  let totalNw = cash;
+  if (userPos) {
+    const series = getEpochSeries(userPos.code, currentTick);
+    const curPrice = series[series.length - 1].price;
+    const pnl = userPos.margin * ((curPrice - userPos.entryPrice) / userPos.entryPrice) * userPos.lev * (userPos.dir === "LONG" ? 1 : -1);
+    const roi = (pnl / userPos.margin) * 100;
+
+    if (userPos.margin + pnl <= 0) {
+      userPos = null;
+      cash = Math.max(cash, 3000);
+      totalNw = cash;
+      alert("💥 觸發強制平倉（爆倉），系統發放 $3,000 救濟金！");
+    } else {
+      totalNw = cash + userPos.margin + pnl;
+      const isProfit = pnl >= 0;
+      posBadge.textContent = (userPos.dir === "LONG" ? "做多 " : "做空 ") + userPos.lev + "x";
+      posBadge.className = "text-xs px-2 py-0.5 rounded font-bold " + (userPos.dir === "LONG" ? "up-bg" : "down-bg");
+      posDetail.innerHTML =
+        '<div class="flex justify-between"><span>標的：</span><b class="text-white">' + userPos.code + " " + STOCKS[userPos.code].name + "</b></div>" +
+        '<div class="flex justify-between"><span>開倉均價 / 現價：</span><span class="font-mono text-slate-200">' + userPos.entryPrice.toFixed(2) + " → " + curPrice.toFixed(2) + "</span></div>" +
+        '<div class="flex justify-between"><span>未實現損益：</span><b class="' + (isProfit ? "up-text" : "down-text") + '">' + (pnl >= 0 ? "+" : "") + Math.round(pnl).toLocaleString() + " (" + (roi >= 0 ? "+" : "") + roi.toFixed(1) + "%)</b></div>";
+      closeBtn.disabled = false;
+      closeBtn.className = "w-full py-2 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 cursor-pointer transition";
+    }
+  }
+
+  if (!userPos) {
+    posBadge.textContent = "空手觀望中";
+    posBadge.className = "text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-400";
+    posDetail.innerHTML = "<div>選擇標的與槓桿後，點擊左側按鈕進場。</div>";
+    closeBtn.disabled = true;
+    closeBtn.className = "w-full py-2 rounded-lg text-xs font-bold bg-slate-800 text-slate-500 cursor-not-allowed";
+  }
+
+  document.getElementById("user-net-worth").textContent = "$" + Math.round(totalNw).toLocaleString();
+  return totalNw;
+}
+
+function renderTick() {
+  try {
+    const currentTick = Math.floor(Date.now() / 800);
+    const market = getGlobalMarketState(currentTick);
+    const remainTicks = 360 - (currentTick % 360);
+
+    document.getElementById("market-badge").textContent = market.label;
+    document.getElementById("news-ticker").textContent = market.news;
+    document.getElementById("chart-epoch-timer").textContent = "週期重置倒數 " + Math.ceil(remainTicks * 0.8) + "s";
+
+    const tabsEl = document.getElementById("stock-tabs");
+    tabsEl.innerHTML = "";
+    Object.entries(STOCKS).forEach(([code, st]) => {
+      const s = getEpochSeries(code, currentTick);
+      const cur = s[s.length - 1].price;
+      const pct = ((cur - st.base) / st.base) * 100;
+      const isUp = pct >= 0;
+      const active = code === selectedStock;
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "p-2.5 rounded-xl border text-left transition " +
+        (active ? "bg-slate-800/95 border-indigo-500 shadow-md" : "bg-slate-900/70 border-slate-800 hover:border-slate-700");
+      btn.onclick = () => { selectedStock = code; renderTick(); };
+      btn.innerHTML =
+        '<div class="flex justify-between items-center text-xs">' +
+          '<span class="font-bold text-white">' + code + '</span>' +
+          '<span class="font-bold ' + (isUp ? "up-text" : "down-text") + '">' + (isUp ? "+" : "") + pct.toFixed(2) + '%</span>' +
+        '</div>' +
+        '<div class="text-[11px] text-slate-400 truncate">' + st.name + '</div>' +
+        '<div class="text-sm font-extrabold font-mono mt-0.5 ' + (isUp ? "up-text" : "down-text") + '">' + cur.toFixed(2) + '</div>';
+      tabsEl.appendChild(btn);
+    });
+
+    const activeSeries = getEpochSeries(selectedStock, currentTick);
+    const stInfo = STOCKS[selectedStock];
+    const latestPrice = activeSeries[activeSeries.length - 1].price;
+    const diff = latestPrice - stInfo.base;
+    const diffPct = (diff / stInfo.base) * 100;
+    const isUp = diff >= 0;
+
+    document.getElementById("chart-stock-title").textContent = selectedStock + " " + stInfo.name;
+    const priceEl = document.getElementById("chart-current-price");
+    priceEl.textContent = latestPrice.toFixed(2);
+    priceEl.className = "text-3xl font-extrabold tracking-tight font-mono " + (isUp ? "up-text" : "down-text");
+
+    const changeEl = document.getElementById("chart-price-change");
+    changeEl.textContent = (isUp ? "+" : "") + diff.toFixed(2) + " (" + (isUp ? "+" : "") + diffPct.toFixed(2) + "%)";
+    changeEl.className = "text-sm font-bold px-2 py-0.5 rounded " + (isUp ? "up-bg" : "down-bg");
+
+    drawRedGreenChart(activeSeries, stInfo.base);
+    updateUserPanel(currentTick);
+  } catch (err) {
+    console.error("renderTick error:", err);
+  }
+}
+
+async function fetchAiAndLeaderboard() {
+  const headers = { apikey: SUPABASE_KEY };
+  try {
+    const aiRes = await fetch(SUPABASE_URL + "/rest/v1/ai_live_status?id=eq.1&select=*", { headers });
+    const aiRows = await aiRes.json();
+    if (aiRows && aiRows.length > 0) {
+      const ai = aiRows[0];
+      const updatedMs = new Date(ai.updated_at).getTime();
+      const isOnline = Date.now() - updatedMs < 15000;
+
+      const dotEl = document.getElementById("ai-online-dot");
+      dotEl.innerHTML = isOnline
+        ? '<span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span><span class="text-emerald-400 font-bold">在線交易中</span>'
+        : '<span class="w-2 h-2 rounded-full bg-slate-500"></span><span>休眠中</span>';
+
+      if (ai.direction && ai.direction !== "NONE") {
+        document.getElementById("ai-stock").textContent = ai.stock_code + " " + ai.stock_name;
+        const dirEl = document.getElementById("ai-dir-lev");
+        dirEl.textContent = (ai.direction === "LONG" ? "做多 LONG" : "做空 SHORT") + " · " + ai.leverage + "x";
+        dirEl.className = "font-bold " + (ai.direction === "LONG" ? "up-text" : "down-text");
+        document.getElementById("ai-entry-margin").textContent = Number(ai.entry_price).toFixed(2) + " / $" + Number(ai.margin).toLocaleString();
+      } else {
+        document.getElementById("ai-stock").textContent = "空手觀望中";
+        document.getElementById("ai-dir-lev").textContent = "-";
+        document.getElementById("ai-dir-lev").className = "font-bold text-slate-300";
+        document.getElementById("ai-entry-margin").textContent = "-";
+      }
+      document.getElementById("ai-live-nw").textContent = "$" + Math.round(Number(ai.net_worth || 10000)).toLocaleString();
+    }
+
+    const lbRes = await fetch(SUPABASE_URL + "/rest/v1/leaderboard?select=*&order=net_worth.desc&limit=20", { headers });
+    const lbRows = await lbRes.json();
+    const listEl = document.getElementById("leaderboard-list");
+    if (lbRows && lbRows.length > 0) {
+      listEl.innerHTML = lbRows.map((row, idx) => {
+        const isAi = String(row.player_name).toLowerCase() === "ai";
+        const isMe = row.player_name === playerName;
+        const roi = Number(row.return_rate || 0);
+        const boxCls = isAi
+          ? "bg-indigo-950/40 border-indigo-500/40"
+          : (isMe ? "bg-slate-800/80 border-amber-500/40" : "bg-slate-900/60 border-slate-800");
+        return '<div class="flex items-center justify-between p-2.5 rounded-lg border ' + boxCls + '">' +
+          '<div class="flex items-center gap-2.5 min-w-0">' +
+            '<span class="w-5 text-xs font-extrabold ' + (idx < 3 ? "text-amber-400" : "text-slate-500") + '">#' + (idx + 1) + '</span>' +
+            '<span class="text-sm font-bold text-white truncate">' + row.player_name + '</span>' +
+            (isAi ? '<span class="ai-badge">AI</span>' : '') +
+          '</div>' +
+          '<div class="text-right shrink-0">' +
+            '<div class="text-sm font-extrabold font-mono text-white">$' + Number(row.net_worth).toLocaleString() + '</div>' +
+            '<div class="text-[11px] font-bold ' + (roi >= 0 ? "up-text" : "down-text") + '">' + (roi >= 0 ? "+" : "") + roi.toFixed(1) + '%</div>' +
+          '</div>' +
+        '</div>';
+      }).join("");
+    }
+  } catch (e) {
+    console.warn("Supabase sync error:", e);
+  }
+}
+
+async function syncUserLeaderboard() {
+  const currentTick = Math.floor(Date.now() / 800);
+  const nw = Math.max(0, Math.round(updateUserPanel(currentTick)));
+  const roi = Number((((nw - 10000) / 10000) * 100).toFixed(2));
+  const headers = {
+    apikey: SUPABASE_KEY,
+    "Content-Type": "application/json",
+    Prefer: "return=minimal"
+  };
+  try {
+    const res = await fetch(SUPABASE_URL + "/rest/v1/leaderboard?select=id&player_name=eq." + encodeURIComponent(playerName) + "&limit=1", { headers: { apikey: SUPABASE_KEY } });
+    const rows = await res.json();
+    const payload = { net_worth: nw, return_rate: roi, created_at: new Date().toISOString() };
+    if (rows && rows.length > 0) {
+      await fetch(SUPABASE_URL + "/rest/v1/leaderboard?id=eq." + rows[0].id, {
+        method: "PATCH",
+        headers,
+        body: JSON.stringify(payload)
+      });
+    } else {
+      await fetch(SUPABASE_URL + "/rest/v1/leaderboard", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ player_name: playerName, ...payload })
+      });
+    }
+  } catch (e) {
+    console.warn("Leaderboard upload error:", e);
+  }
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  renderTick();
+  fetchAiAndLeaderboard();
+  setInterval(renderTick, 800);
+  setInterval(() => {
+    syncUserLeaderboard();
+    fetchAiAndLeaderboard();
+  }, 4000);
+});
+</script>
+</body>
+</html>
