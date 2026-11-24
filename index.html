@@ -1,12 +1,18 @@
-from IPython.display import HTML, display
-
-ai_stock_game_html = """
 <!DOCTYPE html>
-<html>
+<html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 量化股市模擬交易終端</title>
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&family=JetBrains+Mono:wght@600;800&display=swap');
+
+    body {
+        background: #010409;
+        margin: 0;
+        padding: 16px;
+        color: #e6edf3;
+    }
 
     .terminal-box {
         font-family: 'Noto Sans TC', sans-serif;
@@ -124,6 +130,10 @@ ai_stock_game_html = """
         margin-bottom: 12px;
     }
 
+    @media (max-width: 600px) {
+        .dashboard { grid-template-columns: repeat(2, 1fr); }
+    }
+
     .stat-card {
         background: #161b22;
         border: 1px solid #30363d;
@@ -177,6 +187,7 @@ ai_stock_game_html = """
     .btn-close { background: #f57c00; color: white; }
     .btn-ai { background: linear-gradient(90deg, #00b4db, #0083b0); color: white; box-shadow: 0 0 12px rgba(0, 180, 219, 0.4); }
     .btn-gacha { background: linear-gradient(90deg, #8e2de2, #4a00e0); color: white; }
+    .btn-rank { background: linear-gradient(90deg, #f59e0b, #d97706); color: #0d1117; }
 
     .items-bar {
         margin-top: 12px;
@@ -201,6 +212,76 @@ ai_stock_game_html = """
         font-size: 13px;
         cursor: pointer;
         font-weight: bold;
+    }
+
+    /* 全球排行榜區塊樣式 */
+    .leaderboard-panel {
+        margin-top: 14px;
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 10px;
+        padding: 14px;
+    }
+
+    .lb-header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #21262d;
+    }
+
+    .lb-submit-box {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .lb-input {
+        background: #0d1117;
+        border: 1px solid #30363d;
+        color: #e6edf3;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: 'Noto Sans TC', sans-serif;
+        width: 150px;
+    }
+    .lb-input:focus {
+        outline: none;
+        border-color: #f59e0b;
+    }
+
+    .lb-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+    }
+
+    .lb-table th {
+        text-align: left;
+        color: #8b949e;
+        padding: 8px;
+        border-bottom: 1px solid #30363d;
+    }
+
+    .lb-table td {
+        padding: 8px;
+        border-bottom: 1px solid #21262d;
+        font-family: 'JetBrains Mono', 'Noto Sans TC', monospace;
+    }
+
+    .lb-table tr:hover {
+        background: rgba(255, 255, 255, 0.03);
+    }
+
+    .rank-badge {
+        font-weight: 900;
+        font-size: 14px;
     }
 </style>
 </head>
@@ -284,13 +365,46 @@ ai_stock_game_html = """
             <span style="font-size: 12px; color: #6e7681;">(尚無道具)</span>
         </div>
     </div>
+
+    <!-- 全球即時排行榜 -->
+    <div class="leaderboard-panel">
+        <div class="lb-header">
+            <div>
+                <span style="font-size: 16px; font-weight: 900; color: #ffd700;">🏆 全球即時股神排行榜 (TOP 10)</span>
+                <span id="networth-preview" style="font-size: 12px; color: #8b949e; margin-left: 8px;">目前總淨值：$10,000</span>
+            </div>
+            <div class="lb-submit-box">
+                <input type="text" id="player-name" class="lb-input" placeholder="輸入操盤手暱稱..." maxlength="16">
+                <button class="btn btn-rank" id="btn-submit-score" onclick="submitScore()">🚀 上傳戰績</button>
+                <button class="btn" style="background: #21262d; color: #c9d1d9; padding: 9px 12px;" onclick="loadLeaderboard()">🔄 刷新</button>
+            </div>
+        </div>
+
+        <table class="lb-table">
+            <thead>
+                <tr>
+                    <th style="width: 65px;">排名</th>
+                    <th>操盤手暱稱</th>
+                    <th style="text-align: right;">總資產淨值</th>
+                    <th style="text-align: right;">總報酬率</th>
+                    <th style="text-align: right;">上榜時間</th>
+                </tr>
+            </thead>
+            <tbody id="lb-body">
+                <tr><td colspan="5" style="text-align: center; color: #8b949e; padding: 16px;">正在連線至全球雲端排行榜...</td></tr>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <script>
+    // Supabase 雲端資料庫連線設定
+    const SUPABASE_URL = "https://mkdfrrmvchuovqafwyvd.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_HAlAC8PR6fT4sOKIttqqJw_jHdLECaj";
+
     const canvas = document.getElementById('stockCanvas');
     const ctx = canvas.getContext('2d');
 
-    // 多檔股票設定（含不同初始價格與波動度）
     const stocks = {
         "0050": { code: "0050", name: "元大台灣50", desc: "穩健大盤指數 (低波動)", price: 195.00, vol: 1.1, history: Array(60).fill(195.00) },
         "2330": { code: "2330", name: "台積電", desc: "護國神山權值王 (中波動)", price: 1050.00, vol: 1.7, history: Array(60).fill(1050.00) },
@@ -299,8 +413,9 @@ ai_stock_game_html = """
         "3481": { code: "3481", name: "群創", desc: "面板主力飆股 (極高波動)", price: 16.50, vol: 3.4, history: Array(60).fill(16.50) }
     };
 
+    const INITIAL_CAPITAL = 10000;
     let currentStockKey = "0050";
-    let cash = 10000;
+    let cash = INITIAL_CAPITAL;
     let leverage = 1;
 
     let position = null;
@@ -312,7 +427,6 @@ ai_stock_game_html = """
     let trendTicks = 0;
     let items = [];
 
-    // AI 代操變數
     let aiActive = false;
     let aiSecondsLeft = 0;
     let aiCountdownInterval = null;
@@ -325,6 +439,17 @@ ai_stock_game_html = """
         { text: "💥 利空：供應鏈傳砍單雜音，停損賣壓湧現！", bias: -0.65, ticks: 6 },
         { text: "⚖️ 盤整：市場觀望總經數據，多空狹幅震盪。", bias: 0.0, ticks: 7 }
     ];
+
+    // 載入記憶的玩家暱稱
+    const savedName = localStorage.getItem('stock_game_player_name');
+    if (savedName) {
+        document.getElementById('player-name').value = savedName;
+    }
+
+    function getTotalNetWorth() {
+        if (!position) return Math.round(cash);
+        return Math.max(0, Math.round(cash + investedCash + calcPnL()));
+    }
 
     function logAI(msg) {
         const box = document.getElementById('ai-log');
@@ -410,7 +535,6 @@ ai_stock_game_html = """
         return investedCash * pctChange * leverage * direction;
     }
 
-    // 啟動電腦 AI 代操 30 秒
     function startAI() {
         if (aiActive) return;
         if (position) {
@@ -452,21 +576,16 @@ ai_stock_game_html = """
         logAI(`[AI 結束] ${manualStop ? '已手動中止' : '30 秒代操完成'}！結算總資金 $${cash.toLocaleString()} (${sign}$${diff.toLocaleString()})`);
     }
 
-    // AI 交易核心決策邏輯 (每次報價跳動時執行)
     function runAIDecision() {
         const s = stocks[currentStockKey];
         const hist = s.history;
         const len = hist.length;
-        // 計算短期動能 (最近 4 根 vs 前 4 根平均)
         const recentAvg = (hist[len-1] + hist[len-2] + hist[len-3]) / 3;
         const pastAvg = (hist[len-4] + hist[len-5] + hist[len-6]) / 3;
         const momentum = (recentAvg - pastAvg) / pastAvg;
-
-        // 結合新聞訊號與均線動能的綜合分數
         const signalScore = momentum * 100 + trendBias * 0.8;
 
         if (!position) {
-            // 空手時尋找進場機會
             if (signalScore > 0.25) {
                 leverage = signalScore > 0.6 ? 5 : 1;
                 document.querySelectorAll('.lev-btn').forEach(b => b.classList.toggle('active', b.innerText.startsWith(leverage + 'x')));
@@ -479,23 +598,19 @@ ai_stock_game_html = """
                 logAI(`[AI 進場] 偵測空頭下殺 (信號 ${signalScore.toFixed(2)})，開啟 ${leverage}x 放空 @ ${s.price.toFixed(2)}`);
             }
         } else {
-            // 持倉中：判斷停利、停損或趨勢反轉
             const pnl = calcPnL();
             const roi = pnl / investedCash;
 
-            // 1. 獲利超過 8% 自動鎖利平倉
             if (roi >= 0.08) {
                 closePosition();
                 logAI(`[AI 停利] 達標獲利 +$${Math.round(pnl).toLocaleString()} (+${(roi*100).toFixed(1)}%)，落袋為安！`);
                 return;
             }
-            // 2. 虧損超過 -6% 嚴格停損
             if (roi <= -0.06) {
                 closePosition();
                 logAI(`[AI 停損] 觸及風控線 -$${Math.abs(Math.round(pnl)).toLocaleString()}，果斷砍倉保本！`);
                 return;
             }
-            // 3. 趨勢反轉平倉
             if (position === 'LONG' && signalScore < -0.2) {
                 closePosition();
                 logAI(`[AI 轉向] 多頭動能轉弱，平倉結算 ($${pnl >= 0 ? '+' : ''}${Math.round(pnl)})`);
@@ -573,6 +688,7 @@ ai_stock_game_html = """
         }
 
         document.getElementById('cash-val').innerText = `$${cash.toLocaleString()}`;
+        document.getElementById('networth-preview').innerText = `目前總淨值：$${getTotalNetWorth().toLocaleString()}`;
 
         if (position) {
             const dirText = (aiActive ? "🤖 " : "") + (position === 'LONG' ? `做多 ${leverage}x` : `放空 ${leverage}x`);
@@ -664,6 +780,101 @@ ai_stock_game_html = """
         }
     }
 
+    // 讀取 Supabase 全球排行榜
+    async function loadLeaderboard() {
+        const tbody = document.getElementById('lb-body');
+        try {
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard?select=*&order=net_worth.desc&limit=10`, {
+                headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`
+                }
+            });
+            if (!res.ok) throw new Error('資料表讀取失敗，請確認已在 Supabase 執行建表 SQL');
+            const data = await res.json();
+
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #8b949e; padding: 16px;">目前還沒有人上榜，快輸入暱稱搶下全球第一名！</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.map((row, index) => {
+                const rankIcons = ['🥇 1', '🥈 2', '🥉 3'];
+                const rankText = index < 3 ? rankIcons[index] : `#${index + 1}`;
+                const roi = Number(row.return_rate);
+                const roiColor = roi >= 0 ? '#ff4d4f' : '#00e676';
+                const roiSign = roi >= 0 ? '+' : '';
+                const safeName = escapeHtml(row.player_name);
+                const dateObj = new Date(row.created_at);
+                const timeStr = `${dateObj.getMonth()+1}/${dateObj.getDate()} ${String(dateObj.getHours()).padStart(2,'0')}:${String(dateObj.getMinutes()).padStart(2,'0')}`;
+
+                return `
+                    <tr>
+                        <td class="rank-badge">${rankText}</td>
+                        <td style="font-weight: bold; color: #e6edf3;">${safeName}</td>
+                        <td style="text-align: right; color: #ffd700; font-weight: bold;">$${Number(row.net_worth).toLocaleString()}</td>
+                        <td style="text-align: right; color: ${roiColor}; font-weight: bold;">${roiSign}${roi.toFixed(1)}%</td>
+                        <td style="text-align: right; color: #8b949e; font-size: 12px;">${timeStr}</td>
+                    </tr>
+                `;
+            }).join('');
+        } catch (err) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #ff4d4f; padding: 14px;">⚠️ 連線失敗：請確認 Supabase 已建立 leaderboard 資料表 (${err.message})</td></tr>`;
+        }
+    }
+
+    // 上傳當前戰績至 Supabase
+    async function submitScore() {
+        const nameInput = document.getElementById('player-name');
+        const btn = document.getElementById('btn-submit-score');
+        const playerName = nameInput.value.trim();
+
+        if (!playerName) {
+            alert("請先輸入你的操盤手暱稱再上傳戰績！");
+            nameInput.focus();
+            return;
+        }
+
+        localStorage.setItem('stock_game_player_name', playerName);
+        const netWorth = getTotalNetWorth();
+        const returnRate = Number((((netWorth - INITIAL_CAPITAL) / INITIAL_CAPITAL) * 100).toFixed(2));
+
+        btn.disabled = true;
+        btn.innerText = "上傳中...";
+
+        try {
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard`, {
+                method: 'POST',
+                headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=minimal'
+                },
+                body: JSON.stringify({
+                    player_name: playerName,
+                    net_worth: netWorth,
+                    return_rate: returnRate
+                })
+            });
+
+            if (!res.ok) throw new Error('寫入資料庫被拒絕，請確認 SQL 權限設定');
+            logAI(`[全球排行] ${playerName} 成功上傳戰績：總淨值 $${netWorth.toLocaleString()} (${returnRate >= 0 ? '+' : ''}${returnRate}%)`);
+            await loadLeaderboard();
+        } catch (err) {
+            alert("上傳失敗：" + err.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "🚀 上傳戰績";
+        }
+    }
+
+    function escapeHtml(str) {
+        return str.replace(/[&<>"']/g, m => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        })[m]);
+    }
+
     // 主遊戲迴圈
     setInterval(() => {
         if (trendTicks > 0) {
@@ -676,7 +887,6 @@ ai_stock_game_html = """
             document.getElementById('news-text').innerText = ev.text;
         }
 
-        // 所有股票同步跳動報價
         Object.keys(stocks).forEach(k => {
             const st = stocks[k];
             const biasFactor = (k === currentStockKey) ? trendBias : trendBias * 0.5;
@@ -697,9 +907,7 @@ ai_stock_game_html = """
     renderStockTabs();
     drawChart();
     updateUI();
+    loadLeaderboard();
 </script>
 </body>
 </html>
-"""
-
-display(HTML(ai_stock_game_html))
