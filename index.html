@@ -24,6 +24,19 @@
         border-radius: 14px;
         border: 1px solid #30363d;
         box-shadow: 0 12px 35px rgba(0,0,0,0.75);
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    @keyframes shakeAnim {
+        0%, 100% { transform: translateX(0); }
+        15%, 45%, 75% { transform: translateX(-8px); }
+        30%, 60%, 90% { transform: translateX(8px); }
+    }
+
+    .shake-crash {
+        animation: shakeAnim 0.45s ease-in-out;
+        border-color: #ff4d4f !important;
+        box-shadow: 0 0 30px rgba(255, 77, 79, 0.65) !important;
     }
 
     .top-bar {
@@ -42,6 +55,14 @@
         gap: 6px;
         flex-wrap: wrap;
         margin-bottom: 12px;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .stock-tabs-left {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
     }
 
     .stock-tab {
@@ -62,6 +83,18 @@
         border-color: #58a6ff;
     }
 
+    .sound-btn {
+        background: #161b22;
+        border: 1px solid #30363d;
+        color: #c9d1d9;
+        padding: 6px 10px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    .sound-btn:hover { border-color: #ffd700; color: #ffd700; }
+
     .sync-badge {
         font-size: 11px;
         background: rgba(31, 111, 235, 0.2);
@@ -72,6 +105,21 @@
         margin-left: 8px;
         vertical-align: middle;
     }
+
+    .rank-badge {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 900;
+        padding: 2px 8px;
+        border-radius: 999px;
+        margin-left: 6px;
+        vertical-align: middle;
+    }
+    .rank-rookie { background: rgba(139, 148, 158, 0.2); color: #c9d1d9; border: 1px solid #6e7681; }
+    .rank-whale { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #f59e0b; }
+    .rank-wolf { background: rgba(239, 68, 68, 0.22); color: #f87171; border: 1px solid #ef4444; }
+    .rank-god { background: linear-gradient(90deg, rgba(168,85,247,0.3), rgba(236,72,153,0.3)); color: #f472b6; border: 1px solid #e879f9; }
+    .rank-buffett { background: linear-gradient(90deg, #ffd700, #f59e0b); color: #0d1117; border: 1px solid #fef08a; box-shadow: 0 0 10px rgba(255, 215, 0, 0.45); }
 
     .price-display {
         font-family: 'JetBrains Mono', monospace;
@@ -93,6 +141,24 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        gap: 8px;
+        transition: 0.25s;
+    }
+
+    .news-blackswan {
+        background: rgba(239, 68, 68, 0.22) !important;
+        border-left: 4px solid #ff4d4f !important;
+        color: #ff8080 !important;
+        font-weight: 900;
+        box-shadow: 0 0 15px rgba(255, 77, 79, 0.25);
+    }
+
+    .news-superbull {
+        background: rgba(16, 185, 129, 0.2) !important;
+        border-left: 4px solid #00e676 !important;
+        color: #6ee7b7 !important;
+        font-weight: 900;
+        box-shadow: 0 0 15px rgba(0, 230, 118, 0.25);
     }
 
     .chart-wrapper {
@@ -292,8 +358,11 @@
 </head>
 <body>
 
-<div class="terminal-box">
-    <div class="stock-tabs" id="stock-tabs"></div>
+<div class="terminal-box" id="terminal-box">
+    <div class="stock-tabs">
+        <div class="stock-tabs-left" id="stock-tabs"></div>
+        <button class="sound-btn" id="btn-sound" onclick="toggleSound()">🔊 音效：開</button>
+    </div>
 
     <div class="top-bar">
         <div>
@@ -307,7 +376,7 @@
         </div>
     </div>
 
-    <div class="news-ticker">
+    <div class="news-ticker" id="news-ticker">
         <span id="news-text">📢 全球市場連線同步中...</span>
         <span id="insider-hint" style="color: #58a6ff; font-weight: bold;"></span>
     </div>
@@ -322,7 +391,7 @@
     </div>
 
     <div class="ai-log-box" id="ai-log">
-        <div>> [全球同步盤就緒] 所有玩家的股價走勢、K線與突發新聞已透過世界標準時間完全同步！</div>
+        <div>> [全球同步盤就緒] 資金與道具已啟用自動存檔，重新整理頁面不會歸零！</div>
     </div>
 
     <div class="dashboard">
@@ -373,6 +442,7 @@
         <div class="lb-header">
             <div>
                 <span style="font-size: 16px; font-weight: 900; color: #ffd700;">🏆 全球即時股神排行榜 (TOP 10)</span>
+                <span id="player-rank-badge" class="rank-badge rank-rookie">🌱 菜鳥散戶</span>
                 <span id="networth-preview" style="font-size: 12px; color: #8b949e; margin-left: 8px;">目前總淨值：$10,000</span>
             </div>
             <div class="lb-submit-box">
@@ -386,7 +456,7 @@
             <thead>
                 <tr>
                     <th style="width: 65px;">排名</th>
-                    <th>操盤手暱稱</th>
+                    <th>操盤手暱稱 / 段位</th>
                     <th style="text-align: right;">總資產淨值</th>
                     <th style="text-align: right;">總報酬率</th>
                     <th style="text-align: right;">上榜時間</th>
@@ -406,20 +476,103 @@
     const canvas = document.getElementById('stockCanvas');
     const ctx = canvas.getContext('2d');
 
+    // 8-Bit 音效引擎 (Web Audio API)
+    let soundEnabled = true;
+    let audioCtx = null;
+
+    function toggleSound() {
+        soundEnabled = !soundEnabled;
+        document.getElementById('btn-sound').innerText = soundEnabled ? "🔊 音效：開" : "🔇 音效：關";
+    }
+
+    function playSound(type) {
+        if (!soundEnabled) return;
+        try {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const now = audioCtx.currentTime;
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'OPEN') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(520, now);
+                osc.frequency.exponentialRampToValueAtTime(780, now + 0.09);
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
+                osc.start(now);
+                osc.stop(now + 0.11);
+            } else if (type === 'WIN') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, now);
+                osc.frequency.setValueAtTime(880, now + 0.08);
+                osc.frequency.setValueAtTime(1174.66, now + 0.16);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+                osc.start(now);
+                osc.stop(now + 0.32);
+            } else if (type === 'LOSS') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(320, now);
+                osc.frequency.linearRampToValueAtTime(190, now + 0.22);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
+                osc.start(now);
+                osc.stop(now + 0.24);
+            } else if (type === 'CRASH') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(160, now);
+                osc.frequency.linearRampToValueAtTime(55, now + 0.45);
+                gain.gain.setValueAtTime(0.22, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.48);
+                osc.start(now);
+                osc.stop(now + 0.48);
+            } else if (type === 'GACHA') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(660, now);
+                osc.frequency.setValueAtTime(990, now + 0.07);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+                osc.start(now);
+                osc.stop(now + 0.18);
+            }
+        } catch (e) {}
+    }
+
+    function triggerCrashShake() {
+        const box = document.getElementById('terminal-box');
+        box.classList.remove('shake-crash');
+        void box.offsetWidth;
+        box.classList.add('shake-crash');
+        playSound('CRASH');
+    }
+
+    // 段位稱號計算
+    function getRankBadge(netWorth) {
+        if (netWorth >= 1000000) return { label: "💎 巴菲特本尊", cls: "rank-buffett" };
+        if (netWorth >= 500000) return { label: "👑 少年股神", cls: "rank-god" };
+        if (netWorth >= 100000) return { label: "🐺 華爾街之狼", cls: "rank-wolf" };
+        if (netWorth >= 30000) return { label: "🔥 當沖大戶", cls: "rank-whale" };
+        return { label: "🌱 菜鳥散戶", cls: "rank-rookie" };
+    }
+
     const stocks = {
-        "0050": { code: "0050", seed: 101, name: "元大台灣50", desc: "穩健大盤指數 (低波動)", base: 195.00, price: 195.00, vol: 1.1, history: [] },
-        "2330": { code: "2330", seed: 202, name: "台積電", desc: "護國神山權值王 (中波動)", base: 1050.00, price: 1050.00, vol: 1.7, history: [] },
-        "2454": { code: "2454", seed: 303, name: "聯發科", desc: "AI 晶片旗艦 (中高波動)", base: 1320.00, price: 1320.00, vol: 2.3, history: [] },
-        "2317": { code: "2317", seed: 404, name: "鴻海", desc: "AI 伺服器代工龍頭 (中波動)", base: 215.00, price: 215.00, vol: 1.9, history: [] },
-        "3481": { code: "3481", seed: 505, name: "群創", desc: "面板主力飆股 (極高波動)", base: 16.50, price: 16.50, vol: 3.4, history: [] }
+        "0050": { code: "0050", seed: 101, name: "元大台灣50", desc: "穩健大盤指數 (低波動)", base: 195.00, price: 195.00, vol: 1.1, history: [], markers: [] },
+        "2330": { code: "2330", seed: 202, name: "台積電", desc: "護國神山權值王 (中波動)", base: 1050.00, price: 1050.00, vol: 1.7, history: [], markers: [] },
+        "2454": { code: "2454", seed: 303, name: "聯發科", desc: "AI 晶片旗艦 (中高波動)", base: 1320.00, price: 1320.00, vol: 2.3, history: [], markers: [] },
+        "2317": { code: "2317", seed: 404, name: "鴻海", desc: "AI 伺服器代工龍頭 (中波動)", base: 215.00, price: 215.00, vol: 1.9, history: [], markers: [] },
+        "3481": { code: "3481", seed: 505, name: "群創", desc: "面板主力飆股 (極高波動)", base: 16.50, price: 16.50, vol: 3.4, history: [], markers: [] }
     };
 
     const newsEvents = [
-        { text: "🔥 利多：AI 伺服器與晶片訂單爆滿，外資大舉買超！", bias: 0.55 },
-        { text: "🚀 利多：法人調升目標價，主力大單連續敲進！", bias: 0.65 },
-        { text: "❄️ 利空：美股科技股重挫，外資提款賣超！", bias: -0.55 },
-        { text: "💥 利空：供應鏈傳砍單雜音，停損賣壓湧現！", bias: -0.65 },
-        { text: "⚖️ 盤整：市場觀望總經數據，多空狹幅震盪。", bias: 0.0 }
+        { text: "🔥 利多：AI 伺服器與晶片訂單爆滿，外資大舉買超！", bias: 0.55, mode: "normal" },
+        { text: "🚀 利多：法人調升目標價，主力大單連續敲進！", bias: 0.65, mode: "normal" },
+        { text: "❄️ 利空：美股科技股重挫，外資提款賣超！", bias: -0.55, mode: "normal" },
+        { text: "💥 利空：供應鏈傳砍單雜音，停損賣壓湧現！", bias: -0.65, mode: "normal" },
+        { text: "⚖️ 盤整：市場觀望總經數據，多空狹幅震盪。", bias: 0.0, mode: "normal" }
     ];
 
     function syncRand(tick, salt) {
@@ -428,6 +581,13 @@
     }
 
     function getGlobalMarketState(tick) {
+        const cycle = tick % 100;
+        if (cycle >= 88 && cycle <= 93) {
+            return { text: "🚨【突發黑天鵝】全球系統性流動性危機！全市場恐慌性閃崩！", bias: -1.65, mode: "blackswan" };
+        }
+        if (cycle >= 44 && cycle <= 49) {
+            return { text: "⚡【聯準會緊急降息 4 碼】史詩級資金狂潮湧入！全市場暴力噴出！", bias: 1.65, mode: "superbull" };
+        }
         const block = Math.floor(tick / 10);
         return newsEvents[Math.floor(syncRand(block, 999) * newsEvents.length)];
     }
@@ -445,8 +605,14 @@
     }
 
     const INITIAL_CAPITAL = 10000;
+    const SAVED_STATE_KEY = 'stock_game_save_v1';
+    let savedState = null;
+    try {
+        savedState = JSON.parse(localStorage.getItem(SAVED_STATE_KEY) || 'null');
+    } catch (e) {}
+
     let currentStockKey = "0050";
-    let cash = INITIAL_CAPITAL;
+    let cash = (savedState && typeof savedState.cash === 'number' && savedState.cash >= 0) ? savedState.cash : INITIAL_CAPITAL;
     let leverage = 1;
 
     let position = null;
@@ -454,7 +620,7 @@
     let investedCash = 0;
     let shieldActive = false;
 
-    let items = [];
+    let items = (savedState && Array.isArray(savedState.items)) ? savedState.items : [];
     let aiActive = false;
     let aiSecondsLeft = 0;
     let aiCountdownInterval = null;
@@ -462,6 +628,7 @@
 
     let lastProcessedTick = -1;
     let vipDrift = 0;
+    let lastRankLabel = getRankBadge(cash).label;
 
     const savedName = localStorage.getItem('stock_game_player_name');
     if (savedName) {
@@ -477,12 +644,32 @@
         return Math.max(0, Math.round(cash + investedCash + calcPnL()));
     }
 
+    function saveGameState() {
+        try {
+            const currentEquity = getTotalNetWorth();
+            localStorage.setItem(SAVED_STATE_KEY, JSON.stringify({
+                cash: currentEquity,
+                items: items
+            }));
+        } catch (e) {}
+    }
+
     function logAI(msg) {
         const box = document.getElementById('ai-log');
         const line = document.createElement('div');
         line.innerText = `> ${msg}`;
         box.prepend(line);
         if (box.children.length > 15) box.removeChild(box.lastChild);
+    }
+
+    function addChartMarker(st, label, color) {
+        if (st.history.length === 0) return;
+        st.markers.push({
+            idx: st.history.length - 1,
+            price: st.price,
+            label: label,
+            color: color
+        });
     }
 
     function renderStockTabs() {
@@ -524,17 +711,24 @@
             if (!isByAI) alert("本金不足！系統發放 $3,000 救濟金！");
             cash = 3000;
         }
+        const st = stocks[currentStockKey];
         position = type;
-        entryPrice = stocks[currentStockKey].price;
+        entryPrice = st.price;
         investedCash = cash;
         cash = 0;
 
+        addChartMarker(st, type === 'LONG' ? 'B' : 'S', type === 'LONG' ? '#ff4d4f' : '#00e676');
+        if (!isByAI) playSound('OPEN');
+
         syncActionButtons();
+        drawChart();
         updateUI();
+        saveGameState();
     }
 
-    function closePosition() {
+    function closePosition(isByAI = false) {
         if (!position) return;
+        const st = stocks[currentStockKey];
         const pnl = calcPnL();
         cash = Math.max(0, Math.round(investedCash + pnl));
         position = null;
@@ -542,8 +736,15 @@
         investedCash = 0;
         shieldActive = false;
 
+        addChartMarker(st, '平', '#f59e0b');
+        if (!isByAI) {
+            playSound(pnl >= 0 ? 'WIN' : 'LOSS');
+        }
+
         syncActionButtons();
+        drawChart();
         updateUI();
+        saveGameState();
     }
 
     function syncActionButtons() {
@@ -567,6 +768,7 @@
         document.getElementById('ai-banner').style.display = 'flex';
         document.getElementById('ai-timer').innerText = aiSecondsLeft;
         syncActionButtons();
+        playSound('OPEN');
 
         logAI(`[AI 啟動] 量化演算法接管帳戶！初始資金 $${aiStartEquity.toLocaleString()}`);
 
@@ -582,7 +784,7 @@
     function stopAI(manual) {
         if (!aiActive) return;
         clearInterval(aiCountdownInterval);
-        if (position) closePosition();
+        if (position) closePosition(true);
 
         aiActive = false;
         document.getElementById('ai-banner').style.display = 'none';
@@ -590,6 +792,8 @@
 
         const profit = cash - aiStartEquity;
         const sign = profit >= 0 ? "+" : "";
+        playSound(profit >= 0 ? 'WIN' : 'LOSS');
+        saveGameState();
         logAI(`[AI 結束] ${manual ? "手動中止" : "30秒期滿"}！結算資金 $${cash.toLocaleString()} (${sign}$${profit.toLocaleString()})`);
     }
 
@@ -625,13 +829,13 @@
             const stopLoss = vip ? -0.025 : -0.06;
 
             if (roi >= takeProfit) {
-                closePosition();
+                closePosition(true);
                 logAI(`[AI 停利出場] 獲利 +$${Math.round(pnl).toLocaleString()} (+${(roi*100).toFixed(1)}%)`);
             } else if (roi <= stopLoss) {
-                closePosition();
+                closePosition(true);
                 logAI(`[AI 停損風控] 虧損 -$${Math.abs(Math.round(pnl)).toLocaleString()} (${(roi*100).toFixed(1)}%)`);
             } else if ((position === 'LONG' && signal < -0.2) || (position === 'SHORT' && signal > 0.2)) {
-                closePosition();
+                closePosition(true);
                 logAI(`[AI 趨勢反轉平倉] 結算 $${Math.round(pnl).toLocaleString()}`);
             }
         }
@@ -657,6 +861,7 @@
             return;
         }
         cash -= 2000;
+        playSound('GACHA');
         const r = isVipPlayer() ? (Math.random() * 0.55 + 0.45) : Math.random();
         if (r < 0.35) {
             items.push({ name: "🔮 內線消息卡", type: "INSIDER" });
@@ -666,14 +871,17 @@
             alert("抽中【🛡️ 防爆倉護身符】！爆倉時可保住 80% 本金。");
         } else {
             cash += 5000;
+            playSound('WIN');
             alert("🎉 頭獎！抽中【💰 大戶空投支票】，現金直接 +$5,000！");
         }
         renderItems();
         updateUI();
+        saveGameState();
     }
 
     function useItem(idx) {
         const item = items.splice(idx, 1)[0];
+        playSound('OPEN');
         if (item.type === "INSIDER") {
             const nextEv = getGlobalMarketState(lastProcessedTick + 10);
             document.getElementById('insider-hint').innerText = `🤫 內線預知下一波：${nextEv.text.slice(0, 14)}...`;
@@ -683,6 +891,7 @@
             alert("🛡️ 防爆倉護身符已啟動！下一次面臨爆倉時將自動護盤。");
         }
         renderItems();
+        saveGameState();
     }
 
     function renderItems() {
@@ -708,8 +917,20 @@
         priceEl.className = `price-display ${pct >= 0 ? 'up' : 'down'}`;
         pctEl.className = pct >= 0 ? 'up' : 'down';
 
+        const nw = getTotalNetWorth();
         document.getElementById('cash-val').innerText = `$${cash.toLocaleString()}`;
-        document.getElementById('networth-preview').innerText = `目前總淨值：$${getTotalNetWorth().toLocaleString()}`;
+        document.getElementById('networth-preview').innerText = `目前總淨值：$${nw.toLocaleString()}`;
+
+        const badgeInfo = getRankBadge(nw);
+        const badgeEl = document.getElementById('player-rank-badge');
+        badgeEl.innerText = badgeInfo.label;
+        badgeEl.className = `rank-badge ${badgeInfo.cls}`;
+        if (badgeInfo.label !== lastRankLabel) {
+            if (nw > INITIAL_CAPITAL) {
+                logAI(`[段位晉升] 恭喜突破資產門檻，晉升為【${badgeInfo.label}】！`);
+            }
+            lastRankLabel = badgeInfo.label;
+        }
 
         if (position) {
             const prefix = aiActive ? "🤖 " : "";
@@ -730,11 +951,15 @@
                     position = null;
                     shieldActive = false;
                     syncActionButtons();
+                    saveGameState();
+                    playSound('OPEN');
                     alert("🛡️ 防爆倉護身符發動！已為您保留 80% 本金！");
                 } else {
                     position = null;
                     investedCash = 0;
                     syncActionButtons();
+                    saveGameState();
+                    triggerCrashShake();
                     if (!aiActive) alert("💥 槓桿倍數過高，慘遭斷頭爆倉！");
                 }
             }
@@ -748,21 +973,46 @@
     }
 
     function drawChart() {
-        const h = stocks[currentStockKey].history;
+        const st = stocks[currentStockKey];
+        const h = st.history;
         const w = canvas.width;
         const ch = canvas.height;
         if (h.length < 2) return;
         ctx.clearRect(0, 0, w, ch);
 
-        const minP = Math.min(...h) * 0.996;
-        const maxP = Math.max(...h) * 1.004;
+        let minP = Math.min(...h);
+        let maxP = Math.max(...h);
+        if (position && entryPrice > 0) {
+            minP = Math.min(minP, entryPrice);
+            maxP = Math.max(maxP, entryPrice);
+        }
+        minP *= 0.996;
+        maxP *= 1.004;
         const range = maxP - minP || 1;
+        const getY = val => ch - ((val - minP) / range) * (ch - 36) - 18;
 
         ctx.strokeStyle = "#161b22";
         ctx.lineWidth = 1;
         for (let i = 1; i < 4; i++) {
             const y = (ch / 4) * i;
             ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+        }
+
+        if (position && entryPrice > 0) {
+            const ey = getY(entryPrice);
+            ctx.save();
+            ctx.setLineDash([6, 4]);
+            ctx.strokeStyle = position === 'LONG' ? "rgba(255, 77, 79, 0.85)" : "rgba(0, 230, 118, 0.85)";
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(0, ey);
+            ctx.lineTo(w, ey);
+            ctx.stroke();
+            ctx.restore();
+
+            ctx.fillStyle = position === 'LONG' ? "#ff4d4f" : "#00e676";
+            ctx.font = "bold 11px JetBrains Mono, monospace";
+            ctx.fillText(`成本 ${entryPrice.toFixed(2)}`, 8, Math.max(14, ey - 5));
         }
 
         const isUp = h[h.length - 1] >= h[h.length - 2];
@@ -773,7 +1023,7 @@
         ctx.lineWidth = 3;
         h.forEach((val, idx) => {
             const x = (idx / (h.length - 1)) * w;
-            const y = ch - ((val - minP) / range) * (ch - 30) - 15;
+            const y = getY(val);
             if (idx === 0) ctx.moveTo(x, y);
             else ctx.lineTo(x, y);
         });
@@ -787,6 +1037,28 @@
         grad.addColorStop(1, "rgba(13, 17, 23, 0)");
         ctx.fillStyle = grad;
         ctx.fill();
+
+        st.markers.forEach(m => {
+            if (m.idx < 0 || m.idx >= h.length) return;
+            const mx = (m.idx / (h.length - 1)) * w;
+            const my = getY(m.price);
+
+            ctx.beginPath();
+            ctx.arc(mx, my, 9, 0, Math.PI * 2);
+            ctx.fillStyle = m.color;
+            ctx.fill();
+            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = "#0d1117";
+            ctx.stroke();
+
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "bold 10px Noto Sans TC, sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(m.label, mx, my);
+            ctx.textAlign = "start";
+            ctx.textBaseline = "alphabetic";
+        });
     }
 
     let lastSubmitTime = 0;
@@ -820,6 +1092,8 @@
                 else if (idx === 1) rankDisplay = `🥈 2`;
                 else if (idx === 2) rankDisplay = `🥉 3`;
 
+                const nw = Number(row.net_worth);
+                const badge = getRankBadge(nw);
                 const roi = Number(row.return_rate);
                 const roiColor = roi >= 0 ? '#ff4d4f' : '#00e676';
                 const roiSign = roi >= 0 ? '+' : '';
@@ -829,8 +1103,11 @@
                 return `
                     <tr>
                         <td><strong>${rankDisplay}</strong></td>
-                        <td style="font-family: 'Noto Sans TC', sans-serif; font-weight: bold;">${escapeHtml(row.player_name)}</td>
-                        <td style="text-align: right; color: #ffd700; font-weight: bold;">$${Number(row.net_worth).toLocaleString()}</td>
+                        <td style="font-family: 'Noto Sans TC', sans-serif; font-weight: bold;">
+                            ${escapeHtml(row.player_name)}
+                            <span class="rank-badge ${badge.cls}">${badge.label}</span>
+                        </td>
+                        <td style="text-align: right; color: #ffd700; font-weight: bold;">$${nw.toLocaleString()}</td>
                         <td style="text-align: right; color: ${roiColor};">${roiSign}${roi.toFixed(1)}%</td>
                         <td style="text-align: right; color: #8b949e; font-size: 12px;">${timeStr}</td>
                     </tr>
@@ -857,7 +1134,6 @@
             return;
         }
 
-        // 每 10 分鐘只能更改一次暱稱（7676 除外）
         const lockedName = localStorage.getItem('stock_game_locked_name');
         const lockedTime = Number(localStorage.getItem('stock_game_locked_time') || 0);
         const RENAME_COOLDOWN = 10 * 60 * 1000;
@@ -887,7 +1163,6 @@
         btn.innerText = "檢查榜單...";
 
         try {
-            // 查詢資料庫是否已存在同名玩家，同名只保留最高分
             const checkRes = await fetch(
                 `${SUPABASE_URL}/rest/v1/leaderboard?select=*&player_name=eq.${encodeURIComponent(playerName)}&order=net_worth.desc&limit=1`,
                 { headers: { 'apikey': SUPABASE_KEY } }
@@ -958,6 +1233,8 @@
                 localStorage.setItem('stock_game_locked_time', String(Date.now()));
             }
             lastSubmitTime = Date.now();
+            saveGameState();
+            playSound('WIN');
 
             logAI(`[全球排行] ${playerName} 成功刷新最高戰績：$${currentNetWorth.toLocaleString()} (${returnRate >= 0 ? '+' : ''}${returnRate}%)`);
             await loadLeaderboard();
@@ -981,7 +1258,11 @@
         lastProcessedTick = currentTick;
 
         const ev = getGlobalMarketState(currentTick);
+        const tickerEl = document.getElementById('news-ticker');
         document.getElementById('news-text').innerText = ev.text;
+        tickerEl.className = 'news-ticker' +
+            (ev.mode === 'blackswan' ? ' news-blackswan' : '') +
+            (ev.mode === 'superbull' ? ' news-superbull' : '');
 
         const vip = isVipPlayer();
         Object.keys(stocks).forEach(k => {
@@ -992,7 +1273,11 @@
                 }
             } else {
                 st.history.push(computePriceAtTick(st, currentTick));
-                if (st.history.length > 60) st.history.shift();
+                if (st.history.length > 60) {
+                    st.history.shift();
+                    st.markers.forEach(m => m.idx--);
+                    st.markers = st.markers.filter(m => m.idx >= 0);
+                }
             }
 
             let syncedPrice = st.history[st.history.length - 1];
@@ -1009,7 +1294,9 @@
         updateUI();
     }
 
+    window.addEventListener('beforeunload', saveGameState);
     renderStockTabs();
+    renderItems();
     syncTickLoop();
     loadLeaderboard();
     setInterval(syncTickLoop, 200);
