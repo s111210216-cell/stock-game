@@ -880,7 +880,29 @@
         if (currentNetWorth > 999999999) {
             alert("數值異常，無法上傳！");
             return;
-        }
+       setInterval(loadLeaderboard, 15000);
+
+    function syncTickLoop() {
+        const currentTick = Math.floor(Date.now() / 800);
+        if (currentTick === lastProcessedTick) return;
+        lastProcessedTick = currentTick;
+
+        const ev = getGlobalMarketState(currentTick);
+        document.getElementById('news-text').innerText = ev.text;
+
+        const vip = isVipPlayer();
+        Object.keys(stocks).forEach(k => {
+            const st = stocks[k];
+            if (st.history.length === 0) {
+                for (let i = 59; i >= 0; i--) {
+                    st.history.push(computePriceAtTick(st, currentTick - i));
+                }
+            } else {
+                st.history.push(computePriceAtTick(st, currentTick));
+                if (st.history.length > 60) st.history.shift();
+            }
+
+            let syncedPrice = st.history[st.history.length - 1];
 
         const returnRate = Number((((currentNetWorth - INITIAL_CAPITAL) / INITIAL_CAPITAL) * 100).toFixed(2));
         const btn = document.getElementById('btn-submit-score');
