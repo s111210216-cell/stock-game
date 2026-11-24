@@ -2,152 +2,168 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <title>AI 程式設計競技場 (Code Arena)</title>
+  <title>AI 程式設計競技場（免 API Key 手動對決版）</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col">
 
-  <!-- 頂部導覽與題目區 -->
-  <header class="bg-slate-900 border-b border-slate-800 p-4 flex justify-between items-center">
-    <div>
-      <h1 class="text-xl font-bold text-cyan-400">⚔️ AI Code Arena 盲測競技場</h1>
-      <p id="prompt-display" class="text-sm text-slate-300 mt-1">載入題目中...</p>
+  <!-- 頂部：出題產生器 -->
+  <header class="bg-slate-900 border-b border-slate-800 p-4">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row gap-3 items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span class="text-2xl">⚔️</span>
+        <h1 class="text-lg font-bold text-cyan-400">AI Code Arena（免 Key 單機對決版）</h1>
+      </div>
+      
+      <div class="flex-1 flex gap-2 w-full md:max-w-2xl">
+        <input id="topic-input" type="text" 
+          value="用單一 HTML 檔案寫一個霓虹風格的貪吃蛇遊戲，要有計分板、加速道具與重新開始按鈕" 
+          class="flex-1 bg-slate-800 border border-slate-700 rounded px-3 py-1.5 text-sm text-white focus:outline-none focus:border-cyan-500"
+          placeholder="輸入你想考 AI 的題目...">
+        <button onclick="copyPrompt()" id="copy-btn" class="bg-cyan-600 hover:bg-cyan-500 px-4 py-1.5 rounded text-sm font-bold whitespace-nowrap transition">
+          📋 複製標準出題 Prompt
+        </button>
+      </div>
     </div>
-    <button onclick="loadNextMatch()" class="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded text-sm border border-slate-600">
-      換下一場對決 ➔
-    </button>
   </header>
 
-  <!-- 左右雙欄對戰沙盒區 -->
-  <main class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
-    <!-- Model A -->
-    <div class="flex flex-col bg-slate-900 rounded-lg border border-slate-800 overflow-hidden">
-      <div class="p-3 bg-slate-800/60 flex justify-between items-center">
-        <span id="label-a" class="font-bold text-amber-400">🤖 選手 A（神秘模型）</span>
-        <button onclick="toggleCode('A')" class="text-xs bg-slate-700 px-2 py-1 rounded">檢視原始碼</button>
+  <!-- 貼上程式碼區（可收合） -->
+  <section id="setup-panel" class="max-w-7xl mx-auto w-full p-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+      <!-- 左側輸入 -->
+      <div class="bg-slate-900 p-3 rounded-lg border border-slate-800">
+        <div class="flex justify-between items-center mb-2">
+          <input id="name-1" type="text" value="ChatGPT" class="bg-slate-800 text-amber-400 font-bold text-sm px-2 py-1 rounded border border-slate-700 w-40">
+          <span class="text-xs text-slate-400">貼上第一位 AI 的程式碼</span>
+        </div>
+        <textarea id="raw-1" rows="5" placeholder="把第一個 AI 產出的 HTML 程式碼整段貼在這裡..." class="w-full bg-slate-950 text-xs text-green-400 p-2 rounded border border-slate-800 font-mono focus:outline-none focus:border-amber-500"></textarea>
       </div>
-      <iframe id="frame-a" sandbox="allow-scripts" class="w-full h-[500px] bg-white"></iframe>
-      <pre id="code-a" class="hidden p-3 text-xs overflow-auto h-[500px] bg-slate-950 text-green-400"></pre>
+
+      <!-- 右側輸入 -->
+      <div class="bg-slate-900 p-3 rounded-lg border border-slate-800">
+        <div class="flex justify-between items-center mb-2">
+          <input id="name-2" type="text" value="Gemini" class="bg-slate-800 text-purple-400 font-bold text-sm px-2 py-1 rounded border border-slate-700 w-40">
+          <span class="text-xs text-slate-400">貼上第二位 AI 的程式碼</span>
+        </div>
+        <textarea id="raw-2" rows="5" placeholder="把第二個 AI 產出的 HTML 程式碼整段貼在這裡..." class="w-full bg-slate-950 text-xs text-green-400 p-2 rounded border border-slate-800 font-mono focus:outline-none focus:border-purple-500"></textarea>
+      </div>
     </div>
 
-    <!-- Model B -->
-    <div class="flex flex-col bg-slate-900 rounded-lg border border-slate-800 overflow-hidden">
-      <div class="p-3 bg-slate-800/60 flex justify-between items-center">
-        <span id="label-b" class="font-bold text-purple-400">🤖 選手 B（神秘模型）</span>
-        <button onclick="toggleCode('B')" class="text-xs bg-slate-700 px-2 py-1 rounded">檢視原始碼</button>
+    <div class="flex justify-center items-center gap-4">
+      <label class="flex items-center gap-2 text-sm text-slate-300 cursor-pointer select-none">
+        <input id="blind-mode" type="checkbox" checked class="accent-cyan-500 w-4 h-4">
+        啟用盲測模式（隨機交換左右位置，投票後才揭曉誰是誰）
+      </label>
+      <button onclick="startBattle()" class="bg-gradient-to-r from-amber-500 to-purple-600 hover:opacity-90 px-6 py-2 rounded-lg font-bold text-white shadow-lg transition">
+        ⚔️ 開始渲染對決！
+      </button>
+    </div>
+  </section>
+
+  <!-- 雙欄並排競技場舞台 -->
+  <main id="arena-stage" class="hidden flex-1 max-w-7xl mx-auto w-full px-4 pb-6 flex flex-col">
+    <div class="flex justify-between items-center mb-2">
+      <button onclick="resetSetup()" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded border border-slate-700">
+        ⬅️ 修改題目 / 重新貼上程式碼
+      </button>
+      <span id="status-banner" class="text-sm font-bold text-cyan-400">盲測進行中：請試玩兩邊的成品並選出較優者！</span>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
+      <!-- 舞台 A -->
+      <div class="flex flex-col bg-slate-900 rounded-lg border border-slate-800 overflow-hidden">
+        <div class="p-2.5 bg-slate-800/80 flex justify-between items-center">
+          <span id="title-a" class="font-bold text-amber-400">🤖 選手 A（神秘模型）</span>
+          <button onclick="toggleCode('a')" class="text-xs bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded">切換原始碼</button>
+        </div>
+        <iframe id="frame-a" sandbox="allow-scripts" class="w-full h-[520px] bg-white"></iframe>
+        <pre id="code-a" class="hidden p-3 text-xs overflow-auto h-[520px] bg-slate-950 text-green-400 font-mono"></pre>
       </div>
-      <iframe id="frame-b" sandbox="allow-scripts" class="w-full h-[500px] bg-white"></iframe>
-      <pre id="code-b" class="hidden p-3 text-xs overflow-auto h-[500px] bg-slate-950 text-green-400"></pre>
+
+      <!-- 舞台 B -->
+      <div class="flex flex-col bg-slate-900 rounded-lg border border-slate-800 overflow-hidden">
+        <div class="p-2.5 bg-slate-800/80 flex justify-between items-center">
+          <span id="title-b" class="font-bold text-purple-400">🤖 選手 B（神秘模型）</span>
+          <button onclick="toggleCode('b')" class="text-xs bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded">切換原始碼</button>
+        </div>
+        <iframe id="frame-b" sandbox="allow-scripts" class="w-full h-[520px] bg-white"></iframe>
+        <pre id="code-b" class="hidden p-3 text-xs overflow-auto h-[520px] bg-slate-950 text-green-400 font-mono"></pre>
+      </div>
+    </div>
+
+    <!-- 投票揭曉區 -->
+    <div id="vote-bar" class="mt-4 flex justify-center gap-4">
+      <button onclick="revealWinner('A')" class="bg-amber-600 hover:bg-amber-500 px-6 py-2.5 rounded-lg font-bold shadow">👈 左邊 (選手 A) 勝出</button>
+      <button onclick="revealWinner('TIE')" class="bg-slate-700 hover:bg-slate-600 px-6 py-2.5 rounded-lg font-bold shadow">🤝 平手</button>
+      <button onclick="revealWinner('B')" class="bg-purple-600 hover:bg-purple-500 px-6 py-2.5 rounded-lg font-bold shadow">👉 右邊 (選手 B) 勝出</button>
     </div>
   </main>
 
-  <!-- 投票控制台與排行榜 -->
-  <footer class="bg-slate-900 border-t border-slate-800 p-4">
-    <div id="vote-panel" class="flex justify-center gap-4 mb-4">
-      <button onclick="submitVote('A')" class="bg-amber-600 hover:bg-amber-500 px-6 py-2 rounded-lg font-bold">👈 左邊 (A) 寫得比較好</button>
-      <button onclick="submitVote('TIE')" class="bg-slate-700 hover:bg-slate-600 px-6 py-2 rounded-lg font-bold">🤝 旗鼓相當（平手）</button>
-      <button onclick="submitVote('B')" class="bg-purple-600 hover:bg-purple-500 px-6 py-2 rounded-lg font-bold">👉 右邊 (B) 寫得比較好</button>
-    </div>
-
-    <!-- 即時 Elo 排行榜 -->
-    <div class="max-w-3xl mx-auto">
-      <h2 class="text-sm font-bold text-slate-400 mb-2">🏆 即時模型戰力排行榜 (Elo Rating)</h2>
-      <div id="leaderboard" class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs"></div>
-    </div>
-  </footer>
-
   <script>
-    const SUPABASE_URL = "你的_SUPABASE_URL";
-    const SUPABASE_KEY = "你的_SUPABASE_ANON_KEY";
-    const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    let contestants = { A: { name: '', code: '' }, B: { name: '', code: '' } };
 
-    let currentMatch = null;
-    let hasVoted = false;
+    // 自動剝除 AI 回覆中的 ```html ... ``` 與前後廢話
+    function cleanHtml(raw) {
+      const match = raw.match(/```html\s*([\s\S]*?)\s*```/i) || raw.match(/```\s*([\s\S]*?)\s*```/);
+      if (match) return match[1].trim();
+      const docStart = raw.indexOf('<!DOCTYPE html>');
+      const htmlStart = raw.indexOf('<html');
+      const startIdx = docStart !== -1 ? docStart : htmlStart;
+      return startIdx !== -1 ? raw.slice(startIdx).trim() : raw.trim();
+    }
 
-    async function loadNextMatch() {
-      hasVoted = false;
-      document.getElementById('vote-panel').classList.remove('opacity-50', 'pointer-events-none');
-      
-      // 撈取尚未投票的對戰，若都投完了就隨機撈一場
-      let { data } = await db.from('arena_matches').select('*').is('winner', null).limit(1);
-      if (!data || data.length === 0) {
-        const res = await db.from('arena_matches').select('*').limit(10);
-        data = res.data ? [res.data[Math.floor(Math.random() * res.data.length)]] : [];
-      }
-      if (!data || data.length === 0) {
-        document.getElementById('prompt-display').innerText = "目前沒有對戰資料，請先在 Colab 執行 create_match() 生成對戰！";
+    function copyPrompt() {
+      const topic = document.getElementById('topic-input').value.trim();
+      const fullPrompt = `請擔任頂尖前端與遊戲工程師，根據以下需求寫出一個「完全獨立、單一 HTML 檔案」的可執行網頁或小遊戲。\n需求：${topic}\n\n嚴格規則：\n1. 所有 CSS 與 JavaScript 必須全部寫在同一個 HTML 檔案內，不可引用外部本地檔案。\n2. 只輸出純 HTML 程式碼，不要有任何解釋文字。`;
+      navigator.clipboard.writeText(fullPrompt);
+      const btn = document.getElementById('copy-btn');
+      btn.innerText = '✅ 已複製！去貼給兩個 AI';
+      setTimeout(() => btn.innerText = '📋 複製標準出題 Prompt', 2000);
+    }
+
+    function startBattle() {
+      const c1 = { name: document.getElementById('name-1').value || 'AI 1', code: cleanHtml(document.getElementById('raw-1').value) };
+      const c2 = { name: document.getElementById('name-2').value || 'AI 2', code: cleanHtml(document.getElementById('raw-2').value) };
+
+      if (!c1.code || !c2.code) {
+        alert('請先在左右兩邊都貼上 AI 產出的程式碼！');
         return;
       }
 
-      currentMatch = data[0];
-      document.getElementById('prompt-display').innerText = `題目：${currentMatch.prompt}`;
-      document.getElementById('label-a').innerText = "🤖 選手 A（神秘模型）";
-      document.getElementById('label-b').innerText = "🤖 選手 B（神秘模型）";
+      const isBlind = document.getElementById('blind-mode').checked;
+      const swap = isBlind && Math.random() > 0.5;
 
-      // 使用 srcdoc 在沙盒中安全渲染 AI 寫的網頁
-      document.getElementById('frame-a').srcdoc = currentMatch.code_a;
-      document.getElementById('frame-b').srcdoc = currentMatch.code_b;
-      document.getElementById('code-a').textContent = currentMatch.code_a;
-      document.getElementById('code-b').textContent = currentMatch.code_b;
+      contestants.A = swap ? c2 : c1;
+      contestants.B = swap ? c1 : c2;
+
+      document.getElementById('title-a').innerText = isBlind ? '🤖 選手 A（神秘模型）' : `🤖 選手 A：${contestants.A.name}`;
+      document.getElementById('title-b').innerText = isBlind ? '🤖 選手 B（神秘模型）' : `🤖 選手 B：${contestants.B.name}`;
+      document.getElementById('status-banner').innerText = isBlind ? '盲測進行中：請試玩兩邊的成品並選出較優者！' : '公開對決進行中！';
+
+      document.getElementById('frame-a').srcdoc = contestants.A.code;
+      document.getElementById('frame-b').srcdoc = contestants.B.code;
+      document.getElementById('code-a').textContent = contestants.A.code;
+      document.getElementById('code-b').textContent = contestants.B.code;
+
+      document.getElementById('setup-panel').classList.add('hidden');
+      document.getElementById('arena-stage').classList.remove('hidden');
+    }
+
+    function revealWinner(winner) {
+      document.getElementById('title-a').innerText = `🤖 選手 A：${contestants.A.name} ${winner === 'A' ? '👑 勝出' : ''}`;
+      document.getElementById('title-b').innerText = `🤖 選手 B：${contestants.B.name} ${winner === 'B' ? '👑 勝出' : ''}`;
+      document.getElementById('status-banner').innerText = `🎉 揭曉結果：左邊是 ${contestants.A.name}，右邊是 ${contestants.B.name}！`;
     }
 
     function toggleCode(side) {
-      const frame = document.getElementById(`frame-${side.toLowerCase()}`);
-      const code = document.getElementById(`code-${side.toLowerCase()}`);
-      frame.classList.toggle('hidden');
-      code.classList.toggle('hidden');
+      document.getElementById(`frame-${side}`).classList.toggle('hidden');
+      document.getElementById(`code-${side}`).classList.toggle('hidden');
     }
 
-    async function submitVote(result) {
-      if (!currentMatch || hasVoted) return;
-      hasVoted = true;
-      document.getElementById('vote-panel').classList.add('opacity-50', 'pointer-events-none');
-
-      // 揭曉兩邊模型的真實身分
-      document.getElementById('label-a').innerText = `🤖 選手 A：${currentMatch.model_a}`;
-      document.getElementById('label-b').innerText = `🤖 選手 B：${currentMatch.model_b}`;
-
-      // 取得雙方目前 Elo 分數並計算新積分 (K=32)
-      const { data: models } = await db.from('arena_models').select('*').in('model_id', [currentMatch.model_a, currentMatch.model_b]);
-      const mA = models.find(m => m.model_id === currentMatch.model_a);
-      const mB = models.find(m => m.model_id === currentMatch.model_b);
-
-      const expectedA = 1 / (1 + Math.pow(10, (mB.elo_rating - mA.elo_rating) / 400));
-      const scoreA = result === 'A' ? 1 : (result === 'TIE' ? 0.5 : 0);
-      const delta = Math.round(32 * (scoreA - expectedA));
-
-      await db.from('arena_models').update({
-        elo_rating: mA.elo_rating + delta,
-        wins: mA.wins + (result === 'A' ? 1 : 0),
-        losses: mA.losses + (result === 'B' ? 1 : 0),
-        ties: mA.ties + (result === 'TIE' ? 1 : 0)
-      }).eq('model_id', mA.model_id);
-
-      await db.from('arena_models').update({
-        elo_rating: mB.elo_rating - delta,
-        wins: mB.wins + (result === 'B' ? 1 : 0),
-        losses: mB.losses + (result === 'A' ? 1 : 0),
-        ties: mB.ties + (result === 'TIE' ? 1 : 0)
-      }).eq('model_id', mB.model_id);
-
-      await db.from('arena_matches').update({ winner: result }).eq('id', currentMatch.id);
-      loadLeaderboard();
+    function resetSetup() {
+      document.getElementById('arena-stage').classList.add('hidden');
+      document.getElementById('setup-panel').classList.remove('hidden');
     }
-
-    async function loadLeaderboard() {
-      const { data } = await db.from('arena_models').select('*').order('elo_rating', { ascending: false });
-      const container = document.getElementById('leaderboard');
-      container.innerHTML = data.map((m, i) => `
-        <div class="bg-slate-800 p-2 rounded border border-slate-700 flex justify-between">
-          <span>#${i + 1} ${m.display_name}</span>
-          <span class="text-cyan-400 font-mono">${m.elo_rating} (${m.wins}W/${m.losses}L)</span>
-        </div>
-      `).join('');
-    }
-
-    loadNextMatch();
-    loadLeaderboard();
   </script>
 </body>
 </html>
