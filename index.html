@@ -42,7 +42,7 @@
             AI 量化對決交易室
             <span id="market-badge" class="text-xs px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">市場常態</span>
           </h1>
-          <p class="text-xs text-slate-400">全球同步 Tick 引擎 · 台股紅漲綠跌 · 即時「現在金額」排名</p>
+          <p class="text-xs text-slate-400">全球同步 Tick 引擎 · 基準線以上紅、以下綠 · 即時「現在金額」排名</p>
         </div>
       </div>
 
@@ -77,8 +77,8 @@
               </div>
             </div>
             <div class="flex items-center gap-3 text-xs text-slate-400">
-              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span>上漲</span>
-              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>下跌</span>
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span>高於基準</span>
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>低於基準</span>
               <span id="news-ticker" class="text-amber-300 font-medium">📰 市場觀望中</span>
             </div>
           </div>
@@ -308,6 +308,7 @@ function closeUserPosition() {
   syncUserLeaderboard();
 }
 
+// 以該盤基準價（basePrice）為分界：高於基準畫紅色，低於基準畫綠色
 function drawRedGreenChart(series, basePrice) {
   const canvas = document.getElementById("price-chart");
   if (!canvas) return;
@@ -329,13 +330,14 @@ function drawRedGreenChart(series, basePrice) {
   const maxP = Math.max(...prices, basePrice) * 1.0015;
   const range = Math.max(0.01, maxP - minP);
 
-  const padL = 14, padR = 58, padT = 18, padB = 22;
+  const padL = 14, padR = 62, padT = 18, padB = 22;
   const plotW = w - padL - padR;
   const plotH = h - padT - padB;
 
   const getX = idx => padL + (idx / Math.max(1, visible.length - 1)) * plotW;
   const getY = val => padT + (1 - (val - minP) / range) * plotH;
 
+  // 水平格線與價格刻度
   ctx.strokeStyle = "rgba(148, 163, 184, 0.08)";
   ctx.lineWidth = 1;
   ctx.font = "11px monospace";
@@ -350,16 +352,23 @@ function drawRedGreenChart(series, basePrice) {
     ctx.fillText(priceLabel, w - padR + 6, y + 4);
   }
 
+  // 基準線（該盤開盤/基準價，0% 分界線）
   const baseY = getY(basePrice);
   ctx.save();
-  ctx.setLineDash([4, 4]);
-  ctx.strokeStyle = "rgba(250, 204, 21, 0.45)";
+  ctx.setLineDash([5, 4]);
+  ctx.strokeStyle = "rgba(250, 204, 21, 0.7)";
+  ctx.lineWidth = 1.2;
   ctx.beginPath();
   ctx.moveTo(padL, baseY);
   ctx.lineTo(w - padR, baseY);
   ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = "#facc15";
+  ctx.font = "bold 10px sans-serif";
+  ctx.fillText("基準 " + basePrice.toFixed(2), padL + 4, Math.max(12, baseY - 5));
   ctx.restore();
 
+  // 以基準線為中心：每一段線與底面填色依「高於基準(紅) / 低於基準(綠)」決定
   for (let i = 1; i < visible.length; i++) {
     const p0 = Number(visible[i - 1].price);
     const p1 = Number(visible[i].price);
@@ -368,15 +377,16 @@ function drawRedGreenChart(series, basePrice) {
     const x1 = getX(i);
     const y1 = getY(p1);
 
-    const isUp = p1 >= p0;
-    const strokeCol = isUp ? "#ef4444" : "#22c55e";
-    const fillCol = isUp ? "rgba(239, 68, 68, 0.16)" : "rgba(34, 197, 94, 0.16)";
+    const midPrice = (p0 + p1) / 2;
+    const isAboveBase = midPrice >= basePrice;
+    const strokeCol = isAboveBase ? "#ef4444" : "#22c55e";
+    const fillCol = isAboveBase ? "rgba(239, 68, 68, 0.18)" : "rgba(34, 197, 94, 0.18)";
 
     ctx.beginPath();
     ctx.moveTo(x0, y0);
     ctx.lineTo(x1, y1);
-    ctx.lineTo(x1, padT + plotH);
-    ctx.lineTo(x0, padT + plotH);
+    ctx.lineTo(x1, baseY);
+    ctx.lineTo(x0, baseY);
     ctx.closePath();
     ctx.fillStyle = fillCol;
     ctx.fill();
@@ -390,13 +400,14 @@ function drawRedGreenChart(series, basePrice) {
     ctx.stroke();
   }
 
+  // 最新價端點圓球（高於基準紅、低於基準綠）
   const last = visible[visible.length - 1];
   const lastX = getX(visible.length - 1);
   const lastY = getY(last.price);
-  const overallUp = last.price >= basePrice;
+  const aboveBase = last.price >= basePrice;
   ctx.beginPath();
   ctx.arc(lastX, lastY, 4.5, 0, Math.PI * 2);
-  ctx.fillStyle = overallUp ? "#ef4444" : "#22c55e";
+  ctx.fillStyle = aboveBase ? "#ef4444" : "#22c55e";
   ctx.fill();
   ctx.strokeStyle = "#ffffff";
   ctx.lineWidth = 1.5;
