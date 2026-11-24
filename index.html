@@ -2,16 +2,22 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>AI 量化股市模擬交易終端</title>
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&family=JetBrains+Mono:wght@600;800&display=swap');
 
-    body {
+    * {
+        box-sizing: border-box;
+    }
+
+    html, body {
         background: #010409;
         margin: 0;
-        padding: 16px;
+        padding: 12px;
         color: #e6edf3;
+        overflow-x: hidden;
+        width: 100%;
     }
 
     .terminal-box {
@@ -19,8 +25,9 @@
         background: #0d1117;
         color: #e6edf3;
         max-width: 860px;
+        width: 100%;
         margin: 0 auto;
-        padding: 20px;
+        padding: 18px;
         border-radius: 14px;
         border: 1px solid #30363d;
         box-shadow: 0 12px 35px rgba(0,0,0,0.75);
@@ -31,6 +38,11 @@
         0%, 100% { transform: translateX(0); }
         15%, 45%, 75% { transform: translateX(-8px); }
         30%, 60%, 90% { transform: translateX(8px); }
+    }
+
+    @keyframes pulseDanger {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.45; }
     }
 
     .shake-crash {
@@ -47,12 +59,12 @@
         border-bottom: 1px solid #21262d;
         padding-bottom: 12px;
         margin-bottom: 12px;
-        gap: 10px;
+        gap: 8px;
     }
 
     .stock-tabs {
         display: flex;
-        gap: 6px;
+        gap: 8px;
         flex-wrap: wrap;
         margin-bottom: 12px;
         justify-content: space-between;
@@ -69,7 +81,7 @@
         background: #161b22;
         border: 1px solid #30363d;
         color: #8b949e;
-        padding: 6px 12px;
+        padding: 7px 11px;
         border-radius: 8px;
         cursor: pointer;
         font-size: 13px;
@@ -81,6 +93,23 @@
         background: #1f6feb;
         color: white;
         border-color: #58a6ff;
+    }
+
+    .header-utils {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .daily-reset-badge {
+        font-size: 11px;
+        background: rgba(16, 185, 129, 0.15);
+        border: 1px solid rgba(16, 185, 129, 0.4);
+        color: #34d399;
+        padding: 5px 8px;
+        border-radius: 8px;
+        font-family: 'JetBrains Mono', 'Noto Sans TC', monospace;
     }
 
     .sound-btn {
@@ -102,8 +131,9 @@
         color: #58a6ff;
         padding: 2px 8px;
         border-radius: 6px;
-        margin-left: 8px;
+        margin-left: 6px;
         vertical-align: middle;
+        display: inline-block;
     }
 
     .rank-badge {
@@ -135,13 +165,14 @@
         border-left: 4px solid #ffc107;
         padding: 8px 12px;
         border-radius: 4px;
-        font-size: 14px;
+        font-size: 13px;
         color: #ffd54f;
         margin-bottom: 12px;
         display: flex;
+        flex-wrap: wrap;
         justify-content: space-between;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
         transition: 0.25s;
     }
 
@@ -166,13 +197,13 @@
         background: #010409;
         border: 1px solid #21262d;
         border-radius: 10px;
-        padding: 10px;
+        padding: 8px;
         margin-bottom: 12px;
     }
 
     canvas {
         width: 100%;
-        height: 220px;
+        height: 210px;
         display: block;
     }
 
@@ -180,11 +211,18 @@
         display: none;
         background: linear-gradient(90deg, rgba(31, 111, 235, 0.25), rgba(138, 43, 226, 0.25));
         border: 1px solid #58a6ff;
-        padding: 10px 14px;
+        padding: 10px 12px;
         border-radius: 8px;
         margin-bottom: 12px;
         justify-content: space-between;
         align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .ai-banner-btns {
+        display: flex;
+        gap: 6px;
     }
 
     .ai-log-box {
@@ -194,8 +232,9 @@
         padding: 8px 12px;
         font-family: 'JetBrains Mono', 'Noto Sans TC', monospace;
         font-size: 12px;
+        line-height: 1.55;
         color: #79c0ff;
-        height: 62px;
+        height: 76px;
         overflow-y: auto;
         margin-bottom: 12px;
     }
@@ -203,24 +242,61 @@
     .dashboard {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        gap: 10px;
-        margin-bottom: 12px;
-    }
-
-    @media (max-width: 600px) {
-        .dashboard { grid-template-columns: repeat(2, 1fr); }
+        gap: 8px;
+        margin-bottom: 10px;
     }
 
     .stat-card {
         background: #161b22;
         border: 1px solid #30363d;
-        padding: 10px;
+        padding: 10px 8px;
         border-radius: 8px;
         text-align: center;
     }
 
     .stat-label { font-size: 12px; color: #8b949e; margin-bottom: 4px; }
-    .stat-value { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: bold; }
+    .stat-value { font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: bold; }
+
+    /* 爆倉預警條 */
+    .liq-warning-box {
+        display: none;
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 8px;
+        padding: 10px 12px;
+        margin-bottom: 12px;
+    }
+
+    .liq-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 12px;
+        margin-bottom: 6px;
+        font-family: 'JetBrains Mono', 'Noto Sans TC', monospace;
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    .liq-bar-bg {
+        width: 100%;
+        height: 8px;
+        background: #010409;
+        border-radius: 999px;
+        overflow: hidden;
+        border: 1px solid #21262d;
+    }
+
+    .liq-bar-fill {
+        height: 100%;
+        width: 100%;
+        background: #00e676;
+        transition: width 0.25s ease, background-color 0.25s ease;
+    }
+
+    .liq-danger-blink {
+        animation: pulseDanger 0.6s infinite;
+    }
 
     .controls-row {
         display: flex;
@@ -229,7 +305,7 @@
         justify-content: space-between;
         align-items: center;
         background: #161b22;
-        padding: 12px 14px;
+        padding: 12px;
         border-radius: 10px;
         border: 1px solid #30363d;
     }
@@ -239,24 +315,26 @@
         background: #21262d;
         color: #c9d1d9;
         border: 1px solid #30363d;
-        padding: 7px 11px;
-        border-radius: 6px;
+        padding: 8px 12px;
+        border-radius: 8px;
         cursor: pointer;
         font-weight: bold;
+        font-size: 13px;
     }
     .lev-btn.active { background: #1f6feb; color: white; border-color: #58a6ff; }
 
     .trade-btns { display: flex; gap: 8px; flex-wrap: wrap; }
     .btn {
         border: none;
-        padding: 9px 16px;
+        padding: 10px 16px;
         font-size: 14px;
         font-weight: 900;
         border-radius: 8px;
         cursor: pointer;
         transition: 0.15s;
+        touch-action: manipulation;
     }
-    .btn:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.1); }
+    .btn:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.1); }
     .btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
     .btn-long { background: #d32f2f; color: white; }
@@ -274,7 +352,7 @@
         justify-content: space-between;
         align-items: center;
         background: #161b22;
-        padding: 10px 14px;
+        padding: 10px 12px;
         border-radius: 10px;
         border: 1px dashed #8a2be2;
     }
@@ -284,8 +362,8 @@
         background: rgba(138, 43, 226, 0.25);
         border: 1px solid #a371f7;
         color: #d2a8ff;
-        padding: 5px 10px;
-        border-radius: 6px;
+        padding: 6px 12px;
+        border-radius: 8px;
         font-size: 13px;
         cursor: pointer;
         font-weight: bold;
@@ -296,7 +374,7 @@
         background: #161b22;
         border: 1px solid #30363d;
         border-radius: 10px;
-        padding: 14px;
+        padding: 12px;
     }
 
     .lb-header {
@@ -321,7 +399,7 @@
         background: #0d1117;
         border: 1px solid #30363d;
         color: #e6edf3;
-        padding: 8px 12px;
+        padding: 9px 12px;
         border-radius: 8px;
         font-size: 14px;
         font-family: 'Noto Sans TC', sans-serif;
@@ -330,6 +408,11 @@
     .lb-input:focus {
         outline: none;
         border-color: #f59e0b;
+    }
+
+    .lb-table-wrap {
+        width: 100%;
+        overflow-x: auto;
     }
 
     .lb-table {
@@ -341,18 +424,149 @@
     .lb-table th {
         text-align: left;
         color: #8b949e;
-        padding: 8px;
+        padding: 8px 6px;
         border-bottom: 1px solid #30363d;
+        white-space: nowrap;
     }
 
     .lb-table td {
-        padding: 8px;
+        padding: 8px 6px;
         border-bottom: 1px solid #21262d;
         font-family: 'JetBrains Mono', 'Noto Sans TC', monospace;
     }
 
     .lb-table tr:hover {
         background: rgba(255, 255, 255, 0.03);
+    }
+
+    /* 結算明細彈窗 */
+    .receipt-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(1, 4, 9, 0.78);
+        z-index: 9999;
+        justify-content: center;
+        align-items: center;
+        padding: 16px;
+    }
+
+    .receipt-card {
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 14px;
+        max-width: 360px;
+        width: 100%;
+        padding: 20px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
+        font-family: 'Noto Sans TC', sans-serif;
+    }
+
+    .receipt-title {
+        font-size: 18px;
+        font-weight: 900;
+        text-align: center;
+        margin-bottom: 14px;
+        padding-bottom: 10px;
+        border-bottom: 1px dashed #30363d;
+    }
+
+    .receipt-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;
+        font-size: 13px;
+        color: #c9d1d9;
+    }
+
+    .receipt-row span:last-child {
+        font-family: 'JetBrains Mono', monospace;
+        font-weight: bold;
+    }
+
+    /* 手機版 RWD 深度優化 */
+    @media (max-width: 640px) {
+        html, body {
+            padding: 8px;
+        }
+        .terminal-box {
+            padding: 12px;
+            border-radius: 10px;
+        }
+        .stock-tabs-left {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+        }
+        .stock-tab {
+            padding: 8px 4px;
+            font-size: 12px;
+            text-align: center;
+        }
+        .header-utils {
+            width: 100%;
+            justify-content: space-between;
+        }
+        .price-display {
+            font-size: 24px;
+        }
+        canvas {
+            height: 175px;
+        }
+        .dashboard {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+        }
+        .stat-card {
+            padding: 8px 6px;
+        }
+        .stat-value {
+            font-size: 14px;
+        }
+        .controls-row {
+            flex-direction: column;
+            align-items: stretch;
+            padding: 10px;
+        }
+        .lev-group {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            width: 100%;
+        }
+        .lev-btn {
+            padding: 10px 4px;
+            text-align: center;
+        }
+        .trade-btns {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            width: 100%;
+            gap: 8px;
+        }
+        .trade-btns .btn {
+            padding: 13px 8px;
+            font-size: 15px;
+            min-height: 46px;
+        }
+        .items-bar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .items-bar .btn-gacha {
+            width: 100%;
+            padding: 11px;
+        }
+        .lb-submit-box {
+            width: 100%;
+        }
+        .lb-input {
+            flex: 1;
+            min-width: 120px;
+        }
+        .hide-mobile {
+            display: none;
+        }
     }
 </style>
 </head>
@@ -361,18 +575,21 @@
 <div class="terminal-box" id="terminal-box">
     <div class="stock-tabs">
         <div class="stock-tabs-left" id="stock-tabs"></div>
-        <button class="sound-btn" id="btn-sound" onclick="toggleSound()">🔊 音效：開</button>
+        <div class="header-utils">
+            <span class="daily-reset-badge" id="daily-reset-timer">⏳ 每日重置：--:--:--</span>
+            <button class="sound-btn" id="btn-sound" onclick="toggleSound()">🔊 音效：開</button>
+        </div>
     </div>
 
     <div class="top-bar">
         <div>
-            <span id="stock-header" style="font-size: 20px; font-weight: 900;">0050 元大台灣50</span>
-            <span id="stock-desc" style="font-size: 12px; color: #8b949e; margin-left: 8px;">穩健大盤指數</span>
-            <span class="sync-badge">🌐 全球即時同步盤</span>
+            <span id="stock-header" style="font-size: 19px; font-weight: 900;">0050 元大台灣50</span>
+            <span id="stock-desc" style="font-size: 12px; color: #8b949e; margin-left: 6px;">穩健大盤指數</span>
+            <span class="sync-badge">🌐 全球同步盤</span>
         </div>
         <div>
             <span id="price-val" class="price-display up">195.00</span>
-            <span id="pct-val" class="up" style="font-family: 'JetBrains Mono'; font-size: 14px; margin-left: 6px;">(+0.00%)</span>
+            <span id="pct-val" class="up" style="font-family: 'JetBrains Mono'; font-size: 14px; margin-left: 4px;">(+0.00%)</span>
         </div>
     </div>
 
@@ -382,16 +599,19 @@
     </div>
 
     <div class="ai-banner" id="ai-banner">
-        <span style="font-weight: 900; color: #79c0ff;">🤖 量化 AI 自動代操接管中... 剩餘 <span id="ai-timer" style="font-size: 18px; color: #ffd700;">30</span> 秒</span>
-        <button class="btn" style="background: #da3633; color: white; padding: 5px 12px; font-size: 12px;" onclick="stopAI(true)">手動中止代操</button>
+        <span style="font-weight: 900; color: #79c0ff; font-size: 13px;">🤖 AI 自動代操<span id="ai-state-label">接管中</span>... 剩 <span id="ai-timer" style="font-size: 17px; color: #ffd700;">30</span> 秒</span>
+        <div class="ai-banner-btns">
+            <button class="btn" id="btn-ai-pause" style="background: #d97706; color: white; padding: 6px 10px; font-size: 12px;" onclick="togglePauseAI()">⏸️ 暫停觀察</button>
+            <button class="btn" style="background: #da3633; color: white; padding: 6px 10px; font-size: 12px;" onclick="stopAI(true)">⏹️ 中止結算</button>
+        </div>
     </div>
 
     <div class="chart-wrapper">
-        <canvas id="stockCanvas" width="800" height="220"></canvas>
+        <canvas id="stockCanvas" width="800" height="210"></canvas>
     </div>
 
     <div class="ai-log-box" id="ai-log">
-        <div>> [全球同步盤就緒] 資金與道具已啟用自動存檔，重新整理頁面不會歸零！</div>
+        <div>> [終端就緒] 已啟用強制平倉預警條、結算明細、每日零點重置與手機觸控最佳化！</div>
     </div>
 
     <div class="dashboard">
@@ -413,6 +633,17 @@
         </div>
     </div>
 
+    <!-- 爆倉預警條 -->
+    <div class="liq-warning-box" id="liq-warning-box">
+        <div class="liq-header">
+            <span id="liq-price-text" style="color: #f87171; font-weight: bold;">⚠️ 強制平倉價：--</span>
+            <span id="liq-buffer-text" style="color: #34d399; font-weight: bold;">安全緩衝：100%</span>
+        </div>
+        <div class="liq-bar-bg">
+            <div class="liq-bar-fill" id="liq-bar-fill"></div>
+        </div>
+    </div>
+
     <div class="controls-row">
         <div class="lev-group">
             <button class="lev-btn active" onclick="setLev(1, this)">1x 現貨</button>
@@ -421,17 +652,17 @@
         </div>
 
         <div class="trade-btns">
-            <button class="btn btn-ai" id="btn-ai" onclick="startAI()">🤖 電腦 AI 代操 30 秒</button>
-            <button class="btn btn-long" id="btn-long" onclick="openPosition('LONG')">🔴 做多</button>
-            <button class="btn btn-short" id="btn-short" onclick="openPosition('SHORT')">🟢 放空</button>
-            <button class="btn btn-close" id="btn-close" onclick="closePosition()" disabled>💰 平倉</button>
+            <button class="btn btn-long" id="btn-long" onclick="openPosition('LONG')">🔴 全倉做多</button>
+            <button class="btn btn-short" id="btn-short" onclick="openPosition('SHORT')">🟢 全倉放空</button>
+            <button class="btn btn-close" id="btn-close" onclick="closePosition()" disabled>💰 立即平倉</button>
+            <button class="btn btn-ai" id="btn-ai" onclick="startAI()">🤖 AI 代操 30s</button>
         </div>
     </div>
 
     <div class="items-bar">
         <div>
             <button class="btn btn-gacha" onclick="drawBox()">🎁 抽操盤手盲盒 ($2,000)</button>
-            <span style="font-size: 12px; color: #8b949e; margin-left: 8px;">點擊道具使用：</span>
+            <span style="font-size: 12px; color: #8b949e; margin-left: 6px;">點擊道具使用：</span>
         </div>
         <div class="inventory-tags" id="items-list">
             <span style="font-size: 12px; color: #6e7681;">(尚無道具)</span>
@@ -441,31 +672,42 @@
     <div class="leaderboard-panel">
         <div class="lb-header">
             <div>
-                <span style="font-size: 16px; font-weight: 900; color: #ffd700;">🏆 全球即時股神排行榜 (TOP 10)</span>
+                <span style="font-size: 15px; font-weight: 900; color: #ffd700;">🏆 全球即時股神榜 (TOP 10)</span>
                 <span id="player-rank-badge" class="rank-badge rank-rookie">🌱 菜鳥散戶</span>
-                <span id="networth-preview" style="font-size: 12px; color: #8b949e; margin-left: 8px;">目前總淨值：$10,000</span>
+                <div id="networth-preview" style="font-size: 12px; color: #8b949e; margin-top: 4px;">目前總淨值：$10,000（每日 00:00 重置新局）</div>
             </div>
             <div class="lb-submit-box">
                 <input type="text" id="player-name" class="lb-input" placeholder="輸入操盤手暱稱..." maxlength="16">
                 <button class="btn btn-rank" id="btn-submit-score" onclick="submitScore()">🚀 上傳戰績</button>
-                <button class="btn" style="background: #21262d; color: #c9d1d9; padding: 9px 12px;" onclick="loadLeaderboard()">🔄 刷新</button>
+                <button class="btn" style="background: #21262d; color: #c9d1d9; padding: 9px 12px;" onclick="loadLeaderboard()">🔄</button>
             </div>
         </div>
 
-        <table class="lb-table">
-            <thead>
-                <tr>
-                    <th style="width: 65px;">排名</th>
-                    <th>操盤手暱稱 / 段位</th>
-                    <th style="text-align: right;">總資產淨值</th>
-                    <th style="text-align: right;">總報酬率</th>
-                    <th style="text-align: right;">上榜時間</th>
-                </tr>
-            </thead>
-            <tbody id="lb-body">
-                <tr><td colspan="5" style="text-align: center; color: #8b949e; padding: 16px;">正在連線至全球雲端排行榜...</td></tr>
-            </tbody>
-        </table>
+        <div class="lb-table-wrap">
+            <table class="lb-table">
+                <thead>
+                    <tr>
+                        <th style="width: 55px;">排名</th>
+                        <th>操盤手 / 段位</th>
+                        <th style="text-align: right;">總資產淨值</th>
+                        <th style="text-align: right;">報酬率</th>
+                        <th class="hide-mobile" style="text-align: right;">上榜時間</th>
+                    </tr>
+                </thead>
+                <tbody id="lb-body">
+                    <tr><td colspan="5" style="text-align: center; color: #8b949e; padding: 16px;">正在連線至全球雲端排行榜...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- 結算明細彈窗 -->
+<div class="receipt-overlay" id="receipt-overlay" onclick="closeReceipt()">
+    <div class="receipt-card" onclick="event.stopPropagation()">
+        <div class="receipt-title" id="receipt-title">🧾 平倉結算明細</div>
+        <div id="receipt-body"></div>
+        <button class="btn" style="width: 100%; margin-top: 14px; background: #1f6feb; color: white;" onclick="closeReceipt()">確認繼續交易</button>
     </div>
 </div>
 
@@ -476,7 +718,7 @@
     const canvas = document.getElementById('stockCanvas');
     const ctx = canvas.getContext('2d');
 
-    // 8-Bit 音效引擎 (Web Audio API)
+    // 8-Bit 音效引擎
     let soundEnabled = true;
     let audioCtx = null;
 
@@ -550,7 +792,6 @@
         playSound('CRASH');
     }
 
-    // 段位稱號計算
     function getRankBadge(netWorth) {
         if (netWorth >= 1000000) return { label: "💎 巴菲特本尊", cls: "rank-buffett" };
         if (netWorth >= 500000) return { label: "👑 少年股神", cls: "rank-god" };
@@ -559,12 +800,48 @@
         return { label: "🌱 菜鳥散戶", cls: "rank-rookie" };
     }
 
+    // 結算明細彈窗控制
+    function showSettlementReceipt({ isLiquidation, stockName, side, lev, entry, exit, margin, pnl, finalCash, note }) {
+        const titleEl = document.getElementById('receipt-title');
+        const bodyEl = document.getElementById('receipt-body');
+        const roi = margin > 0 ? ((pnl / margin) * 100).toFixed(2) : "0.00";
+        const pnlColor = pnl >= 0 ? "#ff4d4f" : "#00e676";
+        const pnlSign = pnl >= 0 ? "+" : "";
+
+        if (isLiquidation) {
+            titleEl.innerText = "💥 強制平倉（斷頭）結算單";
+            titleEl.style.color = "#ff4d4f";
+        } else {
+            titleEl.innerText = pnl >= 0 ? "🎉 獲利平倉結算明細" : "🧾 停損平倉結算明細";
+            titleEl.style.color = pnl >= 0 ? "#ffd700" : "#58a6ff";
+        }
+
+        bodyEl.innerHTML = `
+            <div class="receipt-row"><span>交易標的</span><span>${stockName}</span></div>
+            <div class="receipt-row"><span>方向與槓桿</span><span>${side === 'LONG' ? '🔴 做多' : '🟢 放空'} ${lev}x</span></div>
+            <div class="receipt-row"><span>投入保證金</span><span>$${margin.toLocaleString()}</span></div>
+            <div class="receipt-row"><span>進場均價</span><span>${entry.toFixed(2)}</span></div>
+            <div class="receipt-row"><span>結算成交價</span><span>${exit.toFixed(2)}</span></div>
+            <div class="receipt-row" style="border-top: 1px solid #30363d; margin-top: 6px; padding-top: 8px;">
+                <span>已實現損益</span>
+                <span style="color: ${pnlColor}; font-size: 16px;">${pnlSign}$${Math.round(pnl).toLocaleString()} (${pnlSign}${roi}%)</span>
+            </div>
+            <div class="receipt-row"><span>結算後可用現金</span><span style="color: #ffd700;">$${finalCash.toLocaleString()}</span></div>
+            ${note ? `<div style="margin-top: 8px; font-size: 12px; color: #fbbf24; background: rgba(245,158,11,0.12); padding: 6px 8px; border-radius: 6px;">${note}</div>` : ''}
+        `;
+        document.getElementById('receipt-overlay').style.display = 'flex';
+    }
+
+    function closeReceipt() {
+        document.getElementById('receipt-overlay').style.display = 'none';
+    }
+
     const stocks = {
-        "0050": { code: "0050", seed: 101, name: "元大台灣50", desc: "穩健大盤指數 (低波動)", base: 195.00, price: 195.00, vol: 1.1, history: [], markers: [] },
-        "2330": { code: "2330", seed: 202, name: "台積電", desc: "護國神山權值王 (中波動)", base: 1050.00, price: 1050.00, vol: 1.7, history: [], markers: [] },
-        "2454": { code: "2454", seed: 303, name: "聯發科", desc: "AI 晶片旗艦 (中高波動)", base: 1320.00, price: 1320.00, vol: 2.3, history: [], markers: [] },
-        "2317": { code: "2317", seed: 404, name: "鴻海", desc: "AI 伺服器代工龍頭 (中波動)", base: 215.00, price: 215.00, vol: 1.9, history: [], markers: [] },
-        "3481": { code: "3481", seed: 505, name: "群創", desc: "面板主力飆股 (極高波動)", base: 16.50, price: 16.50, vol: 3.4, history: [], markers: [] }
+        "0050": { code: "0050", seed: 101, name: "元大台灣50", desc: "穩健大盤指數", base: 195.00, price: 195.00, vol: 1.1, history: [], markers: [] },
+        "2330": { code: "2330", seed: 202, name: "台積電", desc: "護國神山權值王", base: 1050.00, price: 1050.00, vol: 1.7, history: [], markers: [] },
+        "2454": { code: "2454", seed: 303, name: "聯發科", desc: "AI 晶片旗艦", base: 1320.00, price: 1320.00, vol: 2.3, history: [], markers: [] },
+        "2317": { code: "2317", seed: 404, name: "鴻海", desc: "AI 伺服器龍頭", base: 215.00, price: 215.00, vol: 1.9, history: [], markers: [] },
+        "3481": { code: "3481", seed: 505, name: "群創", desc: "面板主力飆股", base: 16.50, price: 16.50, vol: 3.4, history: [], markers: [] }
     };
 
     const newsEvents = [
@@ -583,10 +860,10 @@
     function getGlobalMarketState(tick) {
         const cycle = tick % 100;
         if (cycle >= 88 && cycle <= 93) {
-            return { text: "🚨【突發黑天鵝】全球系統性流動性危機！全市場恐慌性閃崩！", bias: -1.65, mode: "blackswan" };
+            return { text: "🚨【突發黑天鵝】系統性流動性危機！全市場恐慌閃崩！", bias: -1.65, mode: "blackswan" };
         }
         if (cycle >= 44 && cycle <= 49) {
-            return { text: "⚡【聯準會緊急降息 4 碼】史詩級資金狂潮湧入！全市場暴力噴出！", bias: 1.65, mode: "superbull" };
+            return { text: "⚡【聯準會緊急降息 4 碼】史詩級資金狂潮！全市場暴力噴出！", bias: 1.65, mode: "superbull" };
         }
         const block = Math.floor(tick / 10);
         return newsEvents[Math.floor(syncRand(block, 999) * newsEvents.length)];
@@ -604,24 +881,56 @@
         return p;
     }
 
+    // 每日重置日期計算（台灣時間 UTC+8）
+    function getTaipeiDateStr() {
+        const now = new Date();
+        const utc8 = new Date(now.getTime() + 8 * 3600 * 1000);
+        return utc8.toISOString().slice(0, 10);
+    }
+
+    function updateDailyResetCountdown() {
+        const now = new Date();
+        const utc8Ms = now.getTime() + 8 * 3600 * 1000;
+        const msInDay = 24 * 3600 * 1000;
+        const remainMs = msInDay - (utc8Ms % msInDay);
+        const h = String(Math.floor(remainMs / 3600000)).padStart(2, '0');
+        const m = String(Math.floor((remainMs % 3600000) / 60000)).padStart(2, '0');
+        const s = String(Math.floor((remainMs % 60000) / 1000)).padStart(2, '0');
+        document.getElementById('daily-reset-timer').innerText = `⏳ 每日重置：${h}:${m}:${s}`;
+    }
+
     const INITIAL_CAPITAL = 10000;
-    const SAVED_STATE_KEY = 'stock_game_save_v1';
+    const SAVED_STATE_KEY = 'stock_game_save_v2';
+    const todayStr = getTaipeiDateStr();
+
     let savedState = null;
     try {
         savedState = JSON.parse(localStorage.getItem(SAVED_STATE_KEY) || 'null');
     } catch (e) {}
 
-    let currentStockKey = "0050";
-    let cash = (savedState && typeof savedState.cash === 'number' && savedState.cash >= 0) ? savedState.cash : INITIAL_CAPITAL;
-    let leverage = 1;
+    let isDailyResetTriggered = false;
+    let cash = INITIAL_CAPITAL;
+    let items = [];
 
+    if (savedState && savedState.date === todayStr) {
+        if (typeof savedState.cash === 'number' && savedState.cash >= 0) cash = savedState.cash;
+        if (Array.isArray(savedState.items)) items = savedState.items;
+    } else if (savedState && savedState.date && savedState.date !== todayStr) {
+        // 跨日自動重置新局，並贈送一張免費內線消息卡當每日登入獎勵
+        cash = INITIAL_CAPITAL;
+        items = [{ name: "🔮 每日簽到內線卡", type: "INSIDER" }];
+        isDailyResetTriggered = true;
+    }
+
+    let currentStockKey = "0050";
+    let leverage = 1;
     let position = null;
     let entryPrice = 0;
     let investedCash = 0;
     let shieldActive = false;
 
-    let items = (savedState && Array.isArray(savedState.items)) ? savedState.items : [];
     let aiActive = false;
+    let aiPaused = false;
     let aiSecondsLeft = 0;
     let aiCountdownInterval = null;
     let aiStartEquity = 0;
@@ -648,6 +957,7 @@
         try {
             const currentEquity = getTotalNetWorth();
             localStorage.setItem(SAVED_STATE_KEY, JSON.stringify({
+                date: getTaipeiDateStr(),
                 cash: currentEquity,
                 items: items
             }));
@@ -659,7 +969,12 @@
         const line = document.createElement('div');
         line.innerText = `> ${msg}`;
         box.prepend(line);
-        if (box.children.length > 15) box.removeChild(box.lastChild);
+        if (box.children.length > 25) box.removeChild(box.lastChild);
+    }
+
+    if (isDailyResetTriggered) {
+        logAI("🌅 [每日重置] 台灣時間 00:00 新賽季開始！資金已重置為 $10,000，並贈送【🔮 每日簽到內線卡】！");
+        saveGameState();
     }
 
     function addChartMarker(st, label, color) {
@@ -670,6 +985,17 @@
             label: label,
             color: color
         });
+    }
+
+    // 計算強制平倉價
+    function getLiquidationPrice() {
+        if (!position || entryPrice <= 0) return 0;
+        const moveRatio = 1 / leverage;
+        if (position === 'LONG') {
+            return Math.max(0.01, entryPrice * (1 - moveRatio));
+        } else {
+            return entryPrice * (1 + moveRatio);
+        }
     }
 
     function renderStockTabs() {
@@ -717,8 +1043,12 @@
         investedCash = cash;
         cash = 0;
 
+        const liqP = getLiquidationPrice();
         addChartMarker(st, type === 'LONG' ? 'B' : 'S', type === 'LONG' ? '#ff4d4f' : '#00e676');
-        if (!isByAI) playSound('OPEN');
+        if (!isByAI) {
+            playSound('OPEN');
+            logAI(`[手動開倉] ${st.code} ${type === 'LONG' ? '做多' : '放空'} ${leverage}x | 進場價 ${entryPrice.toFixed(2)} | 強平預警線 ${liqP.toFixed(2)}`);
+        }
 
         syncActionButtons();
         drawChart();
@@ -730,6 +1060,12 @@
         if (!position) return;
         const st = stocks[currentStockKey];
         const pnl = calcPnL();
+        const prevSide = position;
+        const prevLev = leverage;
+        const prevEntry = entryPrice;
+        const prevMargin = investedCash;
+        const exitP = st.price;
+
         cash = Math.max(0, Math.round(investedCash + pnl));
         position = null;
         entryPrice = 0;
@@ -739,6 +1075,18 @@
         addChartMarker(st, '平', '#f59e0b');
         if (!isByAI) {
             playSound(pnl >= 0 ? 'WIN' : 'LOSS');
+            showSettlementReceipt({
+                isLiquidation: false,
+                stockName: `${st.code} ${st.name}`,
+                side: prevSide,
+                lev: prevLev,
+                entry: prevEntry,
+                exit: exitP,
+                margin: prevMargin,
+                pnl: pnl,
+                finalCash: cash,
+                note: ""
+            });
         }
 
         syncActionButtons();
@@ -762,17 +1110,21 @@
         if (cash < 100) cash = 3000;
 
         aiActive = true;
+        aiPaused = false;
         aiSecondsLeft = 30;
         aiStartEquity = cash;
 
         document.getElementById('ai-banner').style.display = 'flex';
+        document.getElementById('ai-state-label').innerText = "接管中";
+        document.getElementById('btn-ai-pause').innerText = "⏸️ 暫停觀察";
         document.getElementById('ai-timer').innerText = aiSecondsLeft;
         syncActionButtons();
         playSound('OPEN');
 
-        logAI(`[AI 啟動] 量化演算法接管帳戶！初始資金 $${aiStartEquity.toLocaleString()}`);
+        logAI(`[AI 啟動] 量化策略接管帳戶！本金 $${aiStartEquity.toLocaleString()}（可隨時按「暫停觀察」查看 Log）`);
 
         aiCountdownInterval = setInterval(() => {
+            if (aiPaused) return;
             aiSecondsLeft--;
             document.getElementById('ai-timer').innerText = aiSecondsLeft;
             if (aiSecondsLeft <= 0) {
@@ -781,12 +1133,31 @@
         }, 1000);
     }
 
+    function togglePauseAI() {
+        if (!aiActive) return;
+        aiPaused = !aiPaused;
+        const btn = document.getElementById('btn-ai-pause');
+        const label = document.getElementById('ai-state-label');
+        if (aiPaused) {
+            btn.innerText = "▶️ 繼續代操";
+            btn.style.background = "#059669";
+            label.innerText = "已暫停";
+            logAI(`[AI 暫停] 倒數凍結，已停止自動進出單，可安心檢視目前倉位與日誌。`);
+        } else {
+            btn.innerText = "⏸️ 暫停觀察";
+            btn.style.background = "#d97706";
+            label.innerText = "接管中";
+            logAI(`[AI 恢復] 繼續執行量化自動交易！`);
+        }
+    }
+
     function stopAI(manual) {
         if (!aiActive) return;
         clearInterval(aiCountdownInterval);
         if (position) closePosition(true);
 
         aiActive = false;
+        aiPaused = false;
         document.getElementById('ai-banner').style.display = 'none';
         syncActionButtons();
 
@@ -794,10 +1165,11 @@
         const sign = profit >= 0 ? "+" : "";
         playSound(profit >= 0 ? 'WIN' : 'LOSS');
         saveGameState();
-        logAI(`[AI 結束] ${manual ? "手動中止" : "30秒期滿"}！結算資金 $${cash.toLocaleString()} (${sign}$${profit.toLocaleString()})`);
+        logAI(`[AI 結算] ${manual ? "手動中止" : "30秒期滿"}！結算資金 $${cash.toLocaleString()} (${sign}$${profit.toLocaleString()})`);
     }
 
     function runAIStrategy(globalBias) {
+        if (aiPaused) return;
         const s = stocks[currentStockKey];
         const h = s.history;
         const n = h.length;
@@ -815,12 +1187,12 @@
                 leverage = vip ? (signal > 0.35 ? 20 : 5) : (signal > 0.6 ? 5 : 1);
                 updateLevButtonsUI();
                 openPosition('LONG', true);
-                logAI(`[AI 進場做多] ${s.code} ${leverage}x @ ${s.price.toFixed(2)}`);
+                logAI(`[AI 做多] 動能訊號 +${signal.toFixed(2)} ＞ 門檻 | ${s.code} ${leverage}x @ ${s.price.toFixed(2)}`);
             } else if (signal < -entryThreshold) {
                 leverage = vip ? (signal < -0.35 ? 20 : 5) : (signal < -0.6 ? 5 : 1);
                 updateLevButtonsUI();
                 openPosition('SHORT', true);
-                logAI(`[AI 進場放空] ${s.code} ${leverage}x @ ${s.price.toFixed(2)}`);
+                logAI(`[AI 放空] 動能訊號 ${signal.toFixed(2)} ＜ 門檻 | ${s.code} ${leverage}x @ ${s.price.toFixed(2)}`);
             }
         } else {
             const pnl = calcPnL();
@@ -830,13 +1202,13 @@
 
             if (roi >= takeProfit) {
                 closePosition(true);
-                logAI(`[AI 停利出場] 獲利 +$${Math.round(pnl).toLocaleString()} (+${(roi*100).toFixed(1)}%)`);
+                logAI(`[AI 停利] 達標 +${(roi*100).toFixed(1)}% 獲利落袋 +$${Math.round(pnl).toLocaleString()}`);
             } else if (roi <= stopLoss) {
                 closePosition(true);
-                logAI(`[AI 停損風控] 虧損 -$${Math.abs(Math.round(pnl)).toLocaleString()} (${(roi*100).toFixed(1)}%)`);
+                logAI(`[AI 停損] 觸及風控線 ${(roi*100).toFixed(1)}% 砍單 -$${Math.abs(Math.round(pnl)).toLocaleString()}`);
             } else if ((position === 'LONG' && signal < -0.2) || (position === 'SHORT' && signal > 0.2)) {
                 closePosition(true);
-                logAI(`[AI 趨勢反轉平倉] 結算 $${Math.round(pnl).toLocaleString()}`);
+                logAI(`[AI 轉向] 均線交叉反轉平倉，結算 $${Math.round(pnl).toLocaleString()}`);
             }
         }
     }
@@ -868,7 +1240,7 @@
             alert("抽中【🔮 內線消息卡】！可預知下一波全球大盤新聞。");
         } else if (r < 0.70) {
             items.push({ name: "🛡️ 防爆倉護身符", type: "SHIELD" });
-            alert("抽中【🛡️ 防爆倉護身符】！爆倉時可保住 80% 本金。");
+            alert("抽中【🛡️ 防爆倉護身符】！強平時可保住 80% 保證金。");
         } else {
             cash += 5000;
             playSound('WIN');
@@ -884,11 +1256,11 @@
         playSound('OPEN');
         if (item.type === "INSIDER") {
             const nextEv = getGlobalMarketState(lastProcessedTick + 10);
-            document.getElementById('insider-hint').innerText = `🤫 內線預知下一波：${nextEv.text.slice(0, 14)}...`;
+            document.getElementById('insider-hint').innerText = `🤫 內線預知：${nextEv.text.slice(0, 14)}...`;
             setTimeout(() => document.getElementById('insider-hint').innerText = "", 7500);
         } else if (item.type === "SHIELD") {
             shieldActive = true;
-            alert("🛡️ 防爆倉護身符已啟動！下一次面臨爆倉時將自動護盤。");
+            alert("🛡️ 防爆倉護身符已啟動！下一次觸及強制平倉價時將自動護盤。");
         }
         renderItems();
         saveGameState();
@@ -919,7 +1291,7 @@
 
         const nw = getTotalNetWorth();
         document.getElementById('cash-val').innerText = `$${cash.toLocaleString()}`;
-        document.getElementById('networth-preview').innerText = `目前總淨值：$${nw.toLocaleString()}`;
+        document.getElementById('networth-preview').innerText = `目前總淨值：$${nw.toLocaleString()}（每日 00:00 重置新局）`;
 
         const badgeInfo = getRankBadge(nw);
         const badgeEl = document.getElementById('player-rank-badge');
@@ -932,6 +1304,8 @@
             lastRankLabel = badgeInfo.label;
         }
 
+        const liqBox = document.getElementById('liq-warning-box');
+
         if (position) {
             const prefix = aiActive ? "🤖 " : "";
             document.getElementById('pos-val').innerText = `${prefix}${position === 'LONG' ? '做多' : '放空'} ${leverage}x ${shieldActive ? '🛡️' : ''}`;
@@ -943,28 +1317,99 @@
             pnlEl.innerText = `${pnl >= 0 ? '+' : ''}$${pnl.toLocaleString()}`;
             pnlEl.style.color = pnl >= 0 ? '#ff4d4f' : '#00e676';
 
+            // 更新爆倉預警條與強制平倉價
+            const liqPrice = getLiquidationPrice();
+            const remainingRatio = Math.max(0, Math.min(100, ((investedCash + pnl) / investedCash) * 100));
+            const distPct = Math.abs((s.price - liqPrice) / s.price) * 100;
+
+            liqBox.style.display = 'block';
+            document.getElementById('liq-price-text').innerText = `⚠️ 強平價：${liqPrice.toFixed(2)}（距爆倉 ${distPct.toFixed(2)}%）`;
+
+            const bufText = document.getElementById('liq-buffer-text');
+            const barFill = document.getElementById('liq-bar-fill');
+            barFill.style.width = `${remainingRatio}%`;
+
+            if (remainingRatio <= 30) {
+                bufText.innerText = `🚨 高危預警：保證金僅剩 ${remainingRatio.toFixed(0)}%`;
+                bufText.style.color = "#ff4d4f";
+                barFill.style.background = "#ff4d4f";
+                barFill.classList.add('liq-danger-blink');
+            } else if (remainingRatio <= 65) {
+                bufText.innerText = `⚡ 注意波動：保證金剩餘 ${remainingRatio.toFixed(0)}%`;
+                bufText.style.color = "#fbbf24";
+                barFill.style.background = "#fbbf24";
+                barFill.classList.remove('liq-danger-blink');
+            } else {
+                bufText.innerText = `🛡️ 狀態安全：保證金健康度 ${remainingRatio.toFixed(0)}%`;
+                bufText.style.color = "#34d399";
+                barFill.style.background = "#00e676";
+                barFill.classList.remove('liq-danger-blink');
+            }
+
+            // 檢查是否觸及強制平倉
             if (investedCash + pnl <= 0) {
                 if (isVipPlayer()) {
                     entryPrice = s.price * (position === 'LONG' ? 0.992 : 1.008);
-                } else if (shieldActive) {
-                    cash = Math.round(investedCash * 0.8);
-                    position = null;
-                    shieldActive = false;
-                    syncActionButtons();
-                    saveGameState();
-                    playSound('OPEN');
-                    alert("🛡️ 防爆倉護身符發動！已為您保留 80% 本金！");
                 } else {
+                    const prevSide = position;
+                    const prevLev = leverage;
+                    const prevEntry = entryPrice;
+                    const prevMargin = investedCash;
+                    const hadShield = shieldActive;
+
+                    if (hadShield) {
+                        cash = Math.round(investedCash * 0.8);
+                    } else {
+                        cash = 0;
+                    }
                     position = null;
+                    entryPrice = 0;
                     investedCash = 0;
+                    shieldActive = false;
+                    liqBox.style.display = 'none';
                     syncActionButtons();
                     saveGameState();
-                    triggerCrashShake();
-                    if (!aiActive) alert("💥 槓桿倍數過高，慘遭斷頭爆倉！");
+
+                    if (hadShield) {
+                        playSound('OPEN');
+                        logAI(`[護身符發動] 觸及強平線，成功保住 80% 保證金 ($${cash.toLocaleString()})！`);
+                        if (!aiActive) {
+                            showSettlementReceipt({
+                                isLiquidation: true,
+                                stockName: `${s.code} ${s.name}`,
+                                side: prevSide,
+                                lev: prevLev,
+                                entry: prevEntry,
+                                exit: s.price,
+                                margin: prevMargin,
+                                pnl: -(prevMargin - cash),
+                                finalCash: cash,
+                                note: "🛡️ 已觸發【防爆倉護身符】，成功救回 80% 本金！"
+                            });
+                        }
+                    } else {
+                        triggerCrashShake();
+                        logAI(`[強制平倉] ${s.code} ${prevLev}x 槓桿觸及強平價，保證金 $${prevMargin.toLocaleString()} 已全額清算。`);
+                        if (!aiActive) {
+                            showSettlementReceipt({
+                                isLiquidation: true,
+                                stockName: `${s.code} ${s.name}`,
+                                side: prevSide,
+                                lev: prevLev,
+                                entry: prevEntry,
+                                exit: s.price,
+                                margin: prevMargin,
+                                pnl: -prevMargin,
+                                finalCash: 0,
+                                note: `💡 原因：${prevLev}x 槓桿下，價格反向波動超過 ${(100/prevLev).toFixed(1)}% 觸發強制平倉線。`
+                            });
+                        }
+                    }
                 }
             }
         } else {
-            document.getElementById('pos-val').innerText = aiActive ? "🤖 AI 觀察中" : "空手觀望";
+            liqBox.style.display = 'none';
+            document.getElementById('pos-val').innerText = aiActive ? (aiPaused ? "⏸️ AI 暫停中" : "🤖 AI 觀察中") : "空手觀望";
             document.getElementById('pos-val').style.color = "#8b949e";
             document.getElementById('entry-val').innerText = "-";
             document.getElementById('pnl-val').innerText = "$0";
@@ -998,21 +1443,33 @@
             ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
         }
 
+        // 繪製進場成本虛線 + 強平價虛線（若強平價在可視範圍內）
         if (position && entryPrice > 0) {
             const ey = getY(entryPrice);
             ctx.save();
             ctx.setLineDash([6, 4]);
             ctx.strokeStyle = position === 'LONG' ? "rgba(255, 77, 79, 0.85)" : "rgba(0, 230, 118, 0.85)";
             ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            ctx.moveTo(0, ey);
-            ctx.lineTo(w, ey);
-            ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, ey); ctx.lineTo(w, ey); ctx.stroke();
             ctx.restore();
 
             ctx.fillStyle = position === 'LONG' ? "#ff4d4f" : "#00e676";
-            ctx.font = "bold 11px JetBrains Mono, monospace";
-            ctx.fillText(`成本 ${entryPrice.toFixed(2)}`, 8, Math.max(14, ey - 5));
+            ctx.font = "bold 12px JetBrains Mono, monospace";
+            ctx.fillText(`進場成本 ${entryPrice.toFixed(2)}`, 8, Math.max(15, ey - 5));
+
+            const liqP = getLiquidationPrice();
+            if (liqP >= minP && liqP <= maxP) {
+                const ly = getY(liqP);
+                ctx.save();
+                ctx.setLineDash([3, 3]);
+                ctx.strokeStyle = "#fbbf24";
+                ctx.lineWidth = 1.5;
+                ctx.beginPath(); ctx.moveTo(0, ly); ctx.lineTo(w, ly); ctx.stroke();
+                ctx.restore();
+
+                ctx.fillStyle = "#fbbf24";
+                ctx.fillText(`⚠️ 強平線 ${liqP.toFixed(2)}`, 8, Math.min(ch - 6, ly + 13));
+            }
         }
 
         const isUp = h[h.length - 1] >= h[h.length - 2];
@@ -1109,7 +1566,7 @@
                         </td>
                         <td style="text-align: right; color: #ffd700; font-weight: bold;">$${nw.toLocaleString()}</td>
                         <td style="text-align: right; color: ${roiColor};">${roiSign}${roi.toFixed(1)}%</td>
-                        <td style="text-align: right; color: #8b949e; font-size: 12px;">${timeStr}</td>
+                        <td class="hide-mobile" style="text-align: right; color: #8b949e; font-size: 12px;">${timeStr}</td>
                     </tr>
                 `;
             }).join('');
@@ -1160,7 +1617,7 @@
         const returnRate = Number((((currentNetWorth - INITIAL_CAPITAL) / INITIAL_CAPITAL) * 100).toFixed(2));
         const btn = document.getElementById('btn-submit-score');
         btn.disabled = true;
-        btn.innerText = "檢查榜單...";
+        btn.innerText = "檢查中...";
 
         try {
             const checkRes = await fetch(
@@ -1176,7 +1633,7 @@
                     return;
                 }
 
-                btn.innerText = "刷新紀錄中...";
+                btn.innerText = "更新中...";
                 const patchRes = await fetch(
                     `${SUPABASE_URL}/rest/v1/leaderboard?id=eq.${bestRecord.id}`,
                     {
@@ -1251,6 +1708,7 @@
     }
 
     setInterval(loadLeaderboard, 15000);
+    setInterval(updateDailyResetCountdown, 1000);
 
     function syncTickLoop() {
         const currentTick = Math.floor(Date.now() / 800);
@@ -1297,6 +1755,7 @@
     window.addEventListener('beforeunload', saveGameState);
     renderStockTabs();
     renderItems();
+    updateDailyResetCountdown();
     syncTickLoop();
     loadLeaderboard();
     setInterval(syncTickLoop, 200);
