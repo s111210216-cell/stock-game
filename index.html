@@ -789,17 +789,19 @@
         ctx.fill();
     }
 
+    async function loadLeaderboard() {let lastSubmitTime = 0;
+
     async function loadLeaderboard() {
         const tbody = document.getElementById('lb-body');
         try {
-            const res = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard?select=*&order=net_worth.desc&limit=10`, {
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard?select=*&net_worth=gt.10000&order=net_worth.desc&limit=10`, {
                 headers: { 'apikey': SUPABASE_KEY }
             });
             if (!res.ok) throw new Error('讀取排行榜失敗');
             const data = await res.json();
 
             if (!data || data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #8b949e; padding: 16px;">目前尚無玩家上榜，快成為第一位股神！</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #8b949e; padding: 16px;">目前尚無獲利玩家上榜，快成為第一位股神！</td></tr>`;
                 return;
             }
 
@@ -831,16 +833,32 @@
     }
 
     async function submitScore() {
+        const now = Date.now();
+        if (now - lastSubmitTime < 15000) {
+            const waitSec = Math.ceil((15000 - (now - lastSubmitTime)) / 1000);
+            alert(`操作太頻繁，請等待 ${waitSec} 秒後再上傳戰績！`);
+            return;
+        }
+
         const nameInput = document.getElementById('player-name');
-        const playerName = nameInput.value.trim();
-        if (!playerName) {
+        const playerName = nameInput.value.replace(/\s+/g, ' ').trim();
+        if (!playerName || playerName.length < 1) {
             alert("請先輸入您的操盤手暱稱再上傳戰績！");
             nameInput.focus();
             return;
         }
 
-        localStorage.setItem('stock_game_player_name', playerName);
         const currentNetWorth = getTotalNetWorth();
+        if (currentNetWorth <= INITIAL_CAPITAL) {
+            alert("總淨值必須超過初始本金 $10,000 才能登上全球股神榜！");
+            return;
+        }
+        if (currentNetWorth > 999999999) {
+            alert("數值異常，無法上傳！");
+            return;
+        }
+
+        localStorage.setItem('stock_game_player_name', playerName);
         const returnRate = Number((((currentNetWorth - INITIAL_CAPITAL) / INITIAL_CAPITAL) * 100).toFixed(2));
 
         const btn = document.getElementById('btn-submit-score');
@@ -863,6 +881,7 @@
             });
 
             if (!res.ok) throw new Error('寫入資料庫失敗');
+            lastSubmitTime = Date.now();
             logAI(`[全球排行] ${playerName} 成功上傳戰績：$${currentNetWorth.toLocaleString()} (${returnRate >= 0 ? '+' : ''}${returnRate}%)`);
             await loadLeaderboard();
         } catch (err) {
@@ -877,16 +896,7 @@
         return String(str).replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
     }
 
-    function syncTickLoop() {
-        const currentTick = Math.floor(Date.now() / 800);
-        if (currentTick === lastProcessedTick) return;
-        lastProcessedTick = currentTick;
-
-        const ev = getGlobalMarketState(currentTick);
-        document.getElementById('news-text').innerText = ev.text;
-
-        const vip = isVipPlayer();
-        Object.keys(stocks).forEach(k => {
+    setInterval(loadLeaderboard, 15000); {
             const st = stocks[k];
             if (st.history.length === 0) {
                 for (let i = 59; i >= 0; i--) {
