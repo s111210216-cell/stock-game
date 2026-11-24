@@ -42,7 +42,7 @@
             AI 量化對決交易室
             <span id="market-badge" class="text-xs px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">市場常態</span>
           </h1>
-          <p class="text-xs text-slate-400">全球同步 Tick 引擎 · 動態基準線（上紅下綠）· 即時「現在金額」排名</p>
+          <p class="text-xs text-slate-400">全球同步 Tick 引擎 · 即時「現在金額」排名 · AI 量化代操</p>
         </div>
       </div>
 
@@ -77,8 +77,8 @@
               </div>
             </div>
             <div class="flex items-center gap-3 text-xs text-slate-400">
-              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span>高於動態基準</span>
-              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>低於動態基準</span>
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span>偏多走高</span>
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>偏空走低</span>
               <span id="news-ticker" class="text-amber-300 font-medium">📰 市場觀望中</span>
             </div>
           </div>
@@ -86,58 +86,65 @@
           <div class="relative w-full h-72 bg-slate-950/70 rounded-xl border border-slate-800/80 overflow-hidden">
             <canvas id="price-chart" style="width:100%;height:100%;display:block;"></canvas>
           </div>
+
+          <!-- 交易與 AI 訊號日誌 -->
+          <div id="trade-log-box" class="bg-slate-950/90 border border-slate-800 rounded-xl p-2.5 h-24 overflow-y-auto font-mono text-xs space-y-1">
+            <div class="text-slate-500">&gt; 系統就緒，等待手動下單或啟動「AI 代操 30s」。</div>
+          </div>
         </div>
 
-        <div class="card p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="space-y-3">
-            <div class="flex items-center justify-between">
-              <span class="text-sm font-bold text-white">手動交易下單</span>
-              <span class="text-xs text-slate-400">可用現金：<b id="user-cash" class="text-white">$10,000</b></span>
-            </div>
+        <div class="card p-4 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="text-sm font-bold text-white">交易操作與 AI 代操</span>
+            <span class="text-xs text-slate-400">可用現金：<b id="user-cash" class="text-white">$10,000</b></span>
+          </div>
 
-            <div class="grid grid-cols-2 gap-2 text-xs">
-              <div>
-                <label class="text-slate-400 block mb-1">槓桿倍數</label>
-                <div class="grid grid-cols-3 gap-1" id="lev-buttons">
-                  <button type="button" data-lev="1" class="lev-btn py-1.5 rounded bg-slate-800 text-slate-300 font-bold">1x</button>
-                  <button type="button" data-lev="3" class="lev-btn py-1.5 rounded bg-indigo-600 text-white font-bold">3x</button>
-                  <button type="button" data-lev="5" class="lev-btn py-1.5 rounded bg-slate-800 text-slate-300 font-bold">5x</button>
-                </div>
-              </div>
-              <div>
-                <label class="text-slate-400 block mb-1">投入比例</label>
-                <div class="grid grid-cols-3 gap-1" id="alloc-buttons">
-                  <button type="button" data-alloc="0.25" class="alloc-btn py-1.5 rounded bg-slate-800 text-slate-300 font-bold">25%</button>
-                  <button type="button" data-alloc="0.5" class="alloc-btn py-1.5 rounded bg-slate-800 text-slate-300 font-bold">50%</button>
-                  <button type="button" data-alloc="1" class="alloc-btn py-1.5 rounded bg-indigo-600 text-white font-bold">100%</button>
-                </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+            <div>
+              <label class="text-slate-400 block mb-1">槓桿倍數</label>
+              <div class="grid grid-cols-3 gap-1.5" id="lev-buttons">
+                <button type="button" data-lev="1" class="lev-btn py-2 rounded-lg bg-slate-800 text-slate-300 font-bold">1x 現貨</button>
+                <button type="button" data-lev="3" class="lev-btn py-2 rounded-lg bg-indigo-600 text-white font-bold">3x 融資</button>
+                <button type="button" data-lev="5" class="lev-btn py-2 rounded-lg bg-slate-800 text-slate-300 font-bold">5x 飆車</button>
               </div>
             </div>
-
-            <div class="grid grid-cols-2 gap-2 pt-1">
-              <button type="button" onclick="openUserPosition('LONG')"
-                class="py-2.5 rounded-lg font-bold text-white bg-red-600 hover:bg-red-500 transition">
-                買進做多 (LONG)
-              </button>
-              <button type="button" onclick="openUserPosition('SHORT')"
-                class="py-2.5 rounded-lg font-bold text-white bg-green-600 hover:bg-green-500 transition">
-                融券做空 (SHORT)
-              </button>
+            <div>
+              <label class="text-slate-400 block mb-1">投入比例</label>
+              <div class="grid grid-cols-3 gap-1.5" id="alloc-buttons">
+                <button type="button" data-alloc="0.25" class="alloc-btn py-2 rounded-lg bg-slate-800 text-slate-300 font-bold">25%</button>
+                <button type="button" data-alloc="0.5" class="alloc-btn py-2 rounded-lg bg-slate-800 text-slate-300 font-bold">50%</button>
+                <button type="button" data-alloc="1" class="alloc-btn py-2 rounded-lg bg-indigo-600 text-white font-bold">100% 全倉</button>
+              </div>
             </div>
           </div>
 
-          <div class="bg-slate-900/70 rounded-xl p-3.5 border border-slate-800 flex flex-col justify-between">
-            <div class="flex items-center justify-between">
-              <span class="text-sm font-bold text-white">我的即時持倉</span>
-              <span id="user-pos-badge" class="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-400">空手觀望中</span>
-            </div>
-            <div id="user-pos-detail" class="my-2 text-xs text-slate-400 space-y-1">
-              <div>點擊左側「買進做多」或「融券做空」進場對決。</div>
-            </div>
-            <button type="button" id="close-pos-btn" onclick="closeUserPosition()" disabled
-              class="w-full py-2 rounded-lg text-xs font-bold bg-slate-800 text-slate-500 cursor-not-allowed transition">
-              市價平倉結算
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+            <button type="button" onclick="openUserPosition('LONG')"
+              class="py-2.5 rounded-full font-bold text-white bg-red-600 hover:bg-red-500 transition">
+              ● 買進做多
             </button>
+            <button type="button" onclick="openUserPosition('SHORT')"
+              class="py-2.5 rounded-full font-bold text-white bg-green-600 hover:bg-green-500 transition">
+              ● 融券做空
+            </button>
+            <button type="button" id="close-pos-btn" onclick="closeUserPosition()" disabled
+              class="py-2.5 rounded-full font-bold bg-slate-800 text-slate-500 cursor-not-allowed transition">
+              立即平倉
+            </button>
+            <button type="button" id="ai-autopilot-btn" onclick="toggleAiAutopilot()"
+              class="py-2.5 rounded-full font-bold text-white bg-sky-600 hover:bg-sky-500 transition">
+              🤖 AI 代操 30s
+            </button>
+          </div>
+
+          <div class="bg-slate-900/70 rounded-xl p-3 border border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-white">我的即時持倉：</span>
+              <span id="user-pos-badge" class="px-2 py-0.5 rounded bg-slate-800 text-slate-400">空手觀望</span>
+            </div>
+            <div id="user-pos-detail" class="text-slate-400">
+              尚未進場，可手動下單或按「AI 代操 30s」。
+            </div>
           </div>
         </div>
       </div>
@@ -207,6 +214,16 @@ function safeSetStorage(key, val) {
   try { window.localStorage.setItem(key, val); } catch (e) {}
 }
 
+function appendLog(msg, cls = "text-slate-300") {
+  const box = document.getElementById("trade-log-box");
+  if (!box) return;
+  const line = document.createElement("div");
+  line.className = cls;
+  line.textContent = "> " + msg;
+  box.appendChild(line);
+  box.scrollTop = box.scrollHeight;
+}
+
 function syncRand(t, s) {
   const x = Math.sin(t * 12.9898 + s * 78.233) * 43758.5453;
   return x - Math.floor(x);
@@ -238,24 +255,21 @@ function getEpochSeries(stockKey, currentTick) {
   return series;
 }
 
-function getDynamicBaseSeries(series, fallbackBasePrice, win = 20) {
-  return series.map((item, idx) => {
-    const start = Math.max(0, idx - win + 1);
-    const slice = series.slice(start, idx + 1);
-    if (!slice.length) return fallbackBasePrice;
-    const sum = slice.reduce((acc, d) => acc + Number(d.price), 0);
-    return sum / slice.length;
-  });
-}
-
 let selectedStock = "2330";
 let selectedLev = 3;
 let selectedAlloc = 1.0;
 let cash = 10000;
 let userPos = null;
+let markers = []; // { code, tick, price, label, color }
 let playerName = safeGetStorage("sim_player_name") || ("Trader_" + Math.floor(1000 + Math.random() * 9000));
 if (playerName.trim().toLowerCase() === "ai") playerName = "Trader_" + Math.floor(1000 + Math.random() * 9000);
 document.getElementById("player-name-input").value = playerName;
+
+// AI 代操 30s 狀態
+let aiAutopilotTimer = null;
+let aiAutopilotLeft = 0;
+let aiAutopilotPos = null;
+let aiAutopilotCash = 10000;
 
 function savePlayerName() {
   const raw = document.getElementById("player-name-input").value.trim();
@@ -275,8 +289,8 @@ document.querySelectorAll(".lev-btn").forEach(btn => {
     selectedLev = Number(btn.dataset.lev);
     document.querySelectorAll(".lev-btn").forEach(b => {
       b.className = b === btn
-        ? "lev-btn py-1.5 rounded bg-indigo-600 text-white font-bold"
-        : "lev-btn py-1.5 rounded bg-slate-800 text-slate-300 font-bold";
+        ? "lev-btn py-2 rounded-lg bg-indigo-600 text-white font-bold"
+        : "lev-btn py-2 rounded-lg bg-slate-800 text-slate-300 font-bold";
     });
   });
 });
@@ -286,21 +300,29 @@ document.querySelectorAll(".alloc-btn").forEach(btn => {
     selectedAlloc = Number(btn.dataset.alloc);
     document.querySelectorAll(".alloc-btn").forEach(b => {
       b.className = b === btn
-        ? "alloc-btn py-1.5 rounded bg-indigo-600 text-white font-bold"
-        : "alloc-btn py-1.5 rounded bg-slate-800 text-slate-300 font-bold";
+        ? "alloc-btn py-2 rounded-lg bg-indigo-600 text-white font-bold"
+        : "alloc-btn py-2 rounded-lg bg-slate-800 text-slate-300 font-bold";
     });
   });
 });
 
 function openUserPosition(dir) {
-  if (userPos) { alert("請先平倉目前持倉再建立新倉位！"); return; }
-  if (cash < 100) { alert("可用現金不足！"); return; }
+  if (userPos) { appendLog("已有持倉，請先按「立即平倉」再進場。", "text-amber-400"); return; }
+  if (cash < 100) { appendLog("可用現金不足。", "text-rose-400"); return; }
   const currentTick = Math.floor(Date.now() / 800);
   const series = getEpochSeries(selectedStock, currentTick);
   const curPrice = series[series.length - 1].price;
   const margin = cash * selectedAlloc;
   cash -= margin;
   userPos = { code: selectedStock, dir, lev: selectedLev, entryPrice: curPrice, margin };
+  markers.push({
+    code: selectedStock,
+    tick: currentTick,
+    price: curPrice,
+    label: dir === "LONG" ? "B" : "S",
+    color: dir === "LONG" ? "#ef4444" : "#22c55e"
+  });
+  appendLog(`[手動${dir === "LONG" ? "做多" : "放空"}] ${selectedStock} ${selectedLev}x @ ${curPrice.toFixed(2)} | 保證金 $${Math.round(margin).toLocaleString()}`, dir === "LONG" ? "text-red-400" : "text-green-400");
   updateUserPanel(currentTick);
   syncUserLeaderboard();
 }
@@ -313,12 +335,148 @@ function closeUserPosition() {
   const pnl = userPos.margin * ((curPrice - userPos.entryPrice) / userPos.entryPrice) * userPos.lev * (userPos.dir === "LONG" ? 1 : -1);
   cash = Math.max(0, cash + userPos.margin + pnl);
   if (cash < 300) cash = 3000;
+  markers.push({
+    code: userPos.code,
+    tick: currentTick,
+    price: curPrice,
+    label: "平",
+    color: "#f59e0b"
+  });
+  appendLog(`[平倉結算] ${userPos.code} @ ${curPrice.toFixed(2)} | 損益 ${pnl >= 0 ? "+" : ""}$${Math.round(pnl).toLocaleString()} | 現金 $${Math.round(cash).toLocaleString()}`, pnl >= 0 ? "text-amber-300" : "text-slate-300");
   userPos = null;
   updateUserPanel(currentTick);
   syncUserLeaderboard();
 }
 
-function drawRedGreenChart(series, fallbackBasePrice) {
+// AI 代操 30s 控制
+async function pushAiStatusAndScore(stockCode, stockName, dir, lev, entryPrice, margin, nw) {
+  const roi = Number((((nw - 10000) / 10000) * 100).toFixed(2));
+  const headers = {
+    apikey: SUPABASE_KEY,
+    "Content-Type": "application/json",
+    Prefer: "return=minimal"
+  };
+  try {
+    await fetch(SUPABASE_URL + "/rest/v1/ai_live_status?id=eq.1", {
+      method: "PATCH",
+      headers,
+      body: JSON.stringify({
+        stock_code: stockCode || "NONE",
+        stock_name: stockName || "空手觀望中",
+        direction: dir || "NONE",
+        leverage: lev || 1,
+        entry_price: Number(entryPrice || 0),
+        margin: Number(margin || 0),
+        net_worth: Math.round(nw),
+        updated_at: new Date().toISOString()
+      })
+    });
+
+    const res = await fetch(SUPABASE_URL + "/rest/v1/leaderboard?select=id&player_name=eq.ai&limit=1", { headers: { apikey: SUPABASE_KEY } });
+    const rows = await res.json();
+    const lbPayload = { net_worth: Math.round(nw), return_rate: roi, created_at: new Date().toISOString() };
+    if (rows && rows.length > 0) {
+      await fetch(SUPABASE_URL + "/rest/v1/leaderboard?id=eq." + rows[0].id, {
+        method: "PATCH",
+        headers,
+        body: JSON.stringify(lbPayload)
+      });
+    } else {
+      await fetch(SUPABASE_URL + "/rest/v1/leaderboard", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ player_name: "ai", ...lbPayload })
+      });
+    }
+  } catch (e) {}
+}
+
+function stepAiAutopilot() {
+  const currentTick = Math.floor(Date.now() / 800);
+  const series = getEpochSeries(selectedStock, currentTick);
+  const curPrice = series[series.length - 1].price;
+  const recent = series.slice(-8).map(d => d.price);
+  const mom = recent.length >= 2 ? ((curPrice - recent[0]) / recent[0]) * 100 : 0;
+
+  if (!aiAutopilotPos) {
+    if (Math.abs(mom) >= 0.15) {
+      const dir = mom >= 0 ? "LONG" : "SHORT";
+      const margin = aiAutopilotCash * 0.5;
+      aiAutopilotCash -= margin;
+      aiAutopilotPos = { code: selectedStock, dir, lev: 3, entryPrice: curPrice, margin };
+      markers.push({
+        code: selectedStock,
+        tick: currentTick,
+        price: curPrice,
+        label: dir === "LONG" ? "AI多" : "AI空",
+        color: "#38bdf8"
+      });
+      appendLog(`[AI ${dir === "LONG" ? "做多" : "放空"}] 動能 ${mom >= 0 ? "+" : ""}${mom.toFixed(2)}% | ${selectedStock} 3x @ ${curPrice.toFixed(2)}`, "text-sky-400");
+    }
+  } else {
+    const pnl = aiAutopilotPos.margin * ((curPrice - aiAutopilotPos.entryPrice) / aiAutopilotPos.entryPrice) * aiAutopilotPos.lev * (aiAutopilotPos.dir === "LONG" ? 1 : -1);
+    const roi = (pnl / aiAutopilotPos.margin) * 100;
+    if (roi >= 1.2 || roi <= -1.0 || aiAutopilotLeft <= 1) {
+      aiAutopilotCash = Math.max(500, aiAutopilotCash + aiAutopilotPos.margin + pnl);
+      appendLog(`[AI 結算] ${aiAutopilotPos.code} @ ${curPrice.toFixed(2)} | 損益 ${pnl >= 0 ? "+" : ""}$${Math.round(pnl).toLocaleString()} (${roi >= 0 ? "+" : ""}${roi.toFixed(1)}%)`, "text-indigo-300");
+      aiAutopilotPos = null;
+    }
+  }
+
+  let liveNw = aiAutopilotCash;
+  if (aiAutopilotPos) {
+    const pnl = aiAutopilotPos.margin * ((curPrice - aiAutopilotPos.entryPrice) / aiAutopilotPos.entryPrice) * aiAutopilotPos.lev * (aiAutopilotPos.dir === "LONG" ? 1 : -1);
+    liveNw = aiAutopilotCash + aiAutopilotPos.margin + pnl;
+    pushAiStatusAndScore(aiAutopilotPos.code, STOCKS[aiAutopilotPos.code].name, aiAutopilotPos.dir, aiAutopilotPos.lev, aiAutopilotPos.entryPrice, aiAutopilotPos.margin, liveNw);
+  } else {
+    pushAiStatusAndScore("NONE", "空手觀望中", "NONE", 1, 0, 0, liveNw);
+  }
+}
+
+function stopAiAutopilot(reason = "代操結束") {
+  if (aiAutopilotTimer) {
+    clearInterval(aiAutopilotTimer);
+    aiAutopilotTimer = null;
+  }
+  if (aiAutopilotPos) {
+    const currentTick = Math.floor(Date.now() / 800);
+    const series = getEpochSeries(aiAutopilotPos.code, currentTick);
+    const curPrice = series[series.length - 1].price;
+    const pnl = aiAutopilotPos.margin * ((curPrice - aiAutopilotPos.entryPrice) / aiAutopilotPos.entryPrice) * aiAutopilotPos.lev * (aiAutopilotPos.dir === "LONG" ? 1 : -1);
+    aiAutopilotCash = Math.max(500, aiAutopilotCash + aiAutopilotPos.margin + pnl);
+    aiAutopilotPos = null;
+  }
+  aiAutopilotLeft = 0;
+  const btn = document.getElementById("ai-autopilot-btn");
+  btn.textContent = "🤖 AI 代操 30s";
+  btn.className = "py-2.5 rounded-full font-bold text-white bg-sky-600 hover:bg-sky-500 transition";
+  appendLog(`[AI 代操] ${reason}，目前 AI 淨值 $${Math.round(aiAutopilotCash).toLocaleString()}`, "text-slate-400");
+  pushAiStatusAndScore("NONE", "空手觀望中", "NONE", 1, 0, 0, aiAutopilotCash);
+}
+
+function toggleAiAutopilot() {
+  if (aiAutopilotTimer) {
+    stopAiAutopilot("手動停止");
+    return;
+  }
+  aiAutopilotLeft = 30;
+  appendLog("[AI 代操] 啟動 30 秒自動量化代操...", "text-sky-300");
+  stepAiAutopilot();
+  aiAutopilotTimer = setInterval(() => {
+    aiAutopilotLeft -= 2;
+    const btn = document.getElementById("ai-autopilot-btn");
+    if (aiAutopilotLeft <= 0) {
+      stopAiAutopilot("30s 週期完成");
+      return;
+    }
+    btn.textContent = `🤖 代操中 (${aiAutopilotLeft}s)`;
+    btn.className = "py-2.5 rounded-full font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 transition";
+    stepAiAutopilot();
+  }, 2000);
+}
+
+// 順暢趨勢紅綠圖表 + 進出場標記圓點
+function drawRedGreenChart(series, basePrice) {
   const canvas = document.getElementById("price-chart");
   if (!canvas) return;
   const dpr = window.devicePixelRatio || 1;
@@ -334,18 +492,9 @@ function drawRedGreenChart(series, fallbackBasePrice) {
   const visible = series.slice(-90);
   if (visible.length < 2) return;
 
-  const win = 20;
-  const dynamicBases = visible.map((_, idx) => {
-    const start = Math.max(0, idx - win + 1);
-    const slice = visible.slice(start, idx + 1);
-    if (!slice.length) return fallbackBasePrice;
-    const sum = slice.reduce((acc, item) => acc + Number(item.price), 0);
-    return sum / slice.length;
-  });
-
   const prices = visible.map(d => Number(d.price));
-  const minP = Math.min(...prices, ...dynamicBases) * 0.9985;
-  const maxP = Math.max(...prices, ...dynamicBases) * 1.0015;
+  const minP = Math.min(...prices, basePrice) * 0.9985;
+  const maxP = Math.max(...prices, basePrice) * 1.0015;
   const range = Math.max(0.01, maxP - minP);
 
   const padL = 14, padR = 62, padT = 18, padB = 22;
@@ -369,68 +518,77 @@ function drawRedGreenChart(series, fallbackBasePrice) {
     ctx.fillText(priceLabel, w - padR + 6, y + 4);
   }
 
-  ctx.save();
-  ctx.setLineDash([5, 4]);
-  ctx.strokeStyle = "rgba(250, 204, 21, 0.75)";
-  ctx.lineWidth = 1.4;
+  const firstPrice = visible[0].price;
+  const lastPrice = visible[visible.length - 1].price;
+  const isOverallUp = lastPrice >= firstPrice;
+  const lineCol = isOverallUp ? "#ef4444" : "#22c55e";
+
+  const grad = ctx.createLinearGradient(0, padT, 0, padT + plotH);
+  if (isOverallUp) {
+    grad.addColorStop(0, "rgba(239, 68, 68, 0.28)");
+    grad.addColorStop(1, "rgba(239, 68, 68, 0.0)");
+  } else {
+    grad.addColorStop(0, "rgba(34, 197, 94, 0.28)");
+    grad.addColorStop(1, "rgba(34, 197, 94, 0.0)");
+  }
+
   ctx.beginPath();
-  dynamicBases.forEach((bVal, idx) => {
+  visible.forEach((pt, idx) => {
     const x = getX(idx);
-    const y = getY(bVal);
+    const y = getY(Number(pt.price));
     if (idx === 0) ctx.moveTo(x, y);
     else ctx.lineTo(x, y);
   });
+  ctx.lineTo(getX(visible.length - 1), padT + plotH);
+  ctx.lineTo(getX(0), padT + plotH);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  ctx.beginPath();
+  visible.forEach((pt, idx) => {
+    const x = getX(idx);
+    const y = getY(Number(pt.price));
+    if (idx === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  ctx.strokeStyle = lineCol;
+  ctx.lineWidth = 2.6;
+  ctx.lineJoin = "round";
   ctx.stroke();
-  ctx.restore();
 
-  const lastBase = dynamicBases[dynamicBases.length - 1];
-  const lastBaseY = getY(lastBase);
-  ctx.fillStyle = "#facc15";
-  ctx.font = "bold 10px sans-serif";
-  ctx.fillText("動態基準 " + lastBase.toFixed(2), padL + 4, Math.max(12, lastBaseY - 5));
+  // 繪製交易標記圓點（B / S / 平 / AI）
+  const startTick = visible[0].tick;
+  const endTick = visible[visible.length - 1].tick;
+  markers
+    .filter(m => m.code === selectedStock && m.tick >= startTick && m.tick <= endTick)
+    .forEach(m => {
+      const ratio = (m.tick - startTick) / Math.max(1, endTick - startTick);
+      const mx = padL + ratio * plotW;
+      const my = getY(Number(m.price));
+      ctx.beginPath();
+      ctx.arc(mx, my, 8, 0, Math.PI * 2);
+      ctx.fillStyle = m.color;
+      ctx.fill();
+      ctx.strokeStyle = "#0b0f19";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
 
-  for (let i = 1; i < visible.length; i++) {
-    const p0 = Number(visible[i - 1].price);
-    const p1 = Number(visible[i].price);
-    const b0 = dynamicBases[i - 1];
-    const b1 = dynamicBases[i];
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 9px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(m.label, mx, my + 0.5);
+      ctx.textAlign = "left";
+      ctx.textBaseline = "alphabetic";
+    });
 
-    const x0 = getX(i - 1);
-    const y0 = getY(p0);
-    const x1 = getX(i);
-    const y1 = getY(p1);
-    const by0 = getY(b0);
-    const by1 = getY(b1);
-
-    const isAboveBase = ((p0 - b0) + (p1 - b1)) / 2 >= 0;
-    const strokeCol = isAboveBase ? "#ef4444" : "#22c55e";
-    const fillCol = isAboveBase ? "rgba(239, 68, 68, 0.18)" : "rgba(34, 197, 94, 0.18)";
-
-    ctx.beginPath();
-    ctx.moveTo(x0, y0);
-    ctx.lineTo(x1, y1);
-    ctx.lineTo(x1, by1);
-    ctx.lineTo(x0, by0);
-    ctx.closePath();
-    ctx.fillStyle = fillCol;
-    ctx.fill();
-
-    ctx.beginPath();
-    ctx.moveTo(x0, y0);
-    ctx.lineTo(x1, y1);
-    ctx.strokeStyle = strokeCol;
-    ctx.lineWidth = 2.4;
-    ctx.lineCap = "round";
-    ctx.stroke();
-  }
-
-  const last = visible[visible.length - 1];
+  // 最新價端點
   const lastX = getX(visible.length - 1);
-  const lastY = getY(last.price);
-  const aboveLastBase = last.price >= lastBase;
+  const lastY = getY(lastPrice);
   ctx.beginPath();
   ctx.arc(lastX, lastY, 4.5, 0, Math.PI * 2);
-  ctx.fillStyle = aboveLastBase ? "#ef4444" : "#22c55e";
+  ctx.fillStyle = lineCol;
   ctx.fill();
   ctx.strokeStyle = "#ffffff";
   ctx.lineWidth = 1.5;
@@ -454,27 +612,25 @@ function updateUserPanel(currentTick) {
       userPos = null;
       cash = Math.max(cash, 3000);
       totalNw = cash;
-      alert("💥 觸發強制平倉（爆倉），系統發放 $3,000 救濟金！");
+      appendLog("💥 觸發強制平倉（爆倉），系統發放 $3,000 救濟金！", "text-rose-400");
     } else {
       totalNw = cash + userPos.margin + pnl;
       const isProfit = pnl >= 0;
       posBadge.textContent = (userPos.dir === "LONG" ? "做多 " : "做空 ") + userPos.lev + "x";
-      posBadge.className = "text-xs px-2 py-0.5 rounded font-bold " + (userPos.dir === "LONG" ? "up-bg" : "down-bg");
+      posBadge.className = "px-2 py-0.5 rounded font-bold " + (userPos.dir === "LONG" ? "up-bg" : "down-bg");
       posDetail.innerHTML =
-        '<div class="flex justify-between"><span>標的：</span><b class="text-white">' + userPos.code + " " + STOCKS[userPos.code].name + "</b></div>" +
-        '<div class="flex justify-between"><span>開倉均價 / 現價：</span><span class="font-mono text-slate-200">' + userPos.entryPrice.toFixed(2) + " → " + curPrice.toFixed(2) + "</span></div>" +
-        '<div class="flex justify-between"><span>未實現損益：</span><b class="' + (isProfit ? "up-text" : "down-text") + '">' + (pnl >= 0 ? "+" : "") + Math.round(pnl).toLocaleString() + " (" + (roi >= 0 ? "+" : "") + roi.toFixed(1) + "%)</b></div>";
+        `<b class="text-white">${userPos.code}</b> · 進場 <span class="font-mono text-slate-200">${userPos.entryPrice.toFixed(2)}</span> → 現價 <span class="font-mono text-slate-200">${curPrice.toFixed(2)}</span> · 未實現損益 <b class="${isProfit ? "up-text" : "down-text"}">${pnl >= 0 ? "+" : ""}$${Math.round(pnl).toLocaleString()} (${roi >= 0 ? "+" : ""}${roi.toFixed(1)}%)</b>`;
       closeBtn.disabled = false;
-      closeBtn.className = "w-full py-2 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 cursor-pointer transition";
+      closeBtn.className = "py-2.5 rounded-full font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 cursor-pointer transition";
     }
   }
 
   if (!userPos) {
-    posBadge.textContent = "空手觀望中";
-    posBadge.className = "text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-400";
-    posDetail.innerHTML = "<div>選擇標的與槓桿後，點擊左側按鈕進場。</div>";
+    posBadge.textContent = "空手觀望";
+    posBadge.className = "px-2 py-0.5 rounded bg-slate-800 text-slate-400";
+    posDetail.textContent = "尚未進場，可手動下單或按「AI 代操 30s」。";
     closeBtn.disabled = true;
-    closeBtn.className = "w-full py-2 rounded-lg text-xs font-bold bg-slate-800 text-slate-500 cursor-not-allowed";
+    closeBtn.className = "py-2.5 rounded-full font-bold bg-slate-800 text-slate-500 cursor-not-allowed";
   }
 
   document.getElementById("user-net-worth").textContent = "$" + Math.round(totalNw).toLocaleString();
@@ -495,10 +651,8 @@ function renderTick() {
     tabsEl.innerHTML = "";
     Object.entries(STOCKS).forEach(([code, st]) => {
       const s = getEpochSeries(code, currentTick);
-      const dynBases = getDynamicBaseSeries(s, st.base, 20);
       const cur = s[s.length - 1].price;
-      const curBase = dynBases[dynBases.length - 1];
-      const pct = ((cur - curBase) / curBase) * 100;
+      const pct = ((cur - st.base) / st.base) * 100;
       const isUp = pct >= 0;
       const active = code === selectedStock;
 
@@ -518,12 +672,10 @@ function renderTick() {
     });
 
     const activeSeries = getEpochSeries(selectedStock, currentTick);
-    const activeBases = getDynamicBaseSeries(activeSeries, STOCKS[selectedStock].base, 20);
     const stInfo = STOCKS[selectedStock];
     const latestPrice = activeSeries[activeSeries.length - 1].price;
-    const latestBase = activeBases[activeBases.length - 1];
-    const diff = latestPrice - latestBase;
-    const diffPct = (diff / latestBase) * 100;
+    const diff = latestPrice - stInfo.base;
+    const diffPct = (diff / stInfo.base) * 100;
     const isUp = diff >= 0;
 
     document.getElementById("chart-stock-title").textContent = selectedStock + " " + stInfo.name;
