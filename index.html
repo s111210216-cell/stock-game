@@ -794,13 +794,23 @@
     async function loadLeaderboard() {
         const tbody = document.getElementById('lb-body');
         try {
-            const res = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard?select=*&net_worth=gt.10000&order=net_worth.desc&limit=10`, {
+            // 多抓幾筆在前端做同名去重，確保同名字只顯示最高分那筆
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard?select=*&net_worth=gt.10000&order=net_worth.desc&limit=50`, {
                 headers: { 'apikey': SUPABASE_KEY }
             });
             if (!res.ok) throw new Error('讀取排行榜失敗');
-            const data = await res.json();
+            const rawData = await res.json();
 
-            if (!data || data.length === 0) {
+            const uniqueMap = new Map();
+            (rawData || []).forEach(row => {
+                const key = String(row.player_name || '').trim().toLowerCase();
+                if (key && !uniqueMap.has(key)) {
+                    uniqueMap.set(key, row);
+                }
+            });
+            const data = Array.from(uniqueMap.values()).slice(0, 10);
+
+            if (data.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #8b949e; padding: 16px;">目前尚無獲利玩家上榜，快成為第一位股神！</td></tr>`;
                 return;
             }
@@ -848,6 +858,20 @@
             return;
         }
 
+        // 1. 檢查 10 分鐘改名限制（7676 管理者除外）
+        const lockedName = localStorage.getItem('stock_game_locked_name');
+        const lockedTime = Number(localStorage.getItem('stock_game_locked_time') || 0);
+        const RENAME_COOLDOWN = 10 * 60 * 1000; // 10 分鐘
+
+        if (playerName !== '7676' && lockedName && lockedName !== playerName && (now - lockedTime < RENAME_COOLDOWN)) {
+            const remainMs = RENAME_COOLDOWN - (now - lockedTime);
+            const remainMin = Math.floor(remainMs / 60000);
+            const remainSec = Math.ceil((remainMs % 60000) / 1000);
+            alert(`⏳ 每 10 分鐘只能更改一次暱稱！\n目前鎖定暱稱：「${lockedName}」\n請等待 ${remainMin} 分 ${remainSec} 秒後再改名，或繼續使用「${lockedName}」更新戰績。`);
+            nameInput.value = lockedName;
+            return;
+        }
+
         const currentNetWorth = getTotalNetWorth();
         if (currentNetWorth <= INITIAL_CAPITAL) {
             alert("總淨值必須超過初始本金 $10,000 才能登上全球股神榜！");
@@ -858,31 +882,89 @@
             return;
         }
 
-        localStorage.setItem('stock_game_player_name', playerName);
         const returnRate = Number((((currentNetWorth - INITIAL_CAPITAL) / INITIAL_CAPITAL) * 100).toFixed(2));
-
         const btn = document.getElementById('btn-submit-score');
         btn.disabled = true;
-        btn.innerText = "上傳中...";
+        btn.innerText = "檢查榜單...";
 
         try {
-            const res = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard`, {
-                method: 'POST',
-                headers: {
-                    'apikey': SUPABASE_KEY,
-                    'Content-Type': 'application/json',
-                    'Prefer': 'return=minimal'
-                },
-                body: JSON.stringify({
-                    player_name: playerName,
-                    net_worth: currentNetWorth,
-                    return_rate: returnRate
-                })
-            });
+            // 2. 查詢資料庫是否已存在同名玩家，確保排行榜同名只有一個
+            const checkRes = await fetch(
+                `${SUPABASE_URL}/rest/v1/leaderboard?select=*&player_name=eq.${encodeURIComponent(playerName)}&order=net_worth.desc&limit=1`,
+                { headers: { 'apikey': SUPABASE_KEY } }
+            );
+            const existing = await checkRes.json();
 
-            if (!res.ok) throw new Error('寫入資料庫失敗');
+            if (existing && existing.length > 0) {
+                const bestRecord = existing[0];
+                if (currentNetWorth <= Number(bestRecord.net_worth)) {
+                    alert(`排行榜上「${playerName}」的最高紀錄為 $${Number(bestRecord.net_worth).toLocaleString()}，本次戰績 ($${currentNetWorth.toLocaleString()}) 未破紀錄，不重複覆蓋！`);
+                    return;
+                }
+
+                // 打破自己紀錄：直接更新該筆資料（需 Supabase 有開啟 UPDATE 權限，若未開則退回新增）
+                btn.innerText = "刷新紀錄中...";
+                const patchRes = await fetch(
+                    `${SUPABASE_URL}/rest/v1/leaderboard?id=eq.${bestRecord.id}`,
+                    {
+                        method: 'PATCH',
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'return=minimal'
+                        },
+                        body: JSON.stringify({
+                            net_worth: currentNetWorth,
+                            return_rate: returnRate,
+                            created_at: new Date().toISOString()
+                        })
+                    }
+                );
+
+                if (!patchRes.ok) {
+                    // 若資料表尚未開 UPDATE policy，改以新增方式寫入（前端去重仍只會顯示最高這筆）
+                    await fetch(`${SUPABASE_URL}/rest/v1/leaderboard`, {
+                        method: 'POST',
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'return=minimal'
+                        },
+                        body: JSON.stringify({
+                            player_name: playerName,
+                            net_worth: currentNetWorth,
+                            return_rate: returnRate
+                        })
+                    });
+                }
+            } else {
+                // 全新暱稱：直接新增
+                btn.innerText = "上傳中...";
+                const postRes = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify({
+                        player_name: playerName,
+                        net_worth: currentNetWorth,
+                        return_rate: returnRate
+                    })
+                });
+                if (!postRes.ok) throw new Error('寫入資料庫失敗');
+            }
+
+            // 記錄鎖定暱稱與時間
+            localStorage.setItem('stock_game_player_name', playerName);
+            if (!lockedName || lockedName !== playerName) {
+                localStorage.setItem('stock_game_locked_name', playerName);
+                localStorage.setItem('stock_game_locked_time', String(Date.now()));
+            }
             lastSubmitTime = Date.now();
-            logAI(`[全球排行] ${playerName} 成功上傳戰績：$${currentNetWorth.toLocaleString()} (${returnRate >= 0 ? '+' : ''}${returnRate}%)`);
+
+            logAI(`[全球排行] ${playerName} 成功刷新最高戰績：$${currentNetWorth.toLocaleString()} (${returnRate >= 0 ? '+' : ''}${returnRate}%)`);
             await loadLeaderboard();
         } catch (err) {
             alert("上傳失敗，請稍後再試：" + err.message);
@@ -896,15 +978,7 @@
         return String(str).replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
     }
 
-    setInterval(loadLeaderboard, 15000); {
-            const st = stocks[k];
-            if (st.history.length === 0) {
-                for (let i = 59; i >= 0; i--) {
-                    st.history.push(computePriceAtTick(st, currentTick - i));
-                }
-            } else {
-                st.history.push(computePriceAtTick(st, currentTick));
-                if (st.history.length > 60) st.history.shift();
+    setInterval(loadLeaderboard, 15000);
             }
 
             let syncedPrice = st.history[st.history.length - 1];
