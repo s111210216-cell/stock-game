@@ -1,665 +1,153 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ChatGPT vs Gemini 雙模型量化競技室</title>
+  <meta charset="UTF-8">
+  <title>AI 程式設計競技場 (Code Arena)</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    body {
-      background-color: #0b0f19;
-      color: #e2e8f0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", sans-serif;
-    }
-    .card {
-      background: #131a2a;
-      border: 1px solid #1e293b;
-      border-radius: 14px;
-    }
-    .up-text { color: #ef4444; }
-    .down-text { color: #22c55e; }
-    .up-bg { background-color: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.35); }
-    .down-bg { background-color: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.35); }
-    .gpt-badge { background: linear-gradient(135deg, #10b981, #059669); color: #fff; font-size: 11px; padding: 2px 8px; border-radius: 999px; font-weight: 700; }
-    .gem-badge { background: linear-gradient(135deg, #6366f1, #a855f7); color: #fff; font-size: 11px; padding: 2px 8px; border-radius: 999px; font-weight: 700; }
-  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="min-h-screen p-3 md:p-6">
-  <div class="max-w-7xl mx-auto space-y-4">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col">
 
-    <header class="card p-4 flex flex-wrap items-center justify-between gap-4">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center text-xl">⚔️</div>
-        <div>
-          <h1 class="text-lg md:text-xl font-bold text-white flex items-center gap-2">
-            ChatGPT vs Gemini 雙模型量化競技室
-            <span id="market-badge" class="text-xs px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">市場常態</span>
-          </h1>
-          <p class="text-xs text-slate-400">同 Tick 同步行情 · 初始 $10,000 · Supabase 統一結算排行榜</p>
-        </div>
-      </div>
-
-      <div class="flex flex-wrap items-center gap-3">
-        <div class="flex items-center gap-2 bg-slate-900/90 px-3 py-1.5 rounded-lg border border-slate-800">
-          <span class="text-xs text-slate-400">觀戰者暱稱</span>
-          <input id="player-name-input" type="text" maxlength="14" placeholder="輸入暱稱"
-            class="bg-transparent text-sm font-semibold text-white w-28 focus:outline-none border-b border-slate-700 focus:border-indigo-500" />
-          <button type="button" onclick="savePlayerName()" class="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-2.5 py-1 rounded">套用</button>
-        </div>
-        <div class="bg-slate-900/90 px-3.5 py-1.5 rounded-lg border border-slate-800 text-right">
-          <div class="text-[11px] text-slate-400">我的總淨值（可同場參賽）</div>
-          <div id="user-net-worth" class="text-base font-bold text-amber-400">$10,000</div>
-        </div>
-      </div>
-    </header>
-
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-      <!-- 左側行情與盤面技能區 -->
-      <div class="lg:col-span-8 space-y-4">
-        <div id="stock-tabs" class="grid grid-cols-2 sm:grid-cols-5 gap-2"></div>
-
-        <div class="card p-4 space-y-3">
-          <div class="flex flex-wrap items-end justify-between gap-2">
-            <div>
-              <div class="flex items-center gap-2">
-                <span id="chart-stock-title" class="text-xl font-bold text-white">2330 台積電</span>
-                <span class="text-xs text-emerald-400 bg-emerald-950/60 border border-emerald-700/40 px-2 py-0.5 rounded">0.8s 同步 Tick</span>
-                <span id="skill-active-badge" class="hidden text-xs font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40"></span>
-              </div>
-              <div class="flex items-baseline gap-3 mt-1">
-                <span id="chart-current-price" class="text-3xl font-extrabold tracking-tight text-white">1050.00</span>
-                <span id="chart-price-change" class="text-sm font-bold px-2 py-0.5 rounded up-bg">+0.00 (+0.00%)</span>
-              </div>
-            </div>
-            <div class="flex items-center gap-3 text-xs text-slate-400">
-              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span>走高</span>
-              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>走低</span>
-              <span id="news-ticker" class="text-amber-300 font-medium">📰 市場觀望中</span>
-            </div>
-          </div>
-
-          <div class="relative w-full h-72 bg-slate-950/70 rounded-xl border border-slate-800/80 overflow-hidden">
-            <canvas id="price-chart" style="width:100%;height:100%;display:block;"></canvas>
-          </div>
-
-          <!-- 觀戰干擾技能（同步寫入 Supabase market_skills，雙模型真實承受價格波動） -->
-          <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3 space-y-2">
-            <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
-              <div class="flex items-center gap-2">
-                <span class="font-bold text-amber-300">⚡ 盤面干擾技能（雙模型盲區，真實影響成交價）</span>
-              </div>
-              <span id="skill-cooldown-text" class="font-mono font-bold text-emerald-400">技能就緒（可施放）</span>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              <button type="button" onclick="triggerPlayerSkill('PUMP')"
-                class="skill-btn py-2 px-3 rounded-lg font-bold text-xs text-white bg-rose-600 hover:bg-rose-500 transition">
-                🚀 拉高盤（軋空做空模型）
-              </button>
-              <button type="button" onclick="triggerPlayerSkill('DUMP')"
-                class="skill-btn py-2 px-3 rounded-lg font-bold text-xs text-white bg-emerald-600 hover:bg-emerald-500 transition">
-                📉 砸盤（狙擊做多模型）
-              </button>
-              <button type="button" onclick="triggerPlayerSkill('WICK')"
-                class="skill-btn py-2 px-3 rounded-lg font-bold text-xs text-slate-950 bg-amber-400 hover:bg-amber-300 transition">
-                🪡 插針（多空雙殺洗盤）
-              </button>
-            </div>
-          </div>
-
-          <div id="trade-log-box" class="bg-slate-950/90 border border-slate-800 rounded-xl p-2.5 h-24 overflow-y-auto font-mono text-xs space-y-1">
-            <div class="text-slate-500">&gt; 競技場就緒，等待 dual_ai_arena.py 連線同步 ChatGPT 與 Gemini 戰績...</div>
-          </div>
-        </div>
-
-        <!-- 玩家親自下場操作列 -->
-        <div class="card p-4 space-y-3">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <span class="text-sm font-bold text-white">人類玩家下場挑戰（與雙模型同規則）</span>
-            <span class="text-xs text-slate-400">可用現金：<b id="user-cash" class="text-white">$10,000</b></span>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-            <div>
-              <label class="text-slate-400 block mb-1">槓桿倍數</label>
-              <div class="grid grid-cols-3 gap-1.5" id="lev-buttons">
-                <button type="button" data-lev="1" class="lev-btn py-2 rounded-lg bg-slate-800 text-slate-300 font-bold">1x 現貨</button>
-                <button type="button" data-lev="3" class="lev-btn py-2 rounded-lg bg-indigo-600 text-white font-bold">3x 融資</button>
-                <button type="button" data-lev="5" class="lev-btn py-2 rounded-lg bg-slate-800 text-slate-300 font-bold">5x 飆車</button>
-              </div>
-            </div>
-            <div>
-              <label class="text-slate-400 block mb-1">投入比例</label>
-              <div class="grid grid-cols-3 gap-1.5" id="alloc-buttons">
-                <button type="button" data-alloc="0.25" class="alloc-btn py-2 rounded-lg bg-slate-800 text-slate-300 font-bold">25%</button>
-                <button type="button" data-alloc="0.5" class="alloc-btn py-2 rounded-lg bg-slate-800 text-slate-300 font-bold">50%</button>
-                <button type="button" data-alloc="1" class="alloc-btn py-2 rounded-lg bg-indigo-600 text-white font-bold">100% 全倉</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-3 gap-2 pt-1">
-            <button type="button" onclick="openUserPosition('LONG')" class="py-2.5 rounded-full font-bold text-white bg-red-600 hover:bg-red-500 transition">● 買進做多</button>
-            <button type="button" onclick="openUserPosition('SHORT')" class="py-2.5 rounded-full font-bold text-white bg-green-600 hover:bg-green-500 transition">● 融券做空</button>
-            <button type="button" id="close-pos-btn" onclick="closeUserPosition()" disabled class="py-2.5 rounded-full font-bold bg-slate-800 text-slate-500 cursor-not-allowed transition">立即平倉</button>
-          </div>
-
-          <div class="bg-slate-900/70 rounded-xl p-3 border border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
-            <div class="flex items-center gap-2">
-              <span class="font-bold text-white">我的持倉：</span>
-              <span id="user-pos-badge" class="px-2 py-0.5 rounded bg-slate-800 text-slate-400">空手觀望</span>
-            </div>
-            <div id="user-pos-detail" class="text-slate-400">尚未進場，可隨時下單與 ChatGPT / Gemini 較勁。</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 右側雙模型對決看板與統一排行榜 -->
-      <div class="lg:col-span-4 space-y-4">
-        <div class="card p-4 border-indigo-500/40 space-y-3">
-          <div class="flex items-center justify-between">
-            <span class="text-base font-bold text-white">🤖 雙模型即時對決看板</span>
-            <span class="text-[11px] text-slate-400">Supabase 即時同步</span>
-          </div>
-
-          <!-- ChatGPT 戰況卡片 (id=5) -->
-          <div class="bg-slate-950/80 rounded-xl p-3 border border-emerald-500/30 space-y-1.5 text-xs">
-            <div class="flex justify-between items-center">
-              <div class="flex items-center gap-2">
-                <span class="gpt-badge">ChatGPT</span>
-                <span class="font-bold text-emerald-300">chatgpt_bot</span>
-              </div>
-              <span id="online-5" class="text-slate-500 flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-slate-600"></span>離線</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-slate-400">操作標的</span>
-              <span id="stock-5" class="font-bold text-white">等待連線中</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-slate-400">方向 / 槓桿</span>
-              <span id="dir-5" class="font-bold text-slate-300">-</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-slate-400">開倉均價 / 保證金</span>
-              <span id="entry-5" class="font-mono text-slate-300">-</span>
-            </div>
-            <div class="border-t border-slate-800 pt-1.5 flex justify-between items-center">
-              <span class="text-slate-400">即時總淨值</span>
-              <span id="nw-5" class="text-sm font-extrabold text-amber-400 font-mono">$10,000</span>
-            </div>
-          </div>
-
-          <!-- Gemini 戰況卡片 (id=6) -->
-          <div class="bg-slate-950/80 rounded-xl p-3 border border-indigo-500/30 space-y-1.5 text-xs">
-            <div class="flex justify-between items-center">
-              <div class="flex items-center gap-2">
-                <span class="gem-badge">Gemini</span>
-                <span class="font-bold text-indigo-300">gemini_bot</span>
-              </div>
-              <span id="online-6" class="text-slate-500 flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-slate-600"></span>離線</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-slate-400">操作標的</span>
-              <span id="stock-6" class="font-bold text-white">等待連線中</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-slate-400">方向 / 槓桿</span>
-              <span id="dir-6" class="font-bold text-slate-300">-</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-slate-400">開倉均價 / 保證金</span>
-              <span id="entry-6" class="font-mono text-slate-300">-</span>
-            </div>
-            <div class="border-t border-slate-800 pt-1.5 flex justify-between items-center">
-              <span class="text-slate-400">即時總淨值</span>
-              <span id="nw-6" class="text-sm font-extrabold text-amber-400 font-mono">$10,000</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="card p-4">
-          <div class="flex items-center justify-between mb-3">
-            <h2 class="text-base font-bold text-white">🏆 統一結算排行榜</h2>
-            <span class="text-[11px] text-slate-400">每 3 秒更新</span>
-          </div>
-          <div id="leaderboard-list" class="space-y-2 max-h-[360px] overflow-y-auto pr-1">
-            <div class="text-xs text-slate-500 text-center py-6">載入排行榜中...</div>
-          </div>
-        </div>
-      </div>
+  <!-- 頂部導覽與題目區 -->
+  <header class="bg-slate-900 border-b border-slate-800 p-4 flex justify-between items-center">
+    <div>
+      <h1 class="text-xl font-bold text-cyan-400">⚔️ AI Code Arena 盲測競技場</h1>
+      <p id="prompt-display" class="text-sm text-slate-300 mt-1">載入題目中...</p>
     </div>
-  </div>
+    <button onclick="loadNextMatch()" class="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded text-sm border border-slate-600">
+      換下一場對決 ➔
+    </button>
+  </header>
 
-<script>
-const SUPABASE_URL = "https://mkdfrrmvchuovqafwyvd.supabase.co";
-const SUPABASE_KEY = "sb_publishable_HAlAC8PR6fT4sOKIttqqJw_jHdLECaj";
+  <!-- 左右雙欄對戰沙盒區 -->
+  <main class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
+    <!-- Model A -->
+    <div class="flex flex-col bg-slate-900 rounded-lg border border-slate-800 overflow-hidden">
+      <div class="p-3 bg-slate-800/60 flex justify-between items-center">
+        <span id="label-a" class="font-bold text-amber-400">🤖 選手 A（神秘模型）</span>
+        <button onclick="toggleCode('A')" class="text-xs bg-slate-700 px-2 py-1 rounded">檢視原始碼</button>
+      </div>
+      <iframe id="frame-a" sandbox="allow-scripts" class="w-full h-[500px] bg-white"></iframe>
+      <pre id="code-a" class="hidden p-3 text-xs overflow-auto h-[500px] bg-slate-950 text-green-400"></pre>
+    </div>
 
-const STOCKS = {
-  "0050": { seed: 101, name: "元大台灣50", base: 195.0, vol: 1.4 },
-  "2330": { seed: 202, name: "台積電", base: 1050.0, vol: 2.2 },
-  "2454": { seed: 303, name: "聯發科", base: 1320.0, vol: 2.8 },
-  "2317": { seed: 404, name: "鴻海", base: 215.0, vol: 2.4 },
-  "3481": { seed: 505, name: "群創", base: 16.5, vol: 4.2 },
-};
-const NEWS_BIAS = [0.65, -0.65, 0.35, -0.35, 0.0];
-const RESERVED_NAMES = ["chatgpt_bot", "gemini_bot"];
-const HOUR_TICKS = 4500;
-const priceCache = new Map();
+    <!-- Model B -->
+    <div class="flex flex-col bg-slate-900 rounded-lg border border-slate-800 overflow-hidden">
+      <div class="p-3 bg-slate-800/60 flex justify-between items-center">
+        <span id="label-b" class="font-bold text-purple-400">🤖 選手 B（神秘模型）</span>
+        <button onclick="toggleCode('B')" class="text-xs bg-slate-700 px-2 py-1 rounded">檢視原始碼</button>
+      </div>
+      <iframe id="frame-b" sandbox="allow-scripts" class="w-full h-[500px] bg-white"></iframe>
+      <pre id="code-b" class="hidden p-3 text-xs overflow-auto h-[500px] bg-slate-950 text-green-400"></pre>
+    </div>
+  </main>
 
-const SKILL_COOLDOWN_MS = 60000;
-let lastSkillUsedMs = 0;
-let activeSkillEvent = { type: "NONE", targetStock: "ALL", startTick: 0, endTick: 0 };
+  <!-- 投票控制台與排行榜 -->
+  <footer class="bg-slate-900 border-t border-slate-800 p-4">
+    <div id="vote-panel" class="flex justify-center gap-4 mb-4">
+      <button onclick="submitVote('A')" class="bg-amber-600 hover:bg-amber-500 px-6 py-2 rounded-lg font-bold">👈 左邊 (A) 寫得比較好</button>
+      <button onclick="submitVote('TIE')" class="bg-slate-700 hover:bg-slate-600 px-6 py-2 rounded-lg font-bold">🤝 旗鼓相當（平手）</button>
+      <button onclick="submitVote('B')" class="bg-purple-600 hover:bg-purple-500 px-6 py-2 rounded-lg font-bold">👉 右邊 (B) 寫得比較好</button>
+    </div>
 
-function appendLog(msg, cls = "text-slate-300") {
-  const box = document.getElementById("trade-log-box");
-  if (!box) return;
-  const line = document.createElement("div");
-  line.className = cls;
-  line.textContent = "> " + msg;
-  box.appendChild(line);
-  while (box.children.length > 50) box.removeChild(box.firstChild);
-  box.scrollTop = box.scrollHeight;
-}
+    <!-- 即時 Elo 排行榜 -->
+    <div class="max-w-3xl mx-auto">
+      <h2 class="text-sm font-bold text-slate-400 mb-2">🏆 即時模型戰力排行榜 (Elo Rating)</h2>
+      <div id="leaderboard" class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs"></div>
+    </div>
+  </footer>
 
-function syncRand(t, s) {
-  const x = Math.sin(t * 12.9898 + s * 78.233) * 43758.5453;
-  return x - Math.floor(x);
-}
+  <script>
+    const SUPABASE_URL = "你的_SUPABASE_URL";
+    const SUPABASE_KEY = "你的_SUPABASE_ANON_KEY";
+    const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-function getGlobalMarketState(t) {
-  const block = Math.floor(t / 4);
-  const ev = syncRand(block, 777);
-  const microFlip = syncRand(t, 888) > 0.32 ? 1.0 : -1.0;
+    let currentMatch = null;
+    let hasVoted = false;
 
-  if (ev < 0.12) return { bias: -1.45 * microFlip, label: "🦢 黑天鵝突襲", news: "⚡ 突發利空衝擊，全市場恐慌拋售！" };
-  if (ev > 0.88) return { bias: 1.45 * microFlip, label: "🚀 超級牛市", news: "🔥 重大利多噴發，資金全面湧入！" };
-  const idx = Math.floor(syncRand(block, 999) * NEWS_BIAS.length);
-  const b = NEWS_BIAS[idx] * microFlip;
-  if (b > 0) return { bias: b, label: "偏多格局", news: "📈 買盤回溫，短線氣氛偏多" };
-  if (b < 0) return { bias: b, label: "偏空格局", news: "📉 賣壓浮現，短線氣氛偏空" };
-  return { bias: 0.0, label: "震盪整理", news: "📰 多空交戰，量能觀望整理中" };
-}
+    async function loadNextMatch() {
+      hasVoted = false;
+      document.getElementById('vote-panel').classList.remove('opacity-50', 'pointer-events-none');
+      
+      // 撈取尚未投票的對戰，若都投完了就隨機撈一場
+      let { data } = await db.from('arena_matches').select('*').is('winner', null).limit(1);
+      if (!data || data.length === 0) {
+        const res = await db.from('arena_matches').select('*').limit(10);
+        data = res.data ? [res.data[Math.floor(Math.random() * res.data.length)]] : [];
+      }
+      if (!data || data.length === 0) {
+        document.getElementById('prompt-display').innerText = "目前沒有對戰資料，請先在 Colab 執行 create_match() 生成對戰！";
+        return;
+      }
 
-function getSkillDeltaPct(stockKey, t, st) {
-  if (activeSkillEvent.type === "NONE") return 0.0;
-  if (t < activeSkillEvent.startTick || t > activeSkillEvent.endTick) return 0.0;
-  if (activeSkillEvent.targetStock !== "ALL" && activeSkillEvent.targetStock !== stockKey) return 0.0;
-  const rel = t - activeSkillEvent.startTick;
-  if (activeSkillEvent.type === "PUMP") return (0.014 + rel * 0.0025) * st.vol;
-  if (activeSkillEvent.type === "DUMP") return (-0.014 - rel * 0.0025) * st.vol;
-  if (activeSkillEvent.type === "WICK") {
-    const wickCurve = [0.026, -0.032, 0.022, -0.018, 0.005];
-    return (wickCurve[Math.min(rel, wickCurve.length - 1)] || 0.0) * st.vol;
-  }
-  return 0.0;
-}
+      currentMatch = data[0];
+      document.getElementById('prompt-display').innerText = `題目：${currentMatch.prompt}`;
+      document.getElementById('label-a').innerText = "🤖 選手 A（神秘模型）";
+      document.getElementById('label-b').innerText = "🤖 選手 B（神秘模型）";
 
-function getLivePrice(stockKey, tick) {
-  const key = stockKey + ":" + tick;
-  if (priceCache.has(key)) return priceCache.get(key);
-
-  const st = STOCKS[stockKey];
-  const anchorTick = Math.floor(tick / HOUR_TICKS) * HOUR_TICKS;
-  if (tick <= anchorTick) {
-    priceCache.set(key, st.base);
-    return st.base;
-  }
-
-  let startT = tick - 1;
-  while (startT > anchorTick && !priceCache.has(stockKey + ":" + startT)) startT--;
-
-  let p = priceCache.has(stockKey + ":" + startT) ? priceCache.get(stockKey + ":" + startT) : st.base;
-  for (let t = startT + 1; t <= tick; t++) {
-    const { bias } = getGlobalMarketState(t);
-    const r = syncRand(t, st.seed);
-    const whipsaw = Math.sin(t * 1.7 + st.seed) * 0.45;
-    const shock = syncRand(t, st.seed + 19) > 0.84 ? 1.35 : 0.75;
-    const baseMove = (((r - 0.5) * 1.35 + bias * 0.22 + whipsaw) * st.vol * shock) / 100.0;
-    const skillMove = getSkillDeltaPct(stockKey, t, st);
-    p = Math.max(2.0, p * (1.0 + baseMove + skillMove));
-    priceCache.set(stockKey + ":" + t, p);
-  }
-  return p;
-}
-
-function getContinuousSeries(stockKey, currentTick, count = 100) {
-  const series = [];
-  for (let t = currentTick - count + 1; t <= currentTick; t++) {
-    series.push({ tick: t, price: getLivePrice(stockKey, t) });
-  }
-  return series;
-}
-
-async function syncSkillToBackend(skillType, targetStock, startTick, endTick) {
-  try {
-    await fetch(SUPABASE_URL + "/rest/v1/market_skills?id=eq.1", {
-      method: "PATCH",
-      headers: { apikey: SUPABASE_KEY, "Content-Type": "application/json", Prefer: "return=minimal" },
-      body: JSON.stringify({
-        skill_type: skillType,
-        target_stock: targetStock,
-        triggered_tick: startTick,
-        expires_tick: endTick,
-        updated_at: new Date().toISOString()
-      })
-    });
-  } catch (e) {}
-}
-
-function triggerPlayerSkill(skillType) {
-  const now = Date.now();
-  const remainMs = SKILL_COOLDOWN_MS - (now - lastSkillUsedMs);
-  if (lastSkillUsedMs > 0 && remainMs > 0) {
-    appendLog(`技能冷卻中，還剩 ${Math.ceil(remainMs / 1000)} 秒。`, "text-amber-400");
-    return;
-  }
-  const currentTick = Math.floor(now / 800);
-  lastSkillUsedMs = now;
-  activeSkillEvent = { type: skillType, targetStock: selectedStock, startTick: currentTick, endTick: currentTick + 4 };
-  for (let t = currentTick; t <= currentTick + 10; t++) priceCache.delete(selectedStock + ":" + t);
-
-  const label = skillType === "PUMP" ? "🚀 拉高盤" : (skillType === "DUMP" ? "📉 砸盤" : "🪡 插針");
-  markers.push({
-    code: selectedStock,
-    tick: currentTick,
-    price: getLivePrice(selectedStock, currentTick),
-    label: skillType === "PUMP" ? "拉" : (skillType === "DUMP" ? "砸" : "針"),
-    color: "#f59e0b"
-  });
-  appendLog(`[干擾技能] 對 ${selectedStock} 施放 ${label}，已同步影響雙模型成交價！`, "text-amber-300 font-bold");
-  syncSkillToBackend(skillType, selectedStock, currentTick, currentTick + 4);
-  renderTick();
-}
-
-let selectedStock = "2330";
-let selectedLev = 3;
-let selectedAlloc = 1.0;
-let cash = 10000;
-let userPos = null;
-let markers = [];
-let playerName = "Trader_" + Math.floor(1000 + Math.random() * 9000);
-try {
-  const saved = localStorage.getItem("sim_player_name");
-  if (saved && !RESERVED_NAMES.includes(saved.toLowerCase())) playerName = saved;
-} catch (e) {}
-document.getElementById("player-name-input").value = playerName;
-
-function savePlayerName() {
-  const raw = document.getElementById("player-name-input").value.trim();
-  if (!raw || RESERVED_NAMES.includes(raw.toLowerCase())) {
-    alert("⚠️ chatgpt_bot 與 gemini_bot 為競技模型保留名稱！");
-    document.getElementById("player-name-input").value = playerName;
-    return;
-  }
-  playerName = raw;
-  try { localStorage.setItem("sim_player_name", playerName); } catch (e) {}
-  syncUserLeaderboard();
-}
-
-document.querySelectorAll(".lev-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    selectedLev = Number(btn.dataset.lev);
-    document.querySelectorAll(".lev-btn").forEach(b => {
-      b.className = b === btn ? "lev-btn py-2 rounded-lg bg-indigo-600 text-white font-bold" : "lev-btn py-2 rounded-lg bg-slate-800 text-slate-300 font-bold";
-    });
-  });
-});
-
-document.querySelectorAll(".alloc-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    selectedAlloc = Number(btn.dataset.alloc);
-    document.querySelectorAll(".alloc-btn").forEach(b => {
-      b.className = b === btn ? "alloc-btn py-2 rounded-lg bg-indigo-600 text-white font-bold" : "alloc-btn py-2 rounded-lg bg-slate-800 text-slate-300 font-bold";
-    });
-  });
-});
-
-function openUserPosition(dir) {
-  if (userPos || cash < 300) return;
-  const tick = Math.floor(Date.now() / 800);
-  const curPrice = getLivePrice(selectedStock, tick);
-  const margin = cash * selectedAlloc;
-  const fee = margin * selectedLev * 0.0005;
-  cash -= margin;
-  userPos = { code: selectedStock, dir, lev: selectedLev, entryPrice: curPrice, margin: margin - fee };
-  markers.push({ code: selectedStock, tick, price: curPrice, label: dir === "LONG" ? "B" : "S", color: dir === "LONG" ? "#ef4444" : "#22c55e" });
-  appendLog(`[玩家${dir === "LONG" ? "做多" : "做空"}] ${selectedStock} ${selectedLev}x @ ${curPrice.toFixed(2)}`, dir === "LONG" ? "text-red-400" : "text-green-400");
-  renderTick();
-  syncUserLeaderboard();
-}
-
-function closeUserPosition() {
-  if (!userPos) return;
-  const tick = Math.floor(Date.now() / 800);
-  const curPrice = getLivePrice(userPos.code, tick);
-  const pnl = userPos.margin * ((curPrice - userPos.entryPrice) / userPos.entryPrice) * userPos.lev * (userPos.dir === "LONG" ? 1 : -1);
-  const fee = userPos.margin * userPos.lev * 0.0005;
-  cash = Math.max(0, cash + userPos.margin + pnl - fee);
-  if (cash < 300) cash = 3000;
-  markers.push({ code: userPos.code, tick, price: curPrice, label: "平", color: "#f59e0b" });
-  appendLog(`[玩家平倉] ${userPos.code} @ ${curPrice.toFixed(2)} | 淨損益 ${(pnl - fee) >= 0 ? "+" : ""}$${Math.round(pnl - fee).toLocaleString()}`, "text-amber-300");
-  userPos = null;
-  renderTick();
-  syncUserLeaderboard();
-}
-
-function calcUserNetWorth(tick) {
-  if (!userPos) return cash;
-  const curP = getLivePrice(userPos.code, tick);
-  const pnl = userPos.margin * ((curP - userPos.entryPrice) / userPos.entryPrice) * userPos.lev * (userPos.dir === "LONG" ? 1 : -1);
-  return Math.max(0, cash + userPos.margin + pnl);
-}
-
-function drawChart(series, basePrice) {
-  const canvas = document.getElementById("price-chart");
-  if (!canvas) return;
-  const dpr = window.devicePixelRatio || 1;
-  const rect = canvas.getBoundingClientRect();
-  const w = rect.width || 700, h = rect.height || 288;
-  canvas.width = w * dpr;
-  canvas.height = h * dpr;
-  const ctx = canvas.getContext("2d");
-  ctx.scale(dpr, dpr);
-  ctx.clearRect(0, 0, w, h);
-
-  const visible = series.slice(-90);
-  if (visible.length < 2) return;
-
-  const prices = visible.map(d => d.price);
-  const minP = Math.min(...prices, basePrice) * 0.9985;
-  const maxP = Math.max(...prices, basePrice) * 1.0015;
-  const range = Math.max(0.01, maxP - minP);
-  const padL = 14, padR = 62, padT = 18, padB = 22;
-  const plotW = w - padL - padR, plotH = h - padT - padB;
-  const getX = idx => padL + (idx / (visible.length - 1)) * plotW;
-  const getY = val => padT + (1 - (val - minP) / range) * plotH;
-
-  ctx.strokeStyle = "rgba(148, 163, 184, 0.08)";
-  ctx.font = "11px monospace";
-  ctx.fillStyle = "#64748b";
-  for (let i = 0; i <= 4; i++) {
-    const y = padT + (plotH / 4) * i;
-    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + plotW, y); ctx.stroke();
-    ctx.fillText((maxP - (range / 4) * i).toFixed(2), padL + plotW + 6, y + 4);
-  }
-
-  ctx.lineWidth = 2.2;
-  for (let i = 1; i < visible.length; i++) {
-    ctx.strokeStyle = visible[i].price >= visible[i - 1].price ? "#ef4444" : "#22c55e";
-    ctx.beginPath();
-    ctx.moveTo(getX(i - 1), getY(visible[i - 1].price));
-    ctx.lineTo(getX(i), getY(visible[i].price));
-    ctx.stroke();
-  }
-
-  const startTick = visible[0].tick, endTick = visible[visible.length - 1].tick;
-  markers.forEach(m => {
-    if (m.code !== selectedStock || m.tick < startTick || m.tick > endTick) return;
-    const mx = getX(m.tick - startTick), my = getY(m.price);
-    ctx.fillStyle = m.color;
-    ctx.beginPath(); ctx.arc(mx, my, 9, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = "#0f172a"; ctx.font = "bold 10px sans-serif"; ctx.textAlign = "center";
-    ctx.fillText(m.label, mx, my + 3.5); ctx.textAlign = "left";
-  });
-}
-
-async function syncUserLeaderboard() {
-  const tick = Math.floor(Date.now() / 800);
-  const nw = Math.round(calcUserNetWorth(tick));
-  const roi = Number((((nw - 10000) / 10000) * 100).toFixed(2));
-  const headers = { apikey: SUPABASE_KEY, "Content-Type": "application/json", Prefer: "return=minimal" };
-  try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard?select=id&player_name=eq.${encodeURIComponent(playerName)}&limit=1`, { headers: { apikey: SUPABASE_KEY } });
-    const rows = await res.json();
-    const payload = { net_worth: nw, return_rate: roi, created_at: new Date().toISOString() };
-    if (rows && rows.length > 0) {
-      await fetch(`${SUPABASE_URL}/rest/v1/leaderboard?id=eq.${rows[0].id}`, { method: "PATCH", headers, body: JSON.stringify(payload) });
-    } else {
-      await fetch(`${SUPABASE_URL}/rest/v1/leaderboard`, { method: "POST", headers, body: JSON.stringify({ player_name: playerName, ...payload }) });
-    }
-  } catch (e) {}
-}
-
-async function pollArenaState() {
-  try {
-    // 1. 更新雙模型即時戰況卡片（id=5 ChatGPT, id=6 Gemini）
-    const aiRes = await fetch(`${SUPABASE_URL}/rest/v1/ai_live_status?id=in.(5,6)&order=id.asc`, { headers: { apikey: SUPABASE_KEY } });
-    const aiRows = await aiRes.json();
-    if (Array.isArray(aiRows)) {
-      aiRows.forEach(r => {
-        const id = r.id;
-        const isOnline = r.updated_at && (Date.now() - new Date(r.updated_at).getTime() < 20000);
-        const onlineEl = document.getElementById(`online-${id}`);
-        if (onlineEl) {
-          onlineEl.innerHTML = isOnline
-            ? '<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span><span class="text-emerald-400">競技中</span>'
-            : '<span class="w-2 h-2 rounded-full bg-slate-600"></span>離線';
-        }
-        const hasPos = r.stock_code && r.stock_code !== "NONE" && r.direction && r.direction !== "NONE";
-        document.getElementById(`stock-${id}`).textContent = hasPos ? `${r.stock_code} ${r.stock_name || ""}` : (r.stock_name || "分析行情中");
-        const dirEl = document.getElementById(`dir-${id}`);
-        if (hasPos) {
-          const isLong = r.direction === "LONG";
-          dirEl.textContent = `${isLong ? "做多 LONG" : "做空 SHORT"} · ${r.leverage}x`;
-          dirEl.className = `font-bold ${isLong ? "up-text" : "down-text"}`;
-          document.getElementById(`entry-${id}`).textContent = `${Number(r.entry_price).toFixed(2)} / $${Math.round(Number(r.margin)).toLocaleString()}`;
-        } else {
-          dirEl.textContent = "-";
-          dirEl.className = "font-bold text-slate-300";
-          document.getElementById(`entry-${id}`).textContent = "-";
-        }
-        document.getElementById(`nw-${id}`).textContent = `$${Math.round(Number(r.net_worth || 10000)).toLocaleString()}`;
-      });
+      // 使用 srcdoc 在沙盒中安全渲染 AI 寫的網頁
+      document.getElementById('frame-a').srcdoc = currentMatch.code_a;
+      document.getElementById('frame-b').srcdoc = currentMatch.code_b;
+      document.getElementById('code-a').textContent = currentMatch.code_a;
+      document.getElementById('code-b').textContent = currentMatch.code_b;
     }
 
-    // 2. 更新統一排行榜
-    const lbRes = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard?select=player_name,net_worth,return_rate&order=net_worth.desc&limit=20`, { headers: { apikey: SUPABASE_KEY } });
-    const lbData = await lbRes.json();
-    const listEl = document.getElementById("leaderboard-list");
-    if (Array.isArray(lbData) && listEl) {
-      listEl.innerHTML = lbData.map((row, idx) => {
-        const nameLower = (row.player_name || "").toLowerCase();
-        const isGpt = nameLower === "chatgpt_bot";
-        const isGem = nameLower === "gemini_bot";
-        const isMe = row.player_name === playerName;
-        const roi = Number(row.return_rate || 0);
-        return `
-          <div class="flex items-center justify-between px-3 py-2 rounded-xl border text-xs ${
-            isGpt ? "bg-emerald-950/30 border-emerald-500/40" :
-            isGem ? "bg-indigo-950/30 border-indigo-500/40" :
-            isMe ? "bg-amber-950/20 border-amber-500/40" : "bg-slate-900/70 border-slate-800/80"
-          }">
-            <div class="flex items-center gap-2 min-w-0">
-              <span class="w-5 font-mono font-bold ${idx < 3 ? "text-amber-400" : "text-slate-500"}">#${idx + 1}</span>
-              <span class="font-bold text-white truncate">${row.player_name}</span>
-              ${isGpt ? '<span class="gpt-badge">GPT</span>' : ""}
-              ${isGem ? '<span class="gem-badge">GEM</span>' : ""}
-              ${isMe ? '<span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-500 text-slate-950 font-bold">我</span>' : ""}
-            </div>
-            <div class="text-right shrink-0">
-              <div class="font-mono font-bold text-amber-300">$${Number(row.net_worth || 0).toLocaleString()}</div>
-              <div class="font-mono text-[11px] ${roi >= 0 ? "up-text" : "down-text"}">${roi >= 0 ? "+" : ""}${roi.toFixed(1)}%</div>
-            </div>
-          </div>
-        `;
-      }).join("");
+    function toggleCode(side) {
+      const frame = document.getElementById(`frame-${side.toLowerCase()}`);
+      const code = document.getElementById(`code-${side.toLowerCase()}`);
+      frame.classList.toggle('hidden');
+      code.classList.toggle('hidden');
     }
-  } catch (e) {}
-}
 
-function renderTick() {
-  const now = Date.now();
-  const tick = Math.floor(now / 800);
-  const market = getGlobalMarketState(tick);
+    async function submitVote(result) {
+      if (!currentMatch || hasVoted) return;
+      hasVoted = true;
+      document.getElementById('vote-panel').classList.add('opacity-50', 'pointer-events-none');
 
-  document.getElementById("market-badge").textContent = market.label;
-  document.getElementById("news-ticker").textContent = market.news;
+      // 揭曉兩邊模型的真實身分
+      document.getElementById('label-a').innerText = `🤖 選手 A：${currentMatch.model_a}`;
+      document.getElementById('label-b').innerText = `🤖 選手 B：${currentMatch.model_b}`;
 
-  // 更新股票分頁
-  const tabsEl = document.getElementById("stock-tabs");
-  tabsEl.innerHTML = "";
-  Object.entries(STOCKS).forEach(([code, info]) => {
-    const curP = getLivePrice(code, tick);
-    const pct = ((curP - info.base) / info.base) * 100;
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = `p-2.5 rounded-xl border text-left transition ${code === selectedStock ? "bg-indigo-950/60 border-indigo-500" : "bg-slate-900/70 border-slate-800"}`;
-    btn.onclick = () => { selectedStock = code; renderTick(); };
-    btn.innerHTML = `
-      <div class="flex justify-between text-xs"><span class="font-bold text-slate-300">${code}</span><span class="font-bold ${pct >= 0 ? "up-text" : "down-text"}">${pct >= 0 ? "+" : ""}${pct.toFixed(2)}%</span></div>
-      <div class="text-xs text-slate-400 truncate mt-0.5">${info.name}</div>
-      <div class="text-sm font-extrabold text-white mt-1 font-mono">${curP.toFixed(2)}</div>
-    `;
-    tabsEl.appendChild(btn);
-  });
+      // 取得雙方目前 Elo 分數並計算新積分 (K=32)
+      const { data: models } = await db.from('arena_models').select('*').in('model_id', [currentMatch.model_a, currentMatch.model_b]);
+      const mA = models.find(m => m.model_id === currentMatch.model_a);
+      const mB = models.find(m => m.model_id === currentMatch.model_b);
 
-  // 更新主圖與價格
-  const st = STOCKS[selectedStock];
-  const series = getContinuousSeries(selectedStock, tick, 100);
-  const curP = series[series.length - 1].price;
-  const diff = curP - st.base;
-  const diffPct = (diff / st.base) * 100;
-  document.getElementById("chart-stock-title").textContent = `${selectedStock} ${st.name}`;
-  document.getElementById("chart-current-price").textContent = curP.toFixed(2);
-  const chgEl = document.getElementById("chart-price-change");
-  chgEl.textContent = `${diff >= 0 ? "+" : ""}${diff.toFixed(2)} (${diffPct >= 0 ? "+" : ""}${diffPct.toFixed(2)}%)`;
-  chgEl.className = `text-sm font-bold px-2 py-0.5 rounded ${diff >= 0 ? "up-bg" : "down-bg"}`;
+      const expectedA = 1 / (1 + Math.pow(10, (mB.elo_rating - mA.elo_rating) / 400));
+      const scoreA = result === 'A' ? 1 : (result === 'TIE' ? 0.5 : 0);
+      const delta = Math.round(32 * (scoreA - expectedA));
 
-  // 更新技能冷卻
-  const remain = lastSkillUsedMs > 0 ? Math.max(0, SKILL_COOLDOWN_MS - (now - lastSkillUsedMs)) : 0;
-  const cdText = document.getElementById("skill-cooldown-text");
-  cdText.textContent = remain > 0 ? `冷卻中：${Math.ceil(remain / 1000)}s` : "技能就緒（可施放）";
-  cdText.className = `font-mono font-bold ${remain > 0 ? "text-amber-400" : "text-emerald-400"}`;
-  document.querySelectorAll(".skill-btn").forEach(b => { b.disabled = remain > 0; b.classList.toggle("opacity-40", remain > 0); });
+      await db.from('arena_models').update({
+        elo_rating: mA.elo_rating + delta,
+        wins: mA.wins + (result === 'A' ? 1 : 0),
+        losses: mA.losses + (result === 'B' ? 1 : 0),
+        ties: mA.ties + (result === 'TIE' ? 1 : 0)
+      }).eq('model_id', mA.model_id);
 
-  // 更新玩家狀態
-  document.getElementById("user-cash").textContent = `$${Math.round(cash).toLocaleString()}`;
-  document.getElementById("user-net-worth").textContent = `$${Math.round(calcUserNetWorth(tick)).toLocaleString()}`;
-  const closeBtn = document.getElementById("close-pos-btn");
-  if (!userPos) {
-    document.getElementById("user-pos-badge").textContent = "空手觀望";
-    document.getElementById("user-pos-badge").className = "px-2 py-0.5 rounded bg-slate-800 text-slate-400";
-    document.getElementById("user-pos-detail").textContent = "尚未進場，可隨時下單與 ChatGPT / Gemini 較勁。";
-    closeBtn.disabled = true;
-    closeBtn.className = "py-2.5 rounded-full font-bold bg-slate-800 text-slate-500 cursor-not-allowed transition";
-  } else {
-    const pNow = getLivePrice(userPos.code, tick);
-    const pnl = userPos.margin * ((pNow - userPos.entryPrice) / userPos.entryPrice) * userPos.lev * (userPos.dir === "LONG" ? 1 : -1);
-    const roi = (pnl / userPos.margin) * 100;
-    document.getElementById("user-pos-badge").textContent = `${userPos.code} ${userPos.dir === "LONG" ? "做多" : "做空"} ${userPos.lev}x`;
-    document.getElementById("user-pos-badge").className = `px-2 py-0.5 rounded font-bold ${userPos.dir === "LONG" ? "up-bg" : "down-bg"}`;
-    document.getElementById("user-pos-detail").innerHTML = `開倉 <b class="text-white">${userPos.entryPrice.toFixed(2)}</b> · 浮動損益 <b class="${pnl >= 0 ? "up-text" : "down-text"}">${pnl >= 0 ? "+" : ""}$${Math.round(pnl).toLocaleString()} (${roi >= 0 ? "+" : ""}${roi.toFixed(1)}%)</b>`;
-    closeBtn.disabled = false;
-    closeBtn.className = "py-2.5 rounded-full font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 transition cursor-pointer";
-  }
+      await db.from('arena_models').update({
+        elo_rating: mB.elo_rating - delta,
+        wins: mB.wins + (result === 'B' ? 1 : 0),
+        losses: mB.losses + (result === 'A' ? 1 : 0),
+        ties: mB.ties + (result === 'TIE' ? 1 : 0)
+      }).eq('model_id', mB.model_id);
 
-  drawChart(series, st.base);
-}
+      await db.from('arena_matches').update({ winner: result }).eq('id', currentMatch.id);
+      loadLeaderboard();
+    }
 
-renderTick();
-pollArenaState();
-syncUserLeaderboard();
-setInterval(renderTick, 800);
-setInterval(() => { syncUserLeaderboard(); pollArenaState(); }, 3000);
-</script>
+    async function loadLeaderboard() {
+      const { data } = await db.from('arena_models').select('*').order('elo_rating', { ascending: false });
+      const container = document.getElementById('leaderboard');
+      container.innerHTML = data.map((m, i) => `
+        <div class="bg-slate-800 p-2 rounded border border-slate-700 flex justify-between">
+          <span>#${i + 1} ${m.display_name}</span>
+          <span class="text-cyan-400 font-mono">${m.elo_rating} (${m.wins}W/${m.losses}L)</span>
+        </div>
+      `).join('');
+    }
+
+    loadNextMatch();
+    loadLeaderboard();
+  </script>
 </body>
 </html>
