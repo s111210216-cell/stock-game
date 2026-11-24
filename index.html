@@ -5,1761 +5,519 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>AI 量化股市模擬交易終端</title>
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&family=JetBrains+Mono:wght@600;800&display=swap');
-
-    * {
-        box-sizing: border-box;
-    }
-
-    html, body {
-        background: #010409;
-        margin: 0;
-        padding: 12px;
-        color: #e6edf3;
-        overflow-x: hidden;
-        width: 100%;
-    }
-
-    .terminal-box {
-        font-family: 'Noto Sans TC', sans-serif;
-        background: #0d1117;
-        color: #e6edf3;
-        max-width: 860px;
-        width: 100%;
-        margin: 0 auto;
-        padding: 18px;
-        border-radius: 14px;
-        border: 1px solid #30363d;
-        box-shadow: 0 12px 35px rgba(0,0,0,0.75);
-        transition: border-color 0.2s, box-shadow 0.2s;
-    }
-
-    @keyframes shakeAnim {
-        0%, 100% { transform: translateX(0); }
-        15%, 45%, 75% { transform: translateX(-8px); }
-        30%, 60%, 90% { transform: translateX(8px); }
-    }
-
-    @keyframes pulseDanger {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.45; }
-    }
-
-    .shake-crash {
-        animation: shakeAnim 0.45s ease-in-out;
-        border-color: #ff4d4f !important;
-        box-shadow: 0 0 30px rgba(255, 77, 79, 0.65) !important;
-    }
-
-    .top-bar {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid #21262d;
-        padding-bottom: 12px;
-        margin-bottom: 12px;
-        gap: 8px;
-    }
-
-    .stock-tabs {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        margin-bottom: 12px;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .stock-tabs-left {
-        display: flex;
-        gap: 6px;
-        flex-wrap: wrap;
-    }
-
-    .stock-tab {
-        background: #161b22;
-        border: 1px solid #30363d;
-        color: #8b949e;
-        padding: 7px 11px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 13px;
-        font-weight: bold;
-        transition: 0.2s;
-    }
-    .stock-tab:hover { border-color: #58a6ff; color: #e6edf3; }
-    .stock-tab.active {
-        background: #1f6feb;
-        color: white;
-        border-color: #58a6ff;
-    }
-
-    .header-utils {
-        display: flex;
-        gap: 6px;
-        align-items: center;
-        flex-wrap: wrap;
-    }
-
-    .daily-reset-badge {
-        font-size: 11px;
-        background: rgba(16, 185, 129, 0.15);
-        border: 1px solid rgba(16, 185, 129, 0.4);
-        color: #34d399;
-        padding: 5px 8px;
-        border-radius: 8px;
-        font-family: 'JetBrains Mono', 'Noto Sans TC', monospace;
-    }
-
-    .sound-btn {
-        background: #161b22;
-        border: 1px solid #30363d;
-        color: #c9d1d9;
-        padding: 6px 10px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 12px;
-        font-weight: bold;
-    }
-    .sound-btn:hover { border-color: #ffd700; color: #ffd700; }
-
-    .sync-badge {
-        font-size: 11px;
-        background: rgba(31, 111, 235, 0.2);
-        border: 1px solid rgba(88, 166, 255, 0.4);
-        color: #58a6ff;
-        padding: 2px 8px;
-        border-radius: 6px;
-        margin-left: 6px;
-        vertical-align: middle;
-        display: inline-block;
-    }
-
-    .rank-badge {
-        display: inline-block;
-        font-size: 11px;
-        font-weight: 900;
-        padding: 2px 8px;
-        border-radius: 999px;
-        margin-left: 6px;
-        vertical-align: middle;
-    }
-    .rank-rookie { background: rgba(139, 148, 158, 0.2); color: #c9d1d9; border: 1px solid #6e7681; }
-    .rank-whale { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #f59e0b; }
-    .rank-wolf { background: rgba(239, 68, 68, 0.22); color: #f87171; border: 1px solid #ef4444; }
-    .rank-god { background: linear-gradient(90deg, rgba(168,85,247,0.3), rgba(236,72,153,0.3)); color: #f472b6; border: 1px solid #e879f9; }
-    .rank-buffett { background: linear-gradient(90deg, #ffd700, #f59e0b); color: #0d1117; border: 1px solid #fef08a; box-shadow: 0 0 10px rgba(255, 215, 0, 0.45); }
-
-    .price-display {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 28px;
-        font-weight: 800;
-    }
-
-    .up { color: #ff4d4f; }
-    .down { color: #00e676; }
-
-    .news-ticker {
-        background: rgba(255, 193, 7, 0.1);
-        border-left: 4px solid #ffc107;
-        padding: 8px 12px;
-        border-radius: 4px;
-        font-size: 13px;
-        color: #ffd54f;
-        margin-bottom: 12px;
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        align-items: center;
-        gap: 6px;
-        transition: 0.25s;
-    }
-
-    .news-blackswan {
-        background: rgba(239, 68, 68, 0.22) !important;
-        border-left: 4px solid #ff4d4f !important;
-        color: #ff8080 !important;
-        font-weight: 900;
-        box-shadow: 0 0 15px rgba(255, 77, 79, 0.25);
-    }
-
-    .news-superbull {
-        background: rgba(16, 185, 129, 0.2) !important;
-        border-left: 4px solid #00e676 !important;
-        color: #6ee7b7 !important;
-        font-weight: 900;
-        box-shadow: 0 0 15px rgba(0, 230, 118, 0.25);
-    }
-
-    .chart-wrapper {
-        position: relative;
-        background: #010409;
-        border: 1px solid #21262d;
-        border-radius: 10px;
-        padding: 8px;
-        margin-bottom: 12px;
-    }
-
-    canvas {
-        width: 100%;
-        height: 210px;
-        display: block;
-    }
-
-    .ai-banner {
-        display: none;
-        background: linear-gradient(90deg, rgba(31, 111, 235, 0.25), rgba(138, 43, 226, 0.25));
-        border: 1px solid #58a6ff;
-        padding: 10px 12px;
-        border-radius: 8px;
-        margin-bottom: 12px;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 8px;
-    }
-
-    .ai-banner-btns {
-        display: flex;
-        gap: 6px;
-    }
-
-    .ai-log-box {
-        background: #010409;
-        border: 1px solid #21262d;
-        border-radius: 8px;
-        padding: 8px 12px;
-        font-family: 'JetBrains Mono', 'Noto Sans TC', monospace;
-        font-size: 12px;
-        line-height: 1.55;
-        color: #79c0ff;
-        height: 76px;
-        overflow-y: auto;
-        margin-bottom: 12px;
-    }
-
-    .dashboard {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 8px;
-        margin-bottom: 10px;
-    }
-
-    .stat-card {
-        background: #161b22;
-        border: 1px solid #30363d;
-        padding: 10px 8px;
-        border-radius: 8px;
-        text-align: center;
-    }
-
-    .stat-label { font-size: 12px; color: #8b949e; margin-bottom: 4px; }
-    .stat-value { font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: bold; }
-
-    /* 爆倉預警條 */
-    .liq-warning-box {
-        display: none;
-        background: #161b22;
-        border: 1px solid #30363d;
-        border-radius: 8px;
-        padding: 10px 12px;
-        margin-bottom: 12px;
-    }
-
-    .liq-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 12px;
-        margin-bottom: 6px;
-        font-family: 'JetBrains Mono', 'Noto Sans TC', monospace;
-        flex-wrap: wrap;
-        gap: 4px;
-    }
-
-    .liq-bar-bg {
-        width: 100%;
-        height: 8px;
-        background: #010409;
-        border-radius: 999px;
-        overflow: hidden;
-        border: 1px solid #21262d;
-    }
-
-    .liq-bar-fill {
-        height: 100%;
-        width: 100%;
-        background: #00e676;
-        transition: width 0.25s ease, background-color 0.25s ease;
-    }
-
-    .liq-danger-blink {
-        animation: pulseDanger 0.6s infinite;
-    }
-
-    .controls-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        justify-content: space-between;
-        align-items: center;
-        background: #161b22;
-        padding: 12px;
-        border-radius: 10px;
-        border: 1px solid #30363d;
-    }
-
-    .lev-group { display: flex; gap: 6px; }
-    .lev-btn {
-        background: #21262d;
-        color: #c9d1d9;
-        border: 1px solid #30363d;
-        padding: 8px 12px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: bold;
-        font-size: 13px;
-    }
-    .lev-btn.active { background: #1f6feb; color: white; border-color: #58a6ff; }
-
-    .trade-btns { display: flex; gap: 8px; flex-wrap: wrap; }
-    .btn {
-        border: none;
-        padding: 10px 16px;
-        font-size: 14px;
-        font-weight: 900;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: 0.15s;
-        touch-action: manipulation;
-    }
-    .btn:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.1); }
-    .btn:disabled { opacity: 0.35; cursor: not-allowed; }
-
-    .btn-long { background: #d32f2f; color: white; }
-    .btn-short { background: #00a152; color: white; }
-    .btn-close { background: #f57c00; color: white; }
-    .btn-ai { background: linear-gradient(90deg, #00b4db, #0083b0); color: white; box-shadow: 0 0 12px rgba(0, 180, 219, 0.4); }
-    .btn-gacha { background: linear-gradient(90deg, #8e2de2, #4a00e0); color: white; }
-    .btn-rank { background: linear-gradient(90deg, #f59e0b, #d97706); color: #0d1117; }
-
-    .items-bar {
-        margin-top: 12px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        justify-content: space-between;
-        align-items: center;
-        background: #161b22;
-        padding: 10px 12px;
-        border-radius: 10px;
-        border: 1px dashed #8a2be2;
-    }
-
-    .inventory-tags { display: flex; gap: 8px; flex-wrap: wrap; }
-    .item-tag {
-        background: rgba(138, 43, 226, 0.25);
-        border: 1px solid #a371f7;
-        color: #d2a8ff;
-        padding: 6px 12px;
-        border-radius: 8px;
-        font-size: 13px;
-        cursor: pointer;
-        font-weight: bold;
-    }
-
-    .leaderboard-panel {
-        margin-top: 14px;
-        background: #161b22;
-        border: 1px solid #30363d;
-        border-radius: 10px;
-        padding: 12px;
-    }
-
-    .lb-header {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 12px;
-        padding-bottom: 10px;
-        border-bottom: 1px solid #21262d;
-    }
-
-    .lb-submit-box {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-        flex-wrap: wrap;
-    }
-
-    .lb-input {
-        background: #0d1117;
-        border: 1px solid #30363d;
-        color: #e6edf3;
-        padding: 9px 12px;
-        border-radius: 8px;
-        font-size: 14px;
-        font-family: 'Noto Sans TC', sans-serif;
-        width: 150px;
-    }
-    .lb-input:focus {
-        outline: none;
-        border-color: #f59e0b;
-    }
-
-    .lb-table-wrap {
-        width: 100%;
-        overflow-x: auto;
-    }
-
-    .lb-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 13px;
-    }
-
-    .lb-table th {
-        text-align: left;
-        color: #8b949e;
-        padding: 8px 6px;
-        border-bottom: 1px solid #30363d;
-        white-space: nowrap;
-    }
-
-    .lb-table td {
-        padding: 8px 6px;
-        border-bottom: 1px solid #21262d;
-        font-family: 'JetBrains Mono', 'Noto Sans TC', monospace;
-    }
-
-    .lb-table tr:hover {
-        background: rgba(255, 255, 255, 0.03);
-    }
-
-    /* 結算明細彈窗 */
-    .receipt-overlay {
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(1, 4, 9, 0.78);
-        z-index: 9999;
-        justify-content: center;
-        align-items: center;
-        padding: 16px;
-    }
-
-    .receipt-card {
-        background: #161b22;
-        border: 1px solid #30363d;
-        border-radius: 14px;
-        max-width: 360px;
-        width: 100%;
-        padding: 20px;
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
-        font-family: 'Noto Sans TC', sans-serif;
-    }
-
-    .receipt-title {
-        font-size: 18px;
-        font-weight: 900;
-        text-align: center;
-        margin-bottom: 14px;
-        padding-bottom: 10px;
-        border-bottom: 1px dashed #30363d;
-    }
-
-    .receipt-row {
-        display: flex;
-        justify-content: space-between;
-        padding: 6px 0;
-        font-size: 13px;
-        color: #c9d1d9;
-    }
-
-    .receipt-row span:last-child {
-        font-family: 'JetBrains Mono', monospace;
-        font-weight: bold;
-    }
-
-    /* 手機版 RWD 深度優化 */
-    @media (max-width: 640px) {
-        html, body {
-            padding: 8px;
-        }
-        .terminal-box {
-            padding: 12px;
-            border-radius: 10px;
-        }
-        .stock-tabs-left {
-            width: 100%;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 5px;
-        }
-        .stock-tab {
-            padding: 8px 4px;
-            font-size: 12px;
-            text-align: center;
-        }
-        .header-utils {
-            width: 100%;
-            justify-content: space-between;
-        }
-        .price-display {
-            font-size: 24px;
-        }
-        canvas {
-            height: 175px;
-        }
-        .dashboard {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 6px;
-        }
-        .stat-card {
-            padding: 8px 6px;
-        }
-        .stat-value {
-            font-size: 14px;
-        }
-        .controls-row {
-            flex-direction: column;
-            align-items: stretch;
-            padding: 10px;
-        }
-        .lev-group {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            width: 100%;
-        }
-        .lev-btn {
-            padding: 10px 4px;
-            text-align: center;
-        }
-        .trade-btns {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            width: 100%;
-            gap: 8px;
-        }
-        .trade-btns .btn {
-            padding: 13px 8px;
-            font-size: 15px;
-            min-height: 46px;
-        }
-        .items-bar {
-            flex-direction: column;
-            align-items: stretch;
-        }
-        .items-bar .btn-gacha {
-            width: 100%;
-            padding: 11px;
-        }
-        .lb-submit-box {
-            width: 100%;
-        }
-        .lb-input {
-            flex: 1;
-            min-width: 120px;
-        }
-        .hide-mobile {
-            display: none;
-        }
-    }
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&family=JetBrains+Mono:wght@600;800&display=swap');
+*{box-sizing:border-box}
+html,body{background:#010409;margin:0;padding:10px;color:#e6edf3;overflow-x:hidden;width:100%}
+.terminal-box{font-family:'Noto Sans TC',sans-serif;background:#0d1117;max-width:860px;width:100%;margin:0 auto;padding:16px;border-radius:14px;border:1px solid #30363d;box-shadow:0 12px 35px rgba(0,0,0,.75);transition:.2s}
+@keyframes shakeAnim{0%,100%{transform:translateX(0)}15%,45%,75%{transform:translateX(-8px)}30%,60%,90%{transform:translateX(8px)}}
+@keyframes pulseDanger{0%,100%{opacity:1}50%{opacity:.4}}
+.shake-crash{animation:shakeAnim .45s ease-in-out;border-color:#ff4d4f!important;box-shadow:0 0 30px rgba(255,77,79,.65)!important}
+.top-bar,.stock-tabs,.ai-banner,.controls-row,.items-bar,.lb-header,.liq-header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px}
+.top-bar{border-bottom:1px solid #21262d;padding-bottom:10px;margin-bottom:10px}
+.stock-tabs{margin-bottom:10px}
+.stock-tabs-left,.header-utils,.lev-group,.trade-btns,.inventory-tags,.lb-submit-box,.ai-banner-btns{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.stock-tab,.lev-btn,.sound-btn{background:#161b22;border:1px solid #30363d;color:#c9d1d9;padding:6px 11px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;transition:.15s}
+.stock-tab{color:#8b949e}
+.stock-tab:hover,.sound-btn:hover{border-color:#58a6ff;color:#e6edf3}
+.stock-tab.active,.lev-btn.active{background:#1f6feb;color:#fff;border-color:#58a6ff}
+.daily-reset-badge,.sync-badge{font-size:11px;padding:3px 8px;border-radius:6px;font-family:'JetBrains Mono','Noto Sans TC',monospace}
+.daily-reset-badge{background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.4);color:#34d399}
+.sync-badge{background:rgba(31,111,235,.2);border:1px solid rgba(88,166,255,.4);color:#58a6ff;margin-left:6px}
+.rank-badge{display:inline-block;font-size:11px;font-weight:900;padding:2px 8px;border-radius:999px;margin-left:6px}
+.rank-rookie{background:rgba(139,148,158,.2);color:#c9d1d9;border:1px solid #6e7681}
+.rank-whale{background:rgba(245,158,11,.2);color:#fbbf24;border:1px solid #f59e0b}
+.rank-wolf{background:rgba(239,68,68,.22);color:#f87171;border:1px solid #ef4444}
+.rank-god{background:linear-gradient(90deg,rgba(168,85,247,.3),rgba(236,72,153,.3));color:#f472b6;border:1px solid #e879f9}
+.rank-buffett{background:linear-gradient(90deg,#ffd700,#f59e0b);color:#0d1117;border:1px solid #fef08a;box-shadow:0 0 10px rgba(255,215,0,.45)}
+.price-display{font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:800}
+.up{color:#ff4d4f}.down{color:#00e676}
+.news-ticker{background:rgba(255,193,7,.1);border-left:4px solid #ffc107;padding:8px 12px;border-radius:4px;font-size:13px;color:#ffd54f;margin-bottom:10px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px}
+.news-blackswan{background:rgba(239,68,68,.22)!important;border-left-color:#ff4d4f!important;color:#ff8080!important;font-weight:900}
+.news-superbull{background:rgba(16,185,129,.2)!important;border-left-color:#00e676!important;color:#6ee7b7!important;font-weight:900}
+.chart-wrapper,.ai-log-box{background:#010409;border:1px solid #21262d;border-radius:10px;margin-bottom:10px}
+.chart-wrapper{padding:8px}
+canvas{width:100%;height:205px;display:block}
+.ai-banner{display:none;background:linear-gradient(90deg,rgba(31,111,235,.25),rgba(138,43,226,.25));border:1px solid #58a6ff;padding:9px 12px;border-radius:8px;margin-bottom:10px}
+.ai-log-box{padding:8px 12px;font-family:'JetBrains Mono','Noto Sans TC',monospace;font-size:12px;line-height:1.5;color:#79c0ff;height:72px;overflow-y:auto}
+.dashboard{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
+.stat-card,.liq-warning-box,.controls-row,.items-bar,.leaderboard-panel{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:10px 12px}
+.stat-card{text-align:center;border-radius:8px;padding:9px 6px}
+.stat-label{font-size:12px;color:#8b949e;margin-bottom:3px}
+.stat-value{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700}
+.liq-warning-box{display:none;margin-bottom:10px;border-radius:8px}
+.liq-bar-bg{width:100%;height:8px;background:#010409;border-radius:999px;overflow:hidden;margin-top:5px}
+.liq-bar-fill{height:100%;width:100%;background:#00e676;transition:.25s}
+.liq-danger-blink{animation:pulseDanger .6s infinite}
+.btn{border:none;padding:9px 14px;font-size:14px;font-weight:900;border-radius:8px;cursor:pointer;transition:.15s;touch-action:manipulation}
+.btn:hover:not(:disabled){filter:brightness(1.1);transform:translateY(-1px)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn-long{background:#d32f2f;color:#fff}.btn-short{background:#00a152;color:#fff}.btn-close{background:#f57c00;color:#fff}
+.btn-ai{background:linear-gradient(90deg,#00b4db,#0083b0);color:#fff}
+.btn-gacha{background:linear-gradient(90deg,#8e2de2,#4a00e0);color:#fff}
+.btn-rank{background:linear-gradient(90deg,#f59e0b,#d97706);color:#0d1117}
+.items-bar{margin-top:10px;border-style:dashed;border-color:#8a2be2}
+.item-tag{background:rgba(138,43,226,.25);border:1px solid #a371f7;color:#d2a8ff;padding:5px 10px;border-radius:8px;font-size:13px;cursor:pointer;font-weight:700}
+.leaderboard-panel{margin-top:12px}
+.lb-header{padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid #21262d}
+.lb-input{background:#0d1117;border:1px solid #30363d;color:#e6edf3;padding:8px 10px;border-radius:8px;font-size:14px;width:145px}
+.lb-input:focus{outline:none;border-color:#f59e0b}
+.lb-table-wrap{width:100%;overflow-x:auto}
+.lb-table{width:100%;border-collapse:collapse;font-size:13px}
+.lb-table th{text-align:left;color:#8b949e;padding:7px 5px;border-bottom:1px solid #30363d;white-space:nowrap}
+.lb-table td{padding:7px 5px;border-bottom:1px solid #21262d;font-family:'JetBrains Mono','Noto Sans TC',monospace}
+.receipt-overlay{display:none;position:fixed;inset:0;background:rgba(1,4,9,.78);z-index:9999;justify-content:center;align-items:center;padding:16px}
+.receipt-card{background:#161b22;border:1px solid #30363d;border-radius:14px;max-width:350px;width:100%;padding:18px;box-shadow:0 20px 50px rgba(0,0,0,.85)}
+.receipt-title{font-size:17px;font-weight:900;text-align:center;margin-bottom:12px;padding-bottom:8px;border-bottom:1px dashed #30363d}
+.receipt-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;color:#c9d1d9}
+.receipt-row span:last-child{font-family:'JetBrains Mono',monospace;font-weight:700}
+@media(max-width:640px){
+  html,body{padding:6px}.terminal-box{padding:11px}
+  .stock-tabs-left{width:100%;display:grid;grid-template-columns:repeat(3,1fr)}
+  .stock-tab{padding:8px 4px;font-size:12px;text-align:center}
+  .header-utils,.lev-group,.trade-btns,.lb-submit-box{width:100%}
+  .header-utils{justify-content:space-between}
+  canvas{height:170px}
+  .dashboard{grid-template-columns:repeat(2,1fr);gap:6px}
+  .controls-row,.items-bar{flex-direction:column;align-items:stretch}
+  .lev-group{display:grid;grid-template-columns:repeat(3,1fr)}
+  .lev-btn{padding:10px 4px;text-align:center}
+  .trade-btns{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+  .trade-btns .btn{min-height:46px;font-size:15px}
+  .items-bar .btn-gacha{width:100%}
+  .lb-input{flex:1;min-width:110px}
+  .hide-mobile{display:none}
+}
 </style>
 </head>
 <body>
-
 <div class="terminal-box" id="terminal-box">
-    <div class="stock-tabs">
-        <div class="stock-tabs-left" id="stock-tabs"></div>
-        <div class="header-utils">
-            <span class="daily-reset-badge" id="daily-reset-timer">⏳ 每日重置：--:--:--</span>
-            <button class="sound-btn" id="btn-sound" onclick="toggleSound()">🔊 音效：開</button>
-        </div>
+  <div class="stock-tabs">
+    <div class="stock-tabs-left" id="stock-tabs"></div>
+    <div class="header-utils">
+      <span class="daily-reset-badge" id="daily-reset-timer">⏳ 重置：--:--:--</span>
+      <button class="sound-btn" id="btn-sound" onclick="toggleSound()">🔊 音效：開</button>
     </div>
-
-    <div class="top-bar">
-        <div>
-            <span id="stock-header" style="font-size: 19px; font-weight: 900;">0050 元大台灣50</span>
-            <span id="stock-desc" style="font-size: 12px; color: #8b949e; margin-left: 6px;">穩健大盤指數</span>
-            <span class="sync-badge">🌐 全球同步盤</span>
-        </div>
-        <div>
-            <span id="price-val" class="price-display up">195.00</span>
-            <span id="pct-val" class="up" style="font-family: 'JetBrains Mono'; font-size: 14px; margin-left: 4px;">(+0.00%)</span>
-        </div>
+  </div>
+  <div class="top-bar">
+    <div>
+      <span id="stock-header" style="font-size:19px;font-weight:900">0050 元大台灣50</span>
+      <span id="stock-desc" style="font-size:12px;color:#8b949e;margin-left:6px">穩健大盤指數</span>
+      <span class="sync-badge">🌐 全球同步盤</span>
     </div>
-
-    <div class="news-ticker" id="news-ticker">
-        <span id="news-text">📢 全球市場連線同步中...</span>
-        <span id="insider-hint" style="color: #58a6ff; font-weight: bold;"></span>
+    <div>
+      <span id="price-val" class="price-display up">195.00</span>
+      <span id="pct-val" class="up" style="font-family:'JetBrains Mono';font-size:14px;margin-left:4px">(+0.00%)</span>
     </div>
-
-    <div class="ai-banner" id="ai-banner">
-        <span style="font-weight: 900; color: #79c0ff; font-size: 13px;">🤖 AI 自動代操<span id="ai-state-label">接管中</span>... 剩 <span id="ai-timer" style="font-size: 17px; color: #ffd700;">30</span> 秒</span>
-        <div class="ai-banner-btns">
-            <button class="btn" id="btn-ai-pause" style="background: #d97706; color: white; padding: 6px 10px; font-size: 12px;" onclick="togglePauseAI()">⏸️ 暫停觀察</button>
-            <button class="btn" style="background: #da3633; color: white; padding: 6px 10px; font-size: 12px;" onclick="stopAI(true)">⏹️ 中止結算</button>
-        </div>
+  </div>
+  <div class="news-ticker" id="news-ticker">
+    <span id="news-text">📢 全球市場連線同步中...</span>
+    <span id="insider-hint" style="color:#58a6ff;font-weight:700"></span>
+  </div>
+  <div class="ai-banner" id="ai-banner">
+    <span style="font-weight:900;color:#79c0ff;font-size:13px">🤖 AI 代操<span id="ai-state-label">接管中</span>... 剩 <span id="ai-timer" style="font-size:16px;color:#ffd700">30</span>s</span>
+    <div class="ai-banner-btns">
+      <button class="btn" id="btn-ai-pause" style="background:#d97706;color:#fff;padding:6px 10px;font-size:12px" onclick="togglePauseAI()">⏸️ 暫停觀察</button>
+      <button class="btn" style="background:#da3633;color:#fff;padding:6px 10px;font-size:12px" onclick="stopAI(true)">⏹️ 中止</button>
     </div>
-
-    <div class="chart-wrapper">
-        <canvas id="stockCanvas" width="800" height="210"></canvas>
+  </div>
+  <div class="chart-wrapper"><canvas id="stockCanvas" width="800" height="205"></canvas></div>
+  <div class="ai-log-box" id="ai-log"><div>> [終端就緒] 已啟用強平預警條、結算明細、每日零點重置與手機觸控最佳化！</div></div>
+  <div class="dashboard">
+    <div class="stat-card"><div class="stat-label">可用現金</div><div class="stat-value" id="cash-val" style="color:#ffd700">$10,000</div></div>
+    <div class="stat-card"><div class="stat-label">目前倉位</div><div class="stat-value" id="pos-val">空手觀望</div></div>
+    <div class="stat-card"><div class="stat-label">進場均價</div><div class="stat-value" id="entry-val">-</div></div>
+    <div class="stat-card"><div class="stat-label">未實現損益</div><div class="stat-value" id="pnl-val">$0</div></div>
+  </div>
+  <div class="liq-warning-box" id="liq-warning-box">
+    <div class="liq-header">
+      <span id="liq-price-text" style="color:#f87171;font-weight:700">⚠️ 強平價：--</span>
+      <span id="liq-buffer-text" style="color:#34d399;font-weight:700">安全緩衝：100%</span>
     </div>
-
-    <div class="ai-log-box" id="ai-log">
-        <div>> [終端就緒] 已啟用強制平倉預警條、結算明細、每日零點重置與手機觸控最佳化！</div>
+    <div class="liq-bar-bg"><div class="liq-bar-fill" id="liq-bar-fill"></div></div>
+  </div>
+  <div class="controls-row">
+    <div class="lev-group">
+      <button class="lev-btn active" onclick="setLev(1,this)">1x 現貨</button>
+      <button class="lev-btn" onclick="setLev(5,this)">5x 融資</button>
+      <button class="lev-btn" onclick="setLev(20,this)">20x 飆車</button>
     </div>
-
-    <div class="dashboard">
-        <div class="stat-card">
-            <div class="stat-label">可用現金</div>
-            <div class="stat-value" id="cash-val" style="color: #ffd700;">$10,000</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">目前倉位</div>
-            <div class="stat-value" id="pos-val">空手觀望</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">進場均價</div>
-            <div class="stat-value" id="entry-val">-</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">未實現損益</div>
-            <div class="stat-value" id="pnl-val">$0</div>
-        </div>
+    <div class="trade-btns">
+      <button class="btn btn-long" id="btn-long" onclick="openPosition('LONG')">🔴 全倉做多</button>
+      <button class="btn btn-short" id="btn-short" onclick="openPosition('SHORT')">🟢 全倉放空</button>
+      <button class="btn btn-close" id="btn-close" onclick="closePosition()" disabled>💰 立即平倉</button>
+      <button class="btn btn-ai" id="btn-ai" onclick="startAI()">🤖 AI 代操 30s</button>
     </div>
-
-    <!-- 爆倉預警條 -->
-    <div class="liq-warning-box" id="liq-warning-box">
-        <div class="liq-header">
-            <span id="liq-price-text" style="color: #f87171; font-weight: bold;">⚠️ 強制平倉價：--</span>
-            <span id="liq-buffer-text" style="color: #34d399; font-weight: bold;">安全緩衝：100%</span>
-        </div>
-        <div class="liq-bar-bg">
-            <div class="liq-bar-fill" id="liq-bar-fill"></div>
-        </div>
+  </div>
+  <div class="items-bar">
+    <div><button class="btn btn-gacha" onclick="drawBox()">🎁 抽盲盒 ($2,000)</button><span style="font-size:12px;color:#8b949e;margin-left:6px">點擊使用：</span></div>
+    <div class="inventory-tags" id="items-list"><span style="font-size:12px;color:#6e7681">(尚無道具)</span></div>
+  </div>
+  <div class="leaderboard-panel">
+    <div class="lb-header">
+      <div>
+        <span style="font-size:15px;font-weight:900;color:#ffd700">🏆 全球股神榜 (TOP 10)</span>
+        <span id="player-rank-badge" class="rank-badge rank-rookie">🌱 菜鳥散戶</span>
+        <div id="networth-preview" style="font-size:12px;color:#8b949e;margin-top:3px">總淨值：$10,000（每日 00:00 重置新局）</div>
+      </div>
+      <div class="lb-submit-box">
+        <input type="text" id="player-name" class="lb-input" placeholder="操盤手暱稱..." maxlength="16">
+        <button class="btn btn-rank" id="btn-submit-score" onclick="submitScore()">🚀 上傳</button>
+        <button class="btn" style="background:#21262d;color:#c9d1d9;padding:9px 11px" onclick="loadLeaderboard()">🔄</button>
+      </div>
     </div>
-
-    <div class="controls-row">
-        <div class="lev-group">
-            <button class="lev-btn active" onclick="setLev(1, this)">1x 現貨</button>
-            <button class="lev-btn" onclick="setLev(5, this)">5x 融資</button>
-            <button class="lev-btn" onclick="setLev(20, this)">20x 飆車</button>
-        </div>
-
-        <div class="trade-btns">
-            <button class="btn btn-long" id="btn-long" onclick="openPosition('LONG')">🔴 全倉做多</button>
-            <button class="btn btn-short" id="btn-short" onclick="openPosition('SHORT')">🟢 全倉放空</button>
-            <button class="btn btn-close" id="btn-close" onclick="closePosition()" disabled>💰 立即平倉</button>
-            <button class="btn btn-ai" id="btn-ai" onclick="startAI()">🤖 AI 代操 30s</button>
-        </div>
+    <div class="lb-table-wrap">
+      <table class="lb-table">
+        <thead><tr><th style="width:52px">排名</th><th>操盤手 / 段位</th><th style="text-align:right">總淨值</th><th style="text-align:right">報酬率</th><th class="hide-mobile" style="text-align:right">時間</th></tr></thead>
+        <tbody id="lb-body"><tr><td colspan="5" style="text-align:center;color:#8b949e;padding:14px">連線雲端排行榜中...</td></tr></tbody>
+      </table>
     </div>
-
-    <div class="items-bar">
-        <div>
-            <button class="btn btn-gacha" onclick="drawBox()">🎁 抽操盤手盲盒 ($2,000)</button>
-            <span style="font-size: 12px; color: #8b949e; margin-left: 6px;">點擊道具使用：</span>
-        </div>
-        <div class="inventory-tags" id="items-list">
-            <span style="font-size: 12px; color: #6e7681;">(尚無道具)</span>
-        </div>
-    </div>
-
-    <div class="leaderboard-panel">
-        <div class="lb-header">
-            <div>
-                <span style="font-size: 15px; font-weight: 900; color: #ffd700;">🏆 全球即時股神榜 (TOP 10)</span>
-                <span id="player-rank-badge" class="rank-badge rank-rookie">🌱 菜鳥散戶</span>
-                <div id="networth-preview" style="font-size: 12px; color: #8b949e; margin-top: 4px;">目前總淨值：$10,000（每日 00:00 重置新局）</div>
-            </div>
-            <div class="lb-submit-box">
-                <input type="text" id="player-name" class="lb-input" placeholder="輸入操盤手暱稱..." maxlength="16">
-                <button class="btn btn-rank" id="btn-submit-score" onclick="submitScore()">🚀 上傳戰績</button>
-                <button class="btn" style="background: #21262d; color: #c9d1d9; padding: 9px 12px;" onclick="loadLeaderboard()">🔄</button>
-            </div>
-        </div>
-
-        <div class="lb-table-wrap">
-            <table class="lb-table">
-                <thead>
-                    <tr>
-                        <th style="width: 55px;">排名</th>
-                        <th>操盤手 / 段位</th>
-                        <th style="text-align: right;">總資產淨值</th>
-                        <th style="text-align: right;">報酬率</th>
-                        <th class="hide-mobile" style="text-align: right;">上榜時間</th>
-                    </tr>
-                </thead>
-                <tbody id="lb-body">
-                    <tr><td colspan="5" style="text-align: center; color: #8b949e; padding: 16px;">正在連線至全球雲端排行榜...</td></tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
+  </div>
 </div>
 
-<!-- 結算明細彈窗 -->
 <div class="receipt-overlay" id="receipt-overlay" onclick="closeReceipt()">
-    <div class="receipt-card" onclick="event.stopPropagation()">
-        <div class="receipt-title" id="receipt-title">🧾 平倉結算明細</div>
-        <div id="receipt-body"></div>
-        <button class="btn" style="width: 100%; margin-top: 14px; background: #1f6feb; color: white;" onclick="closeReceipt()">確認繼續交易</button>
-    </div>
+  <div class="receipt-card" onclick="event.stopPropagation()">
+    <div class="receipt-title" id="receipt-title">🧾 平倉結算明細</div>
+    <div id="receipt-body"></div>
+    <button class="btn" style="width:100%;margin-top:12px;background:#1f6feb;color:#fff" onclick="closeReceipt()">確認繼續</button>
+  </div>
 </div>
 
 <script>
-    const SUPABASE_URL = "https://mkdfrrmvchuovqafwyvd.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_HAlAC8PR6fT4sOKIttqqJw_jHdLECaj";
+const SB_URL="https://mkdfrrmvchuovqafwyvd.supabase.co",SB_KEY="sb_publishable_HAlAC8PR6fT4sOKIttqqJw_jHdLECaj";
+const canvas=document.getElementById('stockCanvas'),ctx=canvas.getContext('2d'),$=id=>document.getElementById(id);
+let soundOn=true,audioCtx=null;
+function toggleSound(){soundOn=!soundOn;$('btn-sound').innerText=soundOn?"🔊 音效：開":"🔇 音效：關";}
+function playSound(t){
+  if(!soundOn)return;
+  try{
+    if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    if(audioCtx.state==='suspended')audioCtx.resume();
+    const n=audioCtx.currentTime,o=audioCtx.createOscillator(),g=audioCtx.createGain();
+    o.connect(g);g.connect(audioCtx.destination);
+    const cfg={
+      OPEN:['triangle',520,780,.12,.11],
+      WIN:['sine',587,1174,.15,.3],
+      LOSS:['sawtooth',320,190,.1,.24],
+      CRASH:['sawtooth',160,55,.22,.48],
+      GACHA:['square',660,990,.1,.18]
+    }[t];
+    o.type=cfg[0];o.frequency.setValueAtTime(cfg[1],n);o.frequency.linearRampToValueAtTime(cfg[2],n+cfg[4]);
+    g.gain.setValueAtTime(cfg[3],n);g.gain.exponentialRampToValueAtTime(.001,n+cfg[4]);
+    o.start(n);o.stop(n+cfg[4]);
+  }catch(e){}
+}
+function triggerCrashShake(){const b=$('terminal-box');b.classList.remove('shake-crash');void b.offsetWidth;b.classList.add('shake-crash');playSound('CRASH');}
+function getRankBadge(nw){
+  if(nw>=1e6)return{label:"💎 巴菲特本尊",cls:"rank-buffett"};
+  if(nw>=5e5)return{label:"👑 少年股神",cls:"rank-god"};
+  if(nw>=1e5)return{label:"🐺 華爾街之狼",cls:"rank-wolf"};
+  if(nw>=3e4)return{label:"🔥 當沖大戶",cls:"rank-whale"};
+  return{label:"🌱 菜鳥散戶",cls:"rank-rookie"};
+}
+function showReceipt({isLiq,stockName,side,lev,entry,exit,margin,pnl,finalCash,note}){
+  const roi=margin>0?((pnl/margin)*100).toFixed(2):"0.00",c=pnl>=0?"#ff4d4f":"#00e676",s=pnl>=0?"+":"";
+  $('receipt-title').innerText=isLiq?"💥 強制平倉（斷頭）結算單":(pnl>=0?"🎉 獲利平倉結算明細":"🧾 停損平倉結算明細");
+  $('receipt-title').style.color=isLiq?"#ff4d4f":(pnl>=0?"#ffd700":"#58a6ff");
+  $('receipt-body').innerHTML=`
+    <div class="receipt-row"><span>標的</span><span>${stockName}</span></div>
+    <div class="receipt-row"><span>方向/槓桿</span><span>${side==='LONG'?'🔴 做多':'🟢 放空'} ${lev}x</span></div>
+    <div class="receipt-row"><span>保證金</span><span>$${margin.toLocaleString()}</span></div>
+    <div class="receipt-row"><span>進場 → 結算</span><span>${entry.toFixed(2)} → ${exit.toFixed(2)}</span></div>
+    <div class="receipt-row" style="border-top:1px solid #30363d;margin-top:6px;padding-top:7px"><span>已實現損益</span><span style="color:${c};font-size:15px">${s}$${Math.round(pnl).toLocaleString()} (${s}${roi}%)</span></div>
+    <div class="receipt-row"><span>結算後現金</span><span style="color:#ffd700">$${finalCash.toLocaleString()}</span></div>
+    ${note?`<div style="margin-top:8px;font-size:12px;color:#fbbf24;background:rgba(245,158,11,.12);padding:6px 8px;border-radius:6px">${note}</div>`:''}`;
+  $('receipt-overlay').style.display='flex';
+}
+function closeReceipt(){$('receipt-overlay').style.display='none';}
 
-    const canvas = document.getElementById('stockCanvas');
-    const ctx = canvas.getContext('2d');
+const stocks={
+  "0050":{code:"0050",seed:101,name:"元大台灣50",desc:"穩健大盤指數",base:195,price:195,vol:1.1,history:[],markers:[]},
+  "2330":{code:"2330",seed:202,name:"台積電",desc:"護國神山權值王",base:1050,price:1050,vol:1.7,history:[],markers:[]},
+  "2454":{code:"2454",seed:303,name:"聯發科",desc:"AI 晶片旗艦",base:1320,price:1320,vol:2.3,history:[],markers:[]},
+  "2317":{code:"2317",seed:404,name:"鴻海",desc:"AI 伺服器龍頭",base:215,price:215,vol:1.9,history:[],markers:[]},
+  "3481":{code:"3481",seed:505,name:"群創",desc:"面板主力飆股",base:16.5,price:16.5,vol:3.4,history:[],markers:[]}
+};
+const newsEvents=[
+  {text:"🔥 利多：AI 訂單爆滿，外資大舉買超！",bias:.55,mode:"normal"},
+  {text:"🚀 利多：法人調升目標價，主力大單敲進！",bias:.65,mode:"normal"},
+  {text:"❄️ 利空：美股科技重挫，外資提款賣超！",bias:-.55,mode:"normal"},
+  {text:"💥 利空：供應鏈傳砍單雜音，停損賣壓湧現！",bias:-.65,mode:"normal"},
+  {text:"⚖️ 盤整：市場觀望總經數據，多空狹幅震盪。",bias:0,mode:"normal"}
+];
+const syncRand=(t,s)=>{let x=Math.sin(t*12.9898+s*78.233)*43758.5453;return x-Math.floor(x);};
+function getGlobalMarketState(t){
+  const c=t%100;
+  if(c>=88&&c<=93)return{text:"🚨【突發黑天鵝】系統性流動性危機！全市場恐慌閃崩！",bias:-1.65,mode:"blackswan"};
+  if(c>=44&&c<=49)return{text:"⚡【聯準會緊急降息 4 碼】史詩級資金狂潮暴力噴出！",bias:1.65,mode:"superbull"};
+  return newsEvents[Math.floor(syncRand(Math.floor(t/10),999)*newsEvents.length)];
+}
+function computePriceAtTick(st,tick){
+  let p=st.base;
+  for(let t=Math.floor(tick/360)*360;t<=tick;t++){
+    const ev=getGlobalMarketState(t);
+    p=Math.max(2,p*(1+((syncRand(t,st.seed)-.5+ev.bias*.35)*st.vol)/100));
+  }
+  return p;
+}
+const getTaipeiDate=()=>new Date(Date.now()+288e5).toISOString().slice(0,10);
+function updateResetTimer(){
+  const rem=864e5-((Date.now()+288e5)%864e5),pad=n=>String(Math.floor(n)).padStart(2,'0');
+  $('daily-reset-timer').innerText=`⏳ 重置：${pad(rem/36e5)}:${pad((rem%36e5)/6e4)}:${pad((rem%6e4)/1e3)}`;
+}
 
-    // 8-Bit 音效引擎
-    let soundEnabled = true;
-    let audioCtx = null;
+const INIT_CAP=10000,SAVE_KEY='stock_game_save_v2',todayStr=getTaipeiDate();
+let saved=null;try{saved=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');}catch(e){}
+let cash=INIT_CAP,items=[],dailyReset=false;
+if(saved&&saved.date===todayStr){
+  if(typeof saved.cash==='number'&&saved.cash>=0)cash=saved.cash;
+  if(Array.isArray(saved.items))items=saved.items;
+}else if(saved&&saved.date&&saved.date!==todayStr){
+  items=[{name:"🔮 每日簽到內線卡",type:"INSIDER"}];dailyReset=true;
+}
 
-    function toggleSound() {
-        soundEnabled = !soundEnabled;
-        document.getElementById('btn-sound').innerText = soundEnabled ? "🔊 音效：開" : "🔇 音效：關";
+let curKey="0050",lev=1,pos=null,entryPrice=0,margin=0,shield=false;
+let aiOn=false,aiPaused=false,aiSec=0,aiTimer=null,aiStartEq=0,lastTick=-1,vipDrift=0,lastRank=getRankBadge(cash).label,lastSub=0;
+if(localStorage.getItem('stock_game_player_name'))$('player-name').value=localStorage.getItem('stock_game_player_name');
+
+const isVip=()=>$('player-name').value.trim()==='7676';
+const calcPnL=()=>pos?margin*((stocks[curKey].price-entryPrice)/entryPrice)*lev*(pos==='LONG'?1:-1):0;
+const getNetWorth=()=>pos?Math.max(0,Math.round(cash+margin+calcPnL())):Math.round(cash);
+const getLiqPrice=()=>pos?(pos==='LONG'?Math.max(.01,entryPrice*(1-1/lev)):entryPrice*(1+1/lev)):0;
+function saveState(){try{localStorage.setItem(SAVE_KEY,JSON.stringify({date:getTaipeiDate(),cash:getNetWorth(),items}));}catch(e){}}
+function logAI(m){const b=$('ai-log'),d=document.createElement('div');d.innerText=`> ${m}`;b.prepend(d);if(b.children.length>25)b.removeChild(b.lastChild);}
+if(dailyReset){logAI("🌅 [每日重置] 00:00 新局開始！資金重置為 $10,000 並贈送【🔮 每日簽到內線卡】！");saveState();}
+
+function addMarker(st,label,color){if(st.history.length)st.markers.push({idx:st.history.length-1,price:st.price,label,color});}
+function renderTabs(){$('stock-tabs').innerHTML=Object.keys(stocks).map(k=>`<button class="stock-tab ${k===curKey?'active':''}" onclick="selectStock('${k}')">${stocks[k].code} ${stocks[k].name}</button>`).join('');}
+function selectStock(k){
+  if(pos)return alert("持倉中請先平倉再切換股票！");
+  curKey=k;vipDrift=0;$('stock-header').innerText=`${stocks[k].code} ${stocks[k].name}`;$('stock-desc').innerText=stocks[k].desc;
+  renderTabs();drawChart();updateUI();
+}
+function setLev(v,btn){
+  if(pos||aiOn)return alert("持倉中或 AI 代操期間無法切換槓桿！");
+  lev=v;document.querySelectorAll('.lev-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+}
+function syncBtns(){
+  $('btn-long').disabled=!!pos||aiOn;$('btn-short').disabled=!!pos||aiOn;
+  $('btn-close').disabled=!pos||aiOn;$('btn-ai').disabled=aiOn;
+}
+function openPosition(type,byAI=false){
+  if(cash<100){if(!byAI)alert("本金不足！發放 $3,000 救濟金！");cash=3000;}
+  const st=stocks[curKey];pos=type;entryPrice=st.price;margin=cash;cash=0;
+  addMarker(st,type==='LONG'?'B':'S',type==='LONG'?'#ff4d4f':'#00e676');
+  if(!byAI){playSound('OPEN');logAI(`[開倉] ${st.code} ${type==='LONG'?'做多':'放空'} ${lev}x @ ${entryPrice.toFixed(2)} | 強平線 ${getLiqPrice().toFixed(2)}`);}
+  syncBtns();drawChart();updateUI();saveState();
+}
+function closePosition(byAI=false){
+  if(!pos)return;
+  const st=stocks[curKey],pnl=calcPnL(),pSide=pos,pLev=lev,pEnt=entryPrice,pMar=margin,exP=st.price;
+  cash=Math.max(0,Math.round(margin+pnl));pos=null;entryPrice=0;margin=0;shield=false;
+  addMarker(st,'平','#f59e0b');
+  if(!byAI){playSound(pnl>=0?'WIN':'LOSS');showReceipt({isLiq:false,stockName:`${st.code} ${st.name}`,side:pSide,lev:pLev,entry:pEnt,exit:exP,margin:pMar,pnl,finalCash:cash,note:""});}
+  syncBtns();drawChart();updateUI();saveState();
+}
+function startAI(){
+  if(aiOn||pos)return alert("請先平倉再啟動 AI 代操！");
+  if(cash<100)cash=3000;
+  aiOn=true;aiPaused=false;aiSec=30;aiStartEq=cash;
+  $('ai-banner').style.display='flex';$('ai-state-label').innerText="接管中";$('btn-ai-pause').innerText="⏸️ 暫停觀察";$('ai-timer').innerText=aiSec;
+  syncBtns();playSound('OPEN');logAI(`[AI 啟動] 本金 $${aiStartEq.toLocaleString()}（可隨時按暫停查看日誌）`);
+  aiTimer=setInterval(()=>{if(!aiPaused&&--aiSec<=0)stopAI(false);else $('ai-timer').innerText=aiSec;},1000);
+}
+function togglePauseAI(){
+  if(!aiOn)return;aiPaused=!aiPaused;const b=$('btn-ai-pause');
+  b.innerText=aiPaused?"▶️ 繼續代操":"⏸️ 暫停觀察";b.style.background=aiPaused?"#059669":"#d97706";
+  $('ai-state-label').innerText=aiPaused?"已暫停":"接管中";
+  logAI(aiPaused?"[AI 暫停] 凍結倒數與自動下單，方便檢視日誌。":"[AI 恢復] 繼續執行量化交易！");
+}
+function stopAI(manual){
+  if(!aiOn)return;clearInterval(aiTimer);if(pos)closePosition(true);
+  aiOn=false;aiPaused=false;$('ai-banner').style.display='none';syncBtns();
+  const p=cash-aiStartEq;playSound(p>=0?'WIN':'LOSS');saveState();
+  logAI(`[AI 結算] ${manual?"手動中止":"30s期滿"}！結算 $${cash.toLocaleString()} (${p>=0?'+':''}$${p.toLocaleString()})`);
+}
+function runAIStrategy(bias){
+  if(aiPaused)return;
+  const s=stocks[curKey],h=s.history,n=h.length;if(n<6)return;
+  const mom=((h[n-1]+h[n-2]+h[n-3])-(h[n-4]+h[n-5]+h[n-6]))/(h[n-4]+h[n-5]+h[n-6]);
+  const vip=isVip(),sig=vip?(mom*140+bias*1.3):(mom*100+bias*.8),th=vip?.15:.25;
+  if(!pos){
+    if(Math.abs(sig)>th){
+      lev=vip?(Math.abs(sig)>.35?20:5):(Math.abs(sig)>.6?5:1);
+      document.querySelectorAll('.lev-btn').forEach(b=>b.classList.toggle('active',b.innerText.startsWith(lev+'x')));
+      openPosition(sig>0?'LONG':'SHORT',true);
+      logAI(`[AI ${sig>0?'做多':'放空'}] 訊號 ${sig.toFixed(2)} | ${s.code} ${lev}x @ ${s.price.toFixed(2)}`);
     }
-
-    function playSound(type) {
-        if (!soundEnabled) return;
-        try {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const now = audioCtx.currentTime;
-
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-
-            if (type === 'OPEN') {
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(520, now);
-                osc.frequency.exponentialRampToValueAtTime(780, now + 0.09);
-                gain.gain.setValueAtTime(0.12, now);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
-                osc.start(now);
-                osc.stop(now + 0.11);
-            } else if (type === 'WIN') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(587.33, now);
-                osc.frequency.setValueAtTime(880, now + 0.08);
-                osc.frequency.setValueAtTime(1174.66, now + 0.16);
-                gain.gain.setValueAtTime(0.15, now);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
-                osc.start(now);
-                osc.stop(now + 0.32);
-            } else if (type === 'LOSS') {
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(320, now);
-                osc.frequency.linearRampToValueAtTime(190, now + 0.22);
-                gain.gain.setValueAtTime(0.1, now);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
-                osc.start(now);
-                osc.stop(now + 0.24);
-            } else if (type === 'CRASH') {
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(160, now);
-                osc.frequency.linearRampToValueAtTime(55, now + 0.45);
-                gain.gain.setValueAtTime(0.22, now);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.48);
-                osc.start(now);
-                osc.stop(now + 0.48);
-            } else if (type === 'GACHA') {
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(660, now);
-                osc.frequency.setValueAtTime(990, now + 0.07);
-                gain.gain.setValueAtTime(0.1, now);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
-                osc.start(now);
-                osc.stop(now + 0.18);
-            }
-        } catch (e) {}
+  }else{
+    const pnl=calcPnL(),roi=pnl/margin,tp=vip?.14:.08,sl=vip?-.025:-.06;
+    if(roi>=tp||roi<=sl||(pos==='LONG'&&sig<-.2)||(pos==='SHORT'&&sig>.2)){
+      closePosition(true);logAI(`[AI 平倉] ${roi>=tp?'停利':(roi<=sl?'停損':'均線反轉')} $${Math.round(pnl).toLocaleString()} (${(roi*100).toFixed(1)}%)`);
     }
+  }
+}
+function drawBox(){
+  if(cash<2000)return alert("現金不足 $2,000！");
+  cash-=2000;playSound('GACHA');
+  const r=isVip()?(Math.random()*.55+.45):Math.random();
+  if(r<.35){items.push({name:"🔮 內線消息卡",type:"INSIDER"});alert("抽中【🔮 內線消息卡】！可預知下一波大盤新聞。");}
+  else if(r<.7){items.push({name:"🛡️ 防爆倉護身符",type:"SHIELD"});alert("抽中【🛡️ 防爆倉護身符】！強平時保住 80% 本金。");}
+  else{cash+=5000;playSound('WIN');alert("🎉 頭獎！抽中【💰 大戶空投支票】，現金 +$5,000！");}
+  renderItems();updateUI();saveState();
+}
+function useItem(i){
+  const it=items.splice(i,1)[0];playSound('OPEN');
+  if(it.type==="INSIDER"){
+    $('insider-hint').innerText=`🤫 內線預知：${getGlobalMarketState(lastTick+10).text.slice(0,14)}...`;
+    setTimeout(()=>$('insider-hint').innerText="",7500);
+  }else{shield=true;alert("🛡️ 防爆倉護身符已啟動！");}
+  renderItems();saveState();
+}
+function renderItems(){
+  $('items-list').innerHTML=items.length?items.map((it,i)=>`<span class="item-tag" onclick="useItem(${i})">${it.name}</span>`).join(''):`<span style="font-size:12px;color:#6e7681">(尚無道具)</span>`;
+}
+function updateUI(){
+  const s=stocks[curKey],prev=s.history[s.history.length-2]||s.price,pct=((s.price-prev)/prev)*100;
+  $('price-val').innerText=s.price.toFixed(2);$('pct-val').innerText=`(${pct>=0?'+':''}${pct.toFixed(2)}%)`;
+  $('price-val').className=`price-display ${pct>=0?'up':'down'}`;$('pct-val').className=pct>=0?'up':'down';
+  const nw=getNetWorth();$('cash-val').innerText=`$${cash.toLocaleString()}`;
+  $('networth-preview').innerText=`總淨值：$${nw.toLocaleString()}（每日 00:00 重置新局）`;
+  const b=getRankBadge(nw);$('player-rank-badge').innerText=b.label;$('player-rank-badge').className=`rank-badge ${b.cls}`;
+  if(b.label!==lastRank){if(nw>INIT_CAP)logAI(`[段位晉升] 晉升為【${b.label}】！`);lastRank=b.label;}
 
-    function triggerCrashShake() {
-        const box = document.getElementById('terminal-box');
-        box.classList.remove('shake-crash');
-        void box.offsetWidth;
-        box.classList.add('shake-crash');
-        playSound('CRASH');
+  const liqBox=$('liq-warning-box');
+  if(pos){
+    $('pos-val').innerText=`${aiOn?'🤖 ':''}${pos==='LONG'?'做多':'放空'} ${lev}x ${shield?'🛡️':''}`;
+    $('pos-val').style.color=pos==='LONG'?'#ff4d4f':'#00e676';$('entry-val').innerText=entryPrice.toFixed(2);
+    const pnl=Math.round(calcPnL());$('pnl-val').innerText=`${pnl>=0?'+':''}$${pnl.toLocaleString()}`;$('pnl-val').style.color=pnl>=0?'#ff4d4f':'#00e676';
+
+    const liqP=getLiqPrice(),rem=Math.max(0,Math.min(100,((margin+pnl)/margin)*100)),dist=Math.abs((s.price-liqP)/s.price)*100;
+    liqBox.style.display='block';$('liq-price-text').innerText=`⚠️ 強平價：${liqP.toFixed(2)}（距爆倉 ${dist.toFixed(2)}%）`;
+    const bt=$('liq-buffer-text'),bf=$('liq-bar-fill');bf.style.width=`${rem}%`;
+    bt.innerText=rem<=30?`🚨 高危：保證金僅剩 ${rem.toFixed(0)}%`:(rem<=65?`⚡ 注意：保證金剩餘 ${rem.toFixed(0)}%`:`🛡️ 安全：保證金健康度 ${rem.toFixed(0)}%`);
+    bt.style.color=bf.style.background=rem<=30?"#ff4d4f":(rem<=65?"#fbbf24":"#00e676");
+    bf.classList.toggle('liq-danger-blink',rem<=30);
+
+    if(margin+pnl<=0){
+      if(isVip()){entryPrice=s.price*(pos==='LONG'?.992:1.008);return;}
+      const pSide=pos,pLev=lev,pEnt=entryPrice,pMar=margin,hadShield=shield;
+      cash=hadShield?Math.round(margin*.8):0;pos=null;entryPrice=0;margin=0;shield=false;liqBox.style.display='none';syncBtns();saveState();
+      if(hadShield){
+        playSound('OPEN');logAI(`[護身符發動] 觸及強平線，保住 80% 本金 ($${cash.toLocaleString()})！`);
+        if(!aiOn)showReceipt({isLiq:true,stockName:`${s.code} ${s.name}`,side:pSide,lev:pLev,entry:pEnt,exit:s.price,margin:pMar,pnl:-(pMar-cash),finalCash:cash,note:"🛡️ 已觸發【防爆倉護身符】，救回 80% 保證金！"});
+      }else{
+        triggerCrashShake();logAI(`[強制平倉] ${s.code} ${pLev}x 觸及強平價，保證金 $${pMar.toLocaleString()} 已清算。`);
+        if(!aiOn)showReceipt({isLiq:true,stockName:`${s.code} ${s.name}`,side:pSide,lev:pLev,entry:pEnt,exit:s.price,margin:pMar,pnl:-pMar,finalCash:0,note:`💡 ${pLev}x 槓桿下反向波動超過 ${(100/pLev).toFixed(1)}% 觸發強制平倉。`});
+      }
     }
-
-    function getRankBadge(netWorth) {
-        if (netWorth >= 1000000) return { label: "💎 巴菲特本尊", cls: "rank-buffett" };
-        if (netWorth >= 500000) return { label: "👑 少年股神", cls: "rank-god" };
-        if (netWorth >= 100000) return { label: "🐺 華爾街之狼", cls: "rank-wolf" };
-        if (netWorth >= 30000) return { label: "🔥 當沖大戶", cls: "rank-whale" };
-        return { label: "🌱 菜鳥散戶", cls: "rank-rookie" };
+  }else{
+    liqBox.style.display='none';$('pos-val').innerText=aiOn?(aiPaused?"⏸️ AI 暫停":"🤖 AI 觀察中"):"空手觀望";
+    $('pos-val').style.color="#8b949e";$('entry-val').innerText="-";$('pnl-val').innerText="$0";$('pnl-val').style.color="#e6edf3";
+  }
+}
+function drawChart(){
+  const st=stocks[curKey],h=st.history,w=canvas.width,ch=canvas.height;if(h.length<2)return;
+  ctx.clearRect(0,0,w,ch);
+  let minP=Math.min(...h),maxP=Math.max(...h);
+  if(pos&&entryPrice>0){minP=Math.min(minP,entryPrice);maxP=Math.max(maxP,entryPrice);}
+  minP*=.996;maxP*=1.004;const rng=maxP-minP||1,getY=v=>ch-((v-minP)/rng)*(ch-34)-17;
+  ctx.strokeStyle="#161b22";ctx.lineWidth=1;
+  for(let i=1;i<4;i++){const y=(ch/4)*i;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+  if(pos&&entryPrice>0){
+    const ey=getY(entryPrice),liqP=getLiqPrice();
+    ctx.save();ctx.setLineDash([6,4]);ctx.strokeStyle=pos==='LONG'?"rgba(255,77,79,.85)":"rgba(0,230,118,.85)";ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(0,ey);ctx.lineTo(w,ey);ctx.stroke();ctx.restore();
+    ctx.fillStyle=pos==='LONG'?"#ff4d4f":"#00e676";ctx.font="bold 12px JetBrains Mono,monospace";
+    ctx.fillText(`進場 ${entryPrice.toFixed(2)}`,8,Math.max(15,ey-5));
+    if(liqP>=minP&&liqP<=maxP){
+      const ly=getY(liqP);ctx.save();ctx.setLineDash([3,3]);ctx.strokeStyle="#fbbf24";ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.moveTo(0,ly);ctx.lineTo(w,ly);ctx.stroke();ctx.restore();
+      ctx.fillStyle="#fbbf24";ctx.fillText(`⚠️ 強平 ${liqP.toFixed(2)}`,8,Math.min(ch-6,ly+13));
     }
+  }
+  const isUp=h[h.length-1]>=h[h.length-2],lc=isUp?"#ff4d4f":"#00e676";
+  ctx.beginPath();ctx.strokeStyle=lc;ctx.lineWidth=3;
+  h.forEach((v,i)=>{const x=(i/(h.length-1))*w,y=getY(v);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.stroke();
+  ctx.lineTo(w,ch);ctx.lineTo(0,ch);ctx.closePath();
+  const g=ctx.createLinearGradient(0,0,0,ch);g.addColorStop(0,isUp?"rgba(255,77,79,.28)":"rgba(0,230,118,.28)");g.addColorStop(1,"rgba(13,17,23,0)");
+  ctx.fillStyle=g;ctx.fill();
+  st.markers.forEach(m=>{
+    if(m.idx<0||m.idx>=h.length)return;
+    const mx=(m.idx/(h.length-1))*w,my=getY(m.price);
+    ctx.beginPath();ctx.arc(mx,my,9,0,Math.PI*2);ctx.fillStyle=m.color;ctx.fill();ctx.lineWidth=1.5;ctx.strokeStyle="#0d1117";ctx.stroke();
+    ctx.fillStyle="#fff";ctx.font="bold 10px Noto Sans TC,sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(m.label,mx,my);ctx.textAlign="start";ctx.textBaseline="alphabetic";
+  });
+}
 
-    // 結算明細彈窗控制
-    function showSettlementReceipt({ isLiquidation, stockName, side, lev, entry, exit, margin, pnl, finalCash, note }) {
-        const titleEl = document.getElementById('receipt-title');
-        const bodyEl = document.getElementById('receipt-body');
-        const roi = margin > 0 ? ((pnl / margin) * 100).toFixed(2) : "0.00";
-        const pnlColor = pnl >= 0 ? "#ff4d4f" : "#00e676";
-        const pnlSign = pnl >= 0 ? "+" : "";
-
-        if (isLiquidation) {
-            titleEl.innerText = "💥 強制平倉（斷頭）結算單";
-            titleEl.style.color = "#ff4d4f";
-        } else {
-            titleEl.innerText = pnl >= 0 ? "🎉 獲利平倉結算明細" : "🧾 停損平倉結算明細";
-            titleEl.style.color = pnl >= 0 ? "#ffd700" : "#58a6ff";
-        }
-
-        bodyEl.innerHTML = `
-            <div class="receipt-row"><span>交易標的</span><span>${stockName}</span></div>
-            <div class="receipt-row"><span>方向與槓桿</span><span>${side === 'LONG' ? '🔴 做多' : '🟢 放空'} ${lev}x</span></div>
-            <div class="receipt-row"><span>投入保證金</span><span>$${margin.toLocaleString()}</span></div>
-            <div class="receipt-row"><span>進場均價</span><span>${entry.toFixed(2)}</span></div>
-            <div class="receipt-row"><span>結算成交價</span><span>${exit.toFixed(2)}</span></div>
-            <div class="receipt-row" style="border-top: 1px solid #30363d; margin-top: 6px; padding-top: 8px;">
-                <span>已實現損益</span>
-                <span style="color: ${pnlColor}; font-size: 16px;">${pnlSign}$${Math.round(pnl).toLocaleString()} (${pnlSign}${roi}%)</span>
-            </div>
-            <div class="receipt-row"><span>結算後可用現金</span><span style="color: #ffd700;">$${finalCash.toLocaleString()}</span></div>
-            ${note ? `<div style="margin-top: 8px; font-size: 12px; color: #fbbf24; background: rgba(245,158,11,0.12); padding: 6px 8px; border-radius: 6px;">${note}</div>` : ''}
-        `;
-        document.getElementById('receipt-overlay').style.display = 'flex';
+const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+async function loadLeaderboard(){
+  const tb=$('lb-body');
+  try{
+    const r=await fetch(`${SB_URL}/rest/v1/leaderboard?select=*&net_worth=gt.10000&order=net_worth.desc&limit=50`,{headers:{apikey:SB_KEY}});
+    if(!r.ok)throw new Error('讀取失敗');
+    const map=new Map();(await r.json()||[]).forEach(row=>{const k=String(row.player_name||'').trim().toLowerCase();if(k&&!map.has(k))map.set(k,row);});
+    const data=Array.from(map.values()).slice(0,10);
+    if(!data.length){tb.innerHTML=`<tr><td colspan="5" style="text-align:center;color:#8b949e;padding:14px">尚無獲利玩家上榜，快搶頭香！</td></tr>`;return;}
+    tb.innerHTML=data.map((row,i)=>{
+      const nw=+row.net_worth,bg=getRankBadge(nw),roi=+row.return_rate,d=new Date(row.created_at);
+      return `<tr><td><strong>${['🥇 1','🥈 2','🥉 3'][i]||`#${i+1}`}</strong></td><td style="font-family:'Noto Sans TC',sans-serif;font-weight:700">${esc(row.player_name)}<span class="rank-badge ${bg.cls}">${bg.label}</span></td><td style="text-align:right;color:#ffd700;font-weight:700">$${nw.toLocaleString()}</td><td style="text-align:right;color:${roi>=0?'#ff4d4f':'#00e676'}">${roi>=0?'+':''}${roi.toFixed(1)}%</td><td class="hide-mobile" style="text-align:right;color:#8b949e;font-size:12px">${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}</td></tr>`;
+    }).join('');
+  }catch(e){tb.innerHTML=`<tr><td colspan="5" style="text-align:center;color:#ff4d4f;padding:14px">⚠️ 連線失敗：${e.message}</td></tr>`;}
+}
+async function submitScore(){
+  const now=Date.now();
+  if(now-lastSub<15000)return alert(`請等待 ${Math.ceil((15000-(now-lastSub))/1000)} 秒後再上傳！`);
+  const inp=$('player-name'),name=inp.value.replace(/\s+/g,' ').trim();
+  if(!name){inp.focus();return alert("請先輸入暱稱！");}
+  const lkName=localStorage.getItem('stock_game_locked_name'),lkTime=+localStorage.getItem('stock_game_locked_time')||0;
+  if(name!=='7676'&&lkName&&lkName!==name&&now-lkTime<6e5){
+    const rem=6e5-(now-lkTime);inp.value=lkName;
+    return alert(`⏳ 每 10 分鐘只能改名一次！\n鎖定暱稱：「${lkName}」，請等待 ${Math.floor(rem/6e4)} 分 ${Math.ceil((rem%6e4)/1e3)} 秒。`);
+  }
+  const nw=getNetWorth();
+  if(nw<=INIT_CAP)return alert("總淨值必須超過 $10,000 才能上榜！");
+  if(nw>999999999)return alert("數值異常！");
+  const roi=+(((nw-INIT_CAP)/INIT_CAP)*100).toFixed(2),btn=$('btn-submit-score');
+  btn.disabled=true;btn.innerText="上傳中...";
+  try{
+    const chk=await(await fetch(`${SB_URL}/rest/v1/leaderboard?select=*&player_name=eq.${encodeURIComponent(name)}&order=net_worth.desc&limit=1`,{headers:{apikey:SB_KEY}})).json();
+    const hdr={'apikey':SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'};
+    if(chk&&chk.length){
+      if(nw<=+chk[0].net_worth)return alert(`「${name}」最高紀錄為 $${(+chk[0].net_worth).toLocaleString()}，未破紀錄不覆蓋！`);
+      const p=await fetch(`${SB_URL}/rest/v1/leaderboard?id=eq.${chk[0].id}`,{method:'PATCH',headers:hdr,body:JSON.stringify({net_worth:nw,return_rate:roi,created_at:new Date().toISOString()})});
+      if(!p.ok)await fetch(`${SB_URL}/rest/v1/leaderboard`,{method:'POST',headers:hdr,body:JSON.stringify({player_name:name,net_worth:nw,return_rate:roi})});
+    }else{
+      const p=await fetch(`${SB_URL}/rest/v1/leaderboard`,{method:'POST',headers:hdr,body:JSON.stringify({player_name:name,net_worth:nw,return_rate:roi})});
+      if(!p.ok)throw new Error('寫入失敗');
     }
-
-    function closeReceipt() {
-        document.getElementById('receipt-overlay').style.display = 'none';
-    }
-
-    const stocks = {
-        "0050": { code: "0050", seed: 101, name: "元大台灣50", desc: "穩健大盤指數", base: 195.00, price: 195.00, vol: 1.1, history: [], markers: [] },
-        "2330": { code: "2330", seed: 202, name: "台積電", desc: "護國神山權值王", base: 1050.00, price: 1050.00, vol: 1.7, history: [], markers: [] },
-        "2454": { code: "2454", seed: 303, name: "聯發科", desc: "AI 晶片旗艦", base: 1320.00, price: 1320.00, vol: 2.3, history: [], markers: [] },
-        "2317": { code: "2317", seed: 404, name: "鴻海", desc: "AI 伺服器龍頭", base: 215.00, price: 215.00, vol: 1.9, history: [], markers: [] },
-        "3481": { code: "3481", seed: 505, name: "群創", desc: "面板主力飆股", base: 16.50, price: 16.50, vol: 3.4, history: [], markers: [] }
-    };
-
-    const newsEvents = [
-        { text: "🔥 利多：AI 伺服器與晶片訂單爆滿，外資大舉買超！", bias: 0.55, mode: "normal" },
-        { text: "🚀 利多：法人調升目標價，主力大單連續敲進！", bias: 0.65, mode: "normal" },
-        { text: "❄️ 利空：美股科技股重挫，外資提款賣超！", bias: -0.55, mode: "normal" },
-        { text: "💥 利空：供應鏈傳砍單雜音，停損賣壓湧現！", bias: -0.65, mode: "normal" },
-        { text: "⚖️ 盤整：市場觀望總經數據，多空狹幅震盪。", bias: 0.0, mode: "normal" }
-    ];
-
-    function syncRand(tick, salt) {
-        let x = Math.sin(tick * 12.9898 + salt * 78.233) * 43758.5453;
-        return x - Math.floor(x);
-    }
-
-    function getGlobalMarketState(tick) {
-        const cycle = tick % 100;
-        if (cycle >= 88 && cycle <= 93) {
-            return { text: "🚨【突發黑天鵝】系統性流動性危機！全市場恐慌閃崩！", bias: -1.65, mode: "blackswan" };
-        }
-        if (cycle >= 44 && cycle <= 49) {
-            return { text: "⚡【聯準會緊急降息 4 碼】史詩級資金狂潮！全市場暴力噴出！", bias: 1.65, mode: "superbull" };
-        }
-        const block = Math.floor(tick / 10);
-        return newsEvents[Math.floor(syncRand(block, 999) * newsEvents.length)];
-    }
-
-    function computePriceAtTick(st, tick) {
-        const epochStart = Math.floor(tick / 360) * 360;
-        let p = st.base;
-        for (let t = epochStart; t <= tick; t++) {
-            const ev = getGlobalMarketState(t);
-            const r = syncRand(t, st.seed);
-            const move = ((r - 0.5 + ev.bias * 0.35) * st.vol) / 100;
-            p = Math.max(2, p * (1 + move));
-        }
-        return p;
-    }
-
-    // 每日重置日期計算（台灣時間 UTC+8）
-    function getTaipeiDateStr() {
-        const now = new Date();
-        const utc8 = new Date(now.getTime() + 8 * 3600 * 1000);
-        return utc8.toISOString().slice(0, 10);
-    }
-
-    function updateDailyResetCountdown() {
-        const now = new Date();
-        const utc8Ms = now.getTime() + 8 * 3600 * 1000;
-        const msInDay = 24 * 3600 * 1000;
-        const remainMs = msInDay - (utc8Ms % msInDay);
-        const h = String(Math.floor(remainMs / 3600000)).padStart(2, '0');
-        const m = String(Math.floor((remainMs % 3600000) / 60000)).padStart(2, '0');
-        const s = String(Math.floor((remainMs % 60000) / 1000)).padStart(2, '0');
-        document.getElementById('daily-reset-timer').innerText = `⏳ 每日重置：${h}:${m}:${s}`;
-    }
-
-    const INITIAL_CAPITAL = 10000;
-    const SAVED_STATE_KEY = 'stock_game_save_v2';
-    const todayStr = getTaipeiDateStr();
-
-    let savedState = null;
-    try {
-        savedState = JSON.parse(localStorage.getItem(SAVED_STATE_KEY) || 'null');
-    } catch (e) {}
-
-    let isDailyResetTriggered = false;
-    let cash = INITIAL_CAPITAL;
-    let items = [];
-
-    if (savedState && savedState.date === todayStr) {
-        if (typeof savedState.cash === 'number' && savedState.cash >= 0) cash = savedState.cash;
-        if (Array.isArray(savedState.items)) items = savedState.items;
-    } else if (savedState && savedState.date && savedState.date !== todayStr) {
-        // 跨日自動重置新局，並贈送一張免費內線消息卡當每日登入獎勵
-        cash = INITIAL_CAPITAL;
-        items = [{ name: "🔮 每日簽到內線卡", type: "INSIDER" }];
-        isDailyResetTriggered = true;
-    }
-
-    let currentStockKey = "0050";
-    let leverage = 1;
-    let position = null;
-    let entryPrice = 0;
-    let investedCash = 0;
-    let shieldActive = false;
-
-    let aiActive = false;
-    let aiPaused = false;
-    let aiSecondsLeft = 0;
-    let aiCountdownInterval = null;
-    let aiStartEquity = 0;
-
-    let lastProcessedTick = -1;
-    let vipDrift = 0;
-    let lastRankLabel = getRankBadge(cash).label;
-
-    const savedName = localStorage.getItem('stock_game_player_name');
-    if (savedName) {
-        document.getElementById('player-name').value = savedName;
-    }
-
-    function isVipPlayer() {
-        return document.getElementById('player-name').value.trim() === '7676';
-    }
-
-    function getTotalNetWorth() {
-        if (!position) return Math.round(cash);
-        return Math.max(0, Math.round(cash + investedCash + calcPnL()));
-    }
-
-    function saveGameState() {
-        try {
-            const currentEquity = getTotalNetWorth();
-            localStorage.setItem(SAVED_STATE_KEY, JSON.stringify({
-                date: getTaipeiDateStr(),
-                cash: currentEquity,
-                items: items
-            }));
-        } catch (e) {}
-    }
-
-    function logAI(msg) {
-        const box = document.getElementById('ai-log');
-        const line = document.createElement('div');
-        line.innerText = `> ${msg}`;
-        box.prepend(line);
-        if (box.children.length > 25) box.removeChild(box.lastChild);
-    }
-
-    if (isDailyResetTriggered) {
-        logAI("🌅 [每日重置] 台灣時間 00:00 新賽季開始！資金已重置為 $10,000，並贈送【🔮 每日簽到內線卡】！");
-        saveGameState();
-    }
-
-    function addChartMarker(st, label, color) {
-        if (st.history.length === 0) return;
-        st.markers.push({
-            idx: st.history.length - 1,
-            price: st.price,
-            label: label,
-            color: color
-        });
-    }
-
-    // 計算強制平倉價
-    function getLiquidationPrice() {
-        if (!position || entryPrice <= 0) return 0;
-        const moveRatio = 1 / leverage;
-        if (position === 'LONG') {
-            return Math.max(0.01, entryPrice * (1 - moveRatio));
-        } else {
-            return entryPrice * (1 + moveRatio);
-        }
-    }
-
-    function renderStockTabs() {
-        const container = document.getElementById('stock-tabs');
-        container.innerHTML = Object.keys(stocks).map(k => {
-            const s = stocks[k];
-            const activeClass = k === currentStockKey ? 'active' : '';
-            return `<button class="stock-tab ${activeClass}" onclick="selectStock('${k}')">${s.code} ${s.name}</button>`;
-        }).join('');
-    }
-
-    function selectStock(key) {
-        if (position) {
-            alert("目前有持倉部位，請先平倉後再切換股票！");
-            return;
-        }
-        currentStockKey = key;
-        vipDrift = 0;
-        const s = stocks[key];
-        document.getElementById('stock-header').innerText = `${s.code} ${s.name}`;
-        document.getElementById('stock-desc').innerText = s.desc;
-        renderStockTabs();
-        drawChart();
-        updateUI();
-    }
-
-    function setLev(val, btn) {
-        if (position || aiActive) {
-            alert("持倉中或 AI 代操期間無法手動切換槓桿！");
-            return;
-        }
-        leverage = val;
-        document.querySelectorAll('.lev-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-    }
-
-    function openPosition(type, isByAI = false) {
-        if (cash < 100) {
-            if (!isByAI) alert("本金不足！系統發放 $3,000 救濟金！");
-            cash = 3000;
-        }
-        const st = stocks[currentStockKey];
-        position = type;
-        entryPrice = st.price;
-        investedCash = cash;
-        cash = 0;
-
-        const liqP = getLiquidationPrice();
-        addChartMarker(st, type === 'LONG' ? 'B' : 'S', type === 'LONG' ? '#ff4d4f' : '#00e676');
-        if (!isByAI) {
-            playSound('OPEN');
-            logAI(`[手動開倉] ${st.code} ${type === 'LONG' ? '做多' : '放空'} ${leverage}x | 進場價 ${entryPrice.toFixed(2)} | 強平預警線 ${liqP.toFixed(2)}`);
-        }
-
-        syncActionButtons();
-        drawChart();
-        updateUI();
-        saveGameState();
-    }
-
-    function closePosition(isByAI = false) {
-        if (!position) return;
-        const st = stocks[currentStockKey];
-        const pnl = calcPnL();
-        const prevSide = position;
-        const prevLev = leverage;
-        const prevEntry = entryPrice;
-        const prevMargin = investedCash;
-        const exitP = st.price;
-
-        cash = Math.max(0, Math.round(investedCash + pnl));
-        position = null;
-        entryPrice = 0;
-        investedCash = 0;
-        shieldActive = false;
-
-        addChartMarker(st, '平', '#f59e0b');
-        if (!isByAI) {
-            playSound(pnl >= 0 ? 'WIN' : 'LOSS');
-            showSettlementReceipt({
-                isLiquidation: false,
-                stockName: `${st.code} ${st.name}`,
-                side: prevSide,
-                lev: prevLev,
-                entry: prevEntry,
-                exit: exitP,
-                margin: prevMargin,
-                pnl: pnl,
-                finalCash: cash,
-                note: ""
-            });
-        }
-
-        syncActionButtons();
-        drawChart();
-        updateUI();
-        saveGameState();
-    }
-
-    function syncActionButtons() {
-        document.getElementById('btn-long').disabled = !!position || aiActive;
-        document.getElementById('btn-short').disabled = !!position || aiActive;
-        document.getElementById('btn-close').disabled = !position || aiActive;
-        document.getElementById('btn-ai').disabled = aiActive;
-    }
-
-    function startAI() {
-        if (aiActive || position) {
-            alert("請先平倉目前部位再啟動 AI 代操！");
-            return;
-        }
-        if (cash < 100) cash = 3000;
-
-        aiActive = true;
-        aiPaused = false;
-        aiSecondsLeft = 30;
-        aiStartEquity = cash;
-
-        document.getElementById('ai-banner').style.display = 'flex';
-        document.getElementById('ai-state-label').innerText = "接管中";
-        document.getElementById('btn-ai-pause').innerText = "⏸️ 暫停觀察";
-        document.getElementById('ai-timer').innerText = aiSecondsLeft;
-        syncActionButtons();
-        playSound('OPEN');
-
-        logAI(`[AI 啟動] 量化策略接管帳戶！本金 $${aiStartEquity.toLocaleString()}（可隨時按「暫停觀察」查看 Log）`);
-
-        aiCountdownInterval = setInterval(() => {
-            if (aiPaused) return;
-            aiSecondsLeft--;
-            document.getElementById('ai-timer').innerText = aiSecondsLeft;
-            if (aiSecondsLeft <= 0) {
-                stopAI(false);
-            }
-        }, 1000);
-    }
-
-    function togglePauseAI() {
-        if (!aiActive) return;
-        aiPaused = !aiPaused;
-        const btn = document.getElementById('btn-ai-pause');
-        const label = document.getElementById('ai-state-label');
-        if (aiPaused) {
-            btn.innerText = "▶️ 繼續代操";
-            btn.style.background = "#059669";
-            label.innerText = "已暫停";
-            logAI(`[AI 暫停] 倒數凍結，已停止自動進出單，可安心檢視目前倉位與日誌。`);
-        } else {
-            btn.innerText = "⏸️ 暫停觀察";
-            btn.style.background = "#d97706";
-            label.innerText = "接管中";
-            logAI(`[AI 恢復] 繼續執行量化自動交易！`);
-        }
-    }
-
-    function stopAI(manual) {
-        if (!aiActive) return;
-        clearInterval(aiCountdownInterval);
-        if (position) closePosition(true);
-
-        aiActive = false;
-        aiPaused = false;
-        document.getElementById('ai-banner').style.display = 'none';
-        syncActionButtons();
-
-        const profit = cash - aiStartEquity;
-        const sign = profit >= 0 ? "+" : "";
-        playSound(profit >= 0 ? 'WIN' : 'LOSS');
-        saveGameState();
-        logAI(`[AI 結算] ${manual ? "手動中止" : "30秒期滿"}！結算資金 $${cash.toLocaleString()} (${sign}$${profit.toLocaleString()})`);
-    }
-
-    function runAIStrategy(globalBias) {
-        if (aiPaused) return;
-        const s = stocks[currentStockKey];
-        const h = s.history;
-        const n = h.length;
-        if (n < 6) return;
-
-        const shortMA = (h[n-1] + h[n-2] + h[n-3]) / 3;
-        const longMA = (h[n-4] + h[n-5] + h[n-6]) / 3;
-        const momentum = (shortMA - longMA) / longMA;
-        const vip = isVipPlayer();
-        const signal = vip ? (momentum * 140 + globalBias * 1.3) : (momentum * 100 + globalBias * 0.8);
-
-        if (!position) {
-            const entryThreshold = vip ? 0.15 : 0.25;
-            if (signal > entryThreshold) {
-                leverage = vip ? (signal > 0.35 ? 20 : 5) : (signal > 0.6 ? 5 : 1);
-                updateLevButtonsUI();
-                openPosition('LONG', true);
-                logAI(`[AI 做多] 動能訊號 +${signal.toFixed(2)} ＞ 門檻 | ${s.code} ${leverage}x @ ${s.price.toFixed(2)}`);
-            } else if (signal < -entryThreshold) {
-                leverage = vip ? (signal < -0.35 ? 20 : 5) : (signal < -0.6 ? 5 : 1);
-                updateLevButtonsUI();
-                openPosition('SHORT', true);
-                logAI(`[AI 放空] 動能訊號 ${signal.toFixed(2)} ＜ 門檻 | ${s.code} ${leverage}x @ ${s.price.toFixed(2)}`);
-            }
-        } else {
-            const pnl = calcPnL();
-            const roi = pnl / investedCash;
-            const takeProfit = vip ? 0.14 : 0.08;
-            const stopLoss = vip ? -0.025 : -0.06;
-
-            if (roi >= takeProfit) {
-                closePosition(true);
-                logAI(`[AI 停利] 達標 +${(roi*100).toFixed(1)}% 獲利落袋 +$${Math.round(pnl).toLocaleString()}`);
-            } else if (roi <= stopLoss) {
-                closePosition(true);
-                logAI(`[AI 停損] 觸及風控線 ${(roi*100).toFixed(1)}% 砍單 -$${Math.abs(Math.round(pnl)).toLocaleString()}`);
-            } else if ((position === 'LONG' && signal < -0.2) || (position === 'SHORT' && signal > 0.2)) {
-                closePosition(true);
-                logAI(`[AI 轉向] 均線交叉反轉平倉，結算 $${Math.round(pnl).toLocaleString()}`);
-            }
-        }
-    }
-
-    function updateLevButtonsUI() {
-        document.querySelectorAll('.lev-btn').forEach(b => {
-            b.classList.toggle('active', b.innerText.startsWith(leverage + 'x'));
-        });
-    }
-
-    function calcPnL() {
-        if (!position) return 0;
-        const currPrice = stocks[currentStockKey].price;
-        const pctChange = (currPrice - entryPrice) / entryPrice;
-        const direction = position === 'LONG' ? 1 : -1;
-        return investedCash * pctChange * leverage * direction;
-    }
-
-    function drawBox() {
-        if (cash < 2000) {
-            alert("可用現金不足 $2,000，無法開啟盲盒！");
-            return;
-        }
-        cash -= 2000;
-        playSound('GACHA');
-        const r = isVipPlayer() ? (Math.random() * 0.55 + 0.45) : Math.random();
-        if (r < 0.35) {
-            items.push({ name: "🔮 內線消息卡", type: "INSIDER" });
-            alert("抽中【🔮 內線消息卡】！可預知下一波全球大盤新聞。");
-        } else if (r < 0.70) {
-            items.push({ name: "🛡️ 防爆倉護身符", type: "SHIELD" });
-            alert("抽中【🛡️ 防爆倉護身符】！強平時可保住 80% 保證金。");
-        } else {
-            cash += 5000;
-            playSound('WIN');
-            alert("🎉 頭獎！抽中【💰 大戶空投支票】，現金直接 +$5,000！");
-        }
-        renderItems();
-        updateUI();
-        saveGameState();
-    }
-
-    function useItem(idx) {
-        const item = items.splice(idx, 1)[0];
-        playSound('OPEN');
-        if (item.type === "INSIDER") {
-            const nextEv = getGlobalMarketState(lastProcessedTick + 10);
-            document.getElementById('insider-hint').innerText = `🤫 內線預知：${nextEv.text.slice(0, 14)}...`;
-            setTimeout(() => document.getElementById('insider-hint').innerText = "", 7500);
-        } else if (item.type === "SHIELD") {
-            shieldActive = true;
-            alert("🛡️ 防爆倉護身符已啟動！下一次觸及強制平倉價時將自動護盤。");
-        }
-        renderItems();
-        saveGameState();
-    }
-
-    function renderItems() {
-        const list = document.getElementById('items-list');
-        if (items.length === 0) {
-            list.innerHTML = `<span style="font-size: 12px; color: #6e7681;">(尚無道具)</span>`;
-            return;
-        }
-        list.innerHTML = items.map((it, i) =>
-            `<span class="item-tag" onclick="useItem(${i})">${it.name}</span>`
-        ).join('');
-    }
-
-    function updateUI() {
-        const s = stocks[currentStockKey];
-        const prev = s.history[s.history.length - 2] || s.price;
-        const pct = ((s.price - prev) / prev) * 100;
-
-        const priceEl = document.getElementById('price-val');
-        const pctEl = document.getElementById('pct-val');
-        priceEl.innerText = s.price.toFixed(2);
-        pctEl.innerText = `(${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%)`;
-        priceEl.className = `price-display ${pct >= 0 ? 'up' : 'down'}`;
-        pctEl.className = pct >= 0 ? 'up' : 'down';
-
-        const nw = getTotalNetWorth();
-        document.getElementById('cash-val').innerText = `$${cash.toLocaleString()}`;
-        document.getElementById('networth-preview').innerText = `目前總淨值：$${nw.toLocaleString()}（每日 00:00 重置新局）`;
-
-        const badgeInfo = getRankBadge(nw);
-        const badgeEl = document.getElementById('player-rank-badge');
-        badgeEl.innerText = badgeInfo.label;
-        badgeEl.className = `rank-badge ${badgeInfo.cls}`;
-        if (badgeInfo.label !== lastRankLabel) {
-            if (nw > INITIAL_CAPITAL) {
-                logAI(`[段位晉升] 恭喜突破資產門檻，晉升為【${badgeInfo.label}】！`);
-            }
-            lastRankLabel = badgeInfo.label;
-        }
-
-        const liqBox = document.getElementById('liq-warning-box');
-
-        if (position) {
-            const prefix = aiActive ? "🤖 " : "";
-            document.getElementById('pos-val').innerText = `${prefix}${position === 'LONG' ? '做多' : '放空'} ${leverage}x ${shieldActive ? '🛡️' : ''}`;
-            document.getElementById('pos-val').style.color = position === 'LONG' ? '#ff4d4f' : '#00e676';
-            document.getElementById('entry-val').innerText = entryPrice.toFixed(2);
-
-            const pnl = Math.round(calcPnL());
-            const pnlEl = document.getElementById('pnl-val');
-            pnlEl.innerText = `${pnl >= 0 ? '+' : ''}$${pnl.toLocaleString()}`;
-            pnlEl.style.color = pnl >= 0 ? '#ff4d4f' : '#00e676';
-
-            // 更新爆倉預警條與強制平倉價
-            const liqPrice = getLiquidationPrice();
-            const remainingRatio = Math.max(0, Math.min(100, ((investedCash + pnl) / investedCash) * 100));
-            const distPct = Math.abs((s.price - liqPrice) / s.price) * 100;
-
-            liqBox.style.display = 'block';
-            document.getElementById('liq-price-text').innerText = `⚠️ 強平價：${liqPrice.toFixed(2)}（距爆倉 ${distPct.toFixed(2)}%）`;
-
-            const bufText = document.getElementById('liq-buffer-text');
-            const barFill = document.getElementById('liq-bar-fill');
-            barFill.style.width = `${remainingRatio}%`;
-
-            if (remainingRatio <= 30) {
-                bufText.innerText = `🚨 高危預警：保證金僅剩 ${remainingRatio.toFixed(0)}%`;
-                bufText.style.color = "#ff4d4f";
-                barFill.style.background = "#ff4d4f";
-                barFill.classList.add('liq-danger-blink');
-            } else if (remainingRatio <= 65) {
-                bufText.innerText = `⚡ 注意波動：保證金剩餘 ${remainingRatio.toFixed(0)}%`;
-                bufText.style.color = "#fbbf24";
-                barFill.style.background = "#fbbf24";
-                barFill.classList.remove('liq-danger-blink');
-            } else {
-                bufText.innerText = `🛡️ 狀態安全：保證金健康度 ${remainingRatio.toFixed(0)}%`;
-                bufText.style.color = "#34d399";
-                barFill.style.background = "#00e676";
-                barFill.classList.remove('liq-danger-blink');
-            }
-
-            // 檢查是否觸及強制平倉
-            if (investedCash + pnl <= 0) {
-                if (isVipPlayer()) {
-                    entryPrice = s.price * (position === 'LONG' ? 0.992 : 1.008);
-                } else {
-                    const prevSide = position;
-                    const prevLev = leverage;
-                    const prevEntry = entryPrice;
-                    const prevMargin = investedCash;
-                    const hadShield = shieldActive;
-
-                    if (hadShield) {
-                        cash = Math.round(investedCash * 0.8);
-                    } else {
-                        cash = 0;
-                    }
-                    position = null;
-                    entryPrice = 0;
-                    investedCash = 0;
-                    shieldActive = false;
-                    liqBox.style.display = 'none';
-                    syncActionButtons();
-                    saveGameState();
-
-                    if (hadShield) {
-                        playSound('OPEN');
-                        logAI(`[護身符發動] 觸及強平線，成功保住 80% 保證金 ($${cash.toLocaleString()})！`);
-                        if (!aiActive) {
-                            showSettlementReceipt({
-                                isLiquidation: true,
-                                stockName: `${s.code} ${s.name}`,
-                                side: prevSide,
-                                lev: prevLev,
-                                entry: prevEntry,
-                                exit: s.price,
-                                margin: prevMargin,
-                                pnl: -(prevMargin - cash),
-                                finalCash: cash,
-                                note: "🛡️ 已觸發【防爆倉護身符】，成功救回 80% 本金！"
-                            });
-                        }
-                    } else {
-                        triggerCrashShake();
-                        logAI(`[強制平倉] ${s.code} ${prevLev}x 槓桿觸及強平價，保證金 $${prevMargin.toLocaleString()} 已全額清算。`);
-                        if (!aiActive) {
-                            showSettlementReceipt({
-                                isLiquidation: true,
-                                stockName: `${s.code} ${s.name}`,
-                                side: prevSide,
-                                lev: prevLev,
-                                entry: prevEntry,
-                                exit: s.price,
-                                margin: prevMargin,
-                                pnl: -prevMargin,
-                                finalCash: 0,
-                                note: `💡 原因：${prevLev}x 槓桿下，價格反向波動超過 ${(100/prevLev).toFixed(1)}% 觸發強制平倉線。`
-                            });
-                        }
-                    }
-                }
-            }
-        } else {
-            liqBox.style.display = 'none';
-            document.getElementById('pos-val').innerText = aiActive ? (aiPaused ? "⏸️ AI 暫停中" : "🤖 AI 觀察中") : "空手觀望";
-            document.getElementById('pos-val').style.color = "#8b949e";
-            document.getElementById('entry-val').innerText = "-";
-            document.getElementById('pnl-val').innerText = "$0";
-            document.getElementById('pnl-val').style.color = "#e6edf3";
-        }
-    }
-
-    function drawChart() {
-        const st = stocks[currentStockKey];
-        const h = st.history;
-        const w = canvas.width;
-        const ch = canvas.height;
-        if (h.length < 2) return;
-        ctx.clearRect(0, 0, w, ch);
-
-        let minP = Math.min(...h);
-        let maxP = Math.max(...h);
-        if (position && entryPrice > 0) {
-            minP = Math.min(minP, entryPrice);
-            maxP = Math.max(maxP, entryPrice);
-        }
-        minP *= 0.996;
-        maxP *= 1.004;
-        const range = maxP - minP || 1;
-        const getY = val => ch - ((val - minP) / range) * (ch - 36) - 18;
-
-        ctx.strokeStyle = "#161b22";
-        ctx.lineWidth = 1;
-        for (let i = 1; i < 4; i++) {
-            const y = (ch / 4) * i;
-            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
-        }
-
-        // 繪製進場成本虛線 + 強平價虛線（若強平價在可視範圍內）
-        if (position && entryPrice > 0) {
-            const ey = getY(entryPrice);
-            ctx.save();
-            ctx.setLineDash([6, 4]);
-            ctx.strokeStyle = position === 'LONG' ? "rgba(255, 77, 79, 0.85)" : "rgba(0, 230, 118, 0.85)";
-            ctx.lineWidth = 1.5;
-            ctx.beginPath(); ctx.moveTo(0, ey); ctx.lineTo(w, ey); ctx.stroke();
-            ctx.restore();
-
-            ctx.fillStyle = position === 'LONG' ? "#ff4d4f" : "#00e676";
-            ctx.font = "bold 12px JetBrains Mono, monospace";
-            ctx.fillText(`進場成本 ${entryPrice.toFixed(2)}`, 8, Math.max(15, ey - 5));
-
-            const liqP = getLiquidationPrice();
-            if (liqP >= minP && liqP <= maxP) {
-                const ly = getY(liqP);
-                ctx.save();
-                ctx.setLineDash([3, 3]);
-                ctx.strokeStyle = "#fbbf24";
-                ctx.lineWidth = 1.5;
-                ctx.beginPath(); ctx.moveTo(0, ly); ctx.lineTo(w, ly); ctx.stroke();
-                ctx.restore();
-
-                ctx.fillStyle = "#fbbf24";
-                ctx.fillText(`⚠️ 強平線 ${liqP.toFixed(2)}`, 8, Math.min(ch - 6, ly + 13));
-            }
-        }
-
-        const isUp = h[h.length - 1] >= h[h.length - 2];
-        const lineColor = isUp ? "#ff4d4f" : "#00e676";
-
-        ctx.beginPath();
-        ctx.strokeStyle = lineColor;
-        ctx.lineWidth = 3;
-        h.forEach((val, idx) => {
-            const x = (idx / (h.length - 1)) * w;
-            const y = getY(val);
-            if (idx === 0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
-        });
-        ctx.stroke();
-
-        ctx.lineTo(w, ch);
-        ctx.lineTo(0, ch);
-        ctx.closePath();
-        const grad = ctx.createLinearGradient(0, 0, 0, ch);
-        grad.addColorStop(0, isUp ? "rgba(255, 77, 79, 0.28)" : "rgba(0, 230, 118, 0.28)");
-        grad.addColorStop(1, "rgba(13, 17, 23, 0)");
-        ctx.fillStyle = grad;
-        ctx.fill();
-
-        st.markers.forEach(m => {
-            if (m.idx < 0 || m.idx >= h.length) return;
-            const mx = (m.idx / (h.length - 1)) * w;
-            const my = getY(m.price);
-
-            ctx.beginPath();
-            ctx.arc(mx, my, 9, 0, Math.PI * 2);
-            ctx.fillStyle = m.color;
-            ctx.fill();
-            ctx.lineWidth = 1.5;
-            ctx.strokeStyle = "#0d1117";
-            ctx.stroke();
-
-            ctx.fillStyle = "#ffffff";
-            ctx.font = "bold 10px Noto Sans TC, sans-serif";
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillText(m.label, mx, my);
-            ctx.textAlign = "start";
-            ctx.textBaseline = "alphabetic";
-        });
-    }
-
-    let lastSubmitTime = 0;
-
-    async function loadLeaderboard() {
-        const tbody = document.getElementById('lb-body');
-        try {
-            const res = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard?select=*&net_worth=gt.10000&order=net_worth.desc&limit=50`, {
-                headers: { 'apikey': SUPABASE_KEY }
-            });
-            if (!res.ok) throw new Error('讀取排行榜失敗');
-            const rawData = await res.json();
-
-            const uniqueMap = new Map();
-            (rawData || []).forEach(row => {
-                const key = String(row.player_name || '').trim().toLowerCase();
-                if (key && !uniqueMap.has(key)) {
-                    uniqueMap.set(key, row);
-                }
-            });
-            const data = Array.from(uniqueMap.values()).slice(0, 10);
-
-            if (data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #8b949e; padding: 16px;">目前尚無獲利玩家上榜，快成為第一位股神！</td></tr>`;
-                return;
-            }
-
-            tbody.innerHTML = data.map((row, idx) => {
-                let rankDisplay = `#${idx + 1}`;
-                if (idx === 0) rankDisplay = `🥇 1`;
-                else if (idx === 1) rankDisplay = `🥈 2`;
-                else if (idx === 2) rankDisplay = `🥉 3`;
-
-                const nw = Number(row.net_worth);
-                const badge = getRankBadge(nw);
-                const roi = Number(row.return_rate);
-                const roiColor = roi >= 0 ? '#ff4d4f' : '#00e676';
-                const roiSign = roi >= 0 ? '+' : '';
-                const dateObj = new Date(row.created_at);
-                const timeStr = `${dateObj.getMonth()+1}/${dateObj.getDate()} ${String(dateObj.getHours()).padStart(2,'0')}:${String(dateObj.getMinutes()).padStart(2,'0')}`;
-
-                return `
-                    <tr>
-                        <td><strong>${rankDisplay}</strong></td>
-                        <td style="font-family: 'Noto Sans TC', sans-serif; font-weight: bold;">
-                            ${escapeHtml(row.player_name)}
-                            <span class="rank-badge ${badge.cls}">${badge.label}</span>
-                        </td>
-                        <td style="text-align: right; color: #ffd700; font-weight: bold;">$${nw.toLocaleString()}</td>
-                        <td style="text-align: right; color: ${roiColor};">${roiSign}${roi.toFixed(1)}%</td>
-                        <td class="hide-mobile" style="text-align: right; color: #8b949e; font-size: 12px;">${timeStr}</td>
-                    </tr>
-                `;
-            }).join('');
-        } catch (err) {
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #ff4d4f; padding: 16px;">⚠️ 連線失敗：${err.message}</td></tr>`;
-        }
-    }
-
-    async function submitScore() {
-        const now = Date.now();
-        if (now - lastSubmitTime < 15000) {
-            const waitSec = Math.ceil((15000 - (now - lastSubmitTime)) / 1000);
-            alert(`操作太頻繁，請等待 ${waitSec} 秒後再上傳戰績！`);
-            return;
-        }
-
-        const nameInput = document.getElementById('player-name');
-        const playerName = nameInput.value.replace(/\s+/g, ' ').trim();
-        if (!playerName || playerName.length < 1) {
-            alert("請先輸入您的操盤手暱稱再上傳戰績！");
-            nameInput.focus();
-            return;
-        }
-
-        const lockedName = localStorage.getItem('stock_game_locked_name');
-        const lockedTime = Number(localStorage.getItem('stock_game_locked_time') || 0);
-        const RENAME_COOLDOWN = 10 * 60 * 1000;
-
-        if (playerName !== '7676' && lockedName && lockedName !== playerName && (now - lockedTime < RENAME_COOLDOWN)) {
-            const remainMs = RENAME_COOLDOWN - (now - lockedTime);
-            const remainMin = Math.floor(remainMs / 60000);
-            const remainSec = Math.ceil((remainMs % 60000) / 1000);
-            alert(`⏳ 每 10 分鐘只能更改一次暱稱！\n目前鎖定暱稱：「${lockedName}」\n請等待 ${remainMin} 分 ${remainSec} 秒後再改名，或繼續使用「${lockedName}」更新戰績。`);
-            nameInput.value = lockedName;
-            return;
-        }
-
-        const currentNetWorth = getTotalNetWorth();
-        if (currentNetWorth <= INITIAL_CAPITAL) {
-            alert("總淨值必須超過初始本金 $10,000 才能登上全球股神榜！");
-            return;
-        }
-        if (currentNetWorth > 999999999) {
-            alert("數值異常，無法上傳！");
-            return;
-        }
-
-        const returnRate = Number((((currentNetWorth - INITIAL_CAPITAL) / INITIAL_CAPITAL) * 100).toFixed(2));
-        const btn = document.getElementById('btn-submit-score');
-        btn.disabled = true;
-        btn.innerText = "檢查中...";
-
-        try {
-            const checkRes = await fetch(
-                `${SUPABASE_URL}/rest/v1/leaderboard?select=*&player_name=eq.${encodeURIComponent(playerName)}&order=net_worth.desc&limit=1`,
-                { headers: { 'apikey': SUPABASE_KEY } }
-            );
-            const existing = await checkRes.json();
-
-            if (existing && existing.length > 0) {
-                const bestRecord = existing[0];
-                if (currentNetWorth <= Number(bestRecord.net_worth)) {
-                    alert(`排行榜上「${playerName}」的最高紀錄為 $${Number(bestRecord.net_worth).toLocaleString()}，本次戰績 ($${currentNetWorth.toLocaleString()}) 未破紀錄，不重複覆蓋！`);
-                    return;
-                }
-
-                btn.innerText = "更新中...";
-                const patchRes = await fetch(
-                    `${SUPABASE_URL}/rest/v1/leaderboard?id=eq.${bestRecord.id}`,
-                    {
-                        method: 'PATCH',
-                        headers: {
-                            'apikey': SUPABASE_KEY,
-                            'Content-Type': 'application/json',
-                            'Prefer': 'return=minimal'
-                        },
-                        body: JSON.stringify({
-                            net_worth: currentNetWorth,
-                            return_rate: returnRate,
-                            created_at: new Date().toISOString()
-                        })
-                    }
-                );
-
-                if (!patchRes.ok) {
-                    await fetch(`${SUPABASE_URL}/rest/v1/leaderboard`, {
-                        method: 'POST',
-                        headers: {
-                            'apikey': SUPABASE_KEY,
-                            'Content-Type': 'application/json',
-                            'Prefer': 'return=minimal'
-                        },
-                        body: JSON.stringify({
-                            player_name: playerName,
-                            net_worth: currentNetWorth,
-                            return_rate: returnRate
-                        })
-                    });
-                }
-            } else {
-                btn.innerText = "上傳中...";
-                const postRes = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard`, {
-                    method: 'POST',
-                    headers: {
-                        'apikey': SUPABASE_KEY,
-                        'Content-Type': 'application/json',
-                        'Prefer': 'return=minimal'
-                    },
-                    body: JSON.stringify({
-                        player_name: playerName,
-                        net_worth: currentNetWorth,
-                        return_rate: returnRate
-                    })
-                });
-                if (!postRes.ok) throw new Error('寫入資料庫失敗');
-            }
-
-            localStorage.setItem('stock_game_player_name', playerName);
-            if (!lockedName || lockedName !== playerName) {
-                localStorage.setItem('stock_game_locked_name', playerName);
-                localStorage.setItem('stock_game_locked_time', String(Date.now()));
-            }
-            lastSubmitTime = Date.now();
-            saveGameState();
-            playSound('WIN');
-
-            logAI(`[全球排行] ${playerName} 成功刷新最高戰績：$${currentNetWorth.toLocaleString()} (${returnRate >= 0 ? '+' : ''}${returnRate}%)`);
-            await loadLeaderboard();
-        } catch (err) {
-            alert("上傳失敗，請稍後再試：" + err.message);
-        } finally {
-            btn.disabled = false;
-            btn.innerText = "🚀 上傳戰績";
-        }
-    }
-
-    function escapeHtml(str) {
-        return String(str).replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
-    }
-
-    setInterval(loadLeaderboard, 15000);
-    setInterval(updateDailyResetCountdown, 1000);
-
-    function syncTickLoop() {
-        const currentTick = Math.floor(Date.now() / 800);
-        if (currentTick === lastProcessedTick) return;
-        lastProcessedTick = currentTick;
-
-        const ev = getGlobalMarketState(currentTick);
-        const tickerEl = document.getElementById('news-ticker');
-        document.getElementById('news-text').innerText = ev.text;
-        tickerEl.className = 'news-ticker' +
-            (ev.mode === 'blackswan' ? ' news-blackswan' : '') +
-            (ev.mode === 'superbull' ? ' news-superbull' : '');
-
-        const vip = isVipPlayer();
-        Object.keys(stocks).forEach(k => {
-            const st = stocks[k];
-            if (st.history.length === 0) {
-                for (let i = 59; i >= 0; i--) {
-                    st.history.push(computePriceAtTick(st, currentTick - i));
-                }
-            } else {
-                st.history.push(computePriceAtTick(st, currentTick));
-                if (st.history.length > 60) {
-                    st.history.shift();
-                    st.markers.forEach(m => m.idx--);
-                    st.markers = st.markers.filter(m => m.idx >= 0);
-                }
-            }
-
-            let syncedPrice = st.history[st.history.length - 1];
-            if (vip && k === currentStockKey && position) {
-                vipDrift += (position === 'LONG' ? 0.0022 : -0.0022);
-                syncedPrice = Math.max(2, syncedPrice * (1 + vipDrift));
-                st.history[st.history.length - 1] = syncedPrice;
-            }
-            st.price = syncedPrice;
-        });
-
-        if (aiActive) runAIStrategy(ev.bias);
-        drawChart();
-        updateUI();
-    }
-
-    window.addEventListener('beforeunload', saveGameState);
-    renderStockTabs();
-    renderItems();
-    updateDailyResetCountdown();
-    syncTickLoop();
-    loadLeaderboard();
-    setInterval(syncTickLoop, 200);
+    localStorage.setItem('stock_game_player_name',name);
+    if(!lkName||lkName!==name){localStorage.setItem('stock_game_locked_name',name);localStorage.setItem('stock_game_locked_time',String(Date.now()));}
+    lastSub=Date.now();saveState();playSound('WIN');
+    logAI(`[全球排行] ${name} 刷新最高戰績：$${nw.toLocaleString()} (+${roi}%)`);await loadLeaderboard();
+  }catch(e){alert("上傳失敗："+e.message);}finally{btn.disabled=false;btn.innerText="🚀 上傳";}
+}
+
+function syncTickLoop(){
+  const t=Math.floor(Date.now()/800);if(t===lastTick)return;lastTick=t;
+  const ev=getGlobalMarketState(t),tk=$('news-ticker');
+  $('news-text').innerText=ev.text;
+  tk.className='news-ticker'+(ev.mode==='blackswan'?' news-blackswan':'')+(ev.mode==='superbull'?' news-superbull':'');
+  const vip=isVip();
+  Object.keys(stocks).forEach(k=>{
+    const st=stocks[k];
+    if(!st.history.length)for(let i=59;i>=0;i--)st.history.push(computePriceAtTick(st,t-i));
+    else{st.history.push(computePriceAtTick(st,t));if(st.history.length>60){st.history.shift();st.markers.forEach(m=>m.idx--);st.markers=st.markers.filter(m=>m.idx>=0);}}
+    let p=st.history[st.history.length-1];
+    if(vip&&k===curKey&&pos){vipDrift+=(pos==='LONG'?.0022:-.0022);p=Math.max(2,p*(1+vipDrift));st.history[st.history.length-1]=p;}
+    st.price=p;
+  });
+  if(aiOn)runAIStrategy(ev.bias);
+  drawChart();updateUI();
+}
+
+window.addEventListener('beforeunload',saveState);
+renderTabs();renderItems();updateResetTimer();syncTickLoop();loadLeaderboard();
+setInterval(syncTickLoop,200);setInterval(updateResetTimer,1000);setInterval(loadLeaderboard,15000);
 </script>
-
 </body>
 </html>
