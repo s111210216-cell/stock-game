@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <title>Live Market Arena｜台積電 (2330) 1994–2026 史詩長跑競技場</title>
+  <title>Live Market Arena｜台積電 1994–2026 歷史 ＋ 未來無限自由走勢</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -12,22 +12,24 @@
   <header class="bg-slate-900 border-b border-slate-800 p-3">
     <div class="max-w-7xl mx-auto flex flex-wrap gap-3 items-center justify-between">
       <div class="flex items-center gap-2">
-        <span class="text-2xl">🏔️</span>
+        <span class="text-2xl">🚀</span>
         <div>
-          <h1 class="text-base font-bold text-cyan-400">Live Market Arena（台積電 1994 上市 → 2026/11 史詩長跑競技場）</h1>
-          <p class="text-[11px] text-slate-400">橫跨 32 年・1,280 根真實波段週 K 線（$35 谷底 → $2,705 天價 → $2,150）｜快捷鍵 [B] 買進 / [S] 賣出</p>
+          <h1 class="text-base font-bold text-cyan-400">Live Market Arena（台積電 32 年歷史 ＋ 2026/11 後無限自由未來）</h1>
+          <p class="text-[11px] text-slate-400">前 1,280 週重演 1994–2026 真實波段 → 第 1,281 週起進入無終點平行宇宙自由行情｜快捷鍵 [B] 買 / [S] 賣</p>
         </div>
       </div>
 
       <div class="flex flex-wrap items-center gap-2 text-xs">
         <button onclick="togglePause()" id="pause-btn" class="bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 rounded font-bold">⏸ 暫停盤面</button>
         <select id="speed-select" onchange="updateSpeed()" class="bg-slate-800 border border-slate-700 rounded px-2 py-1.5">
-          <option value="600">速度：1x (慢慢體驗 32 年)</option>
+          <option value="600">速度：1x (慢慢操盤)</option>
           <option value="180" selected>速度：3x (標準節奏)</option>
-          <option value="35">速度：15x (極速穿越牛熊)</option>
+          <option value="35">速度：15x (極速演進)</option>
         </select>
         <div class="h-4 w-[1px] bg-slate-700 mx-1"></div>
-        <button onclick="resetSimulation()" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 px-3 py-1.5 rounded font-bold">🔄 回到 1994 重新開局</button>
+        <button onclick="triggerFutureNews('GOOD')" class="bg-rose-900/80 hover:bg-rose-800 border border-rose-600 text-rose-200 px-2.5 py-1.5 rounded font-bold">🔥 未來利多</button>
+        <button onclick="triggerFutureNews('BAD')" class="bg-teal-900/80 hover:bg-teal-800 border border-teal-600 text-teal-200 px-2.5 py-1.5 rounded font-bold">❄️ 未來利空</button>
+        <button onclick="resetSimulation()" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 px-3 py-1.5 rounded font-bold">🔄 回到 1994 重來</button>
         <button onclick="toggleEditor()" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 px-3 py-1.5 rounded font-bold">🧠 管理 4 位 AI 大腦</button>
       </div>
     </div>
@@ -50,17 +52,18 @@
   <!-- 主戰場區 -->
   <main class="max-w-7xl mx-auto w-full p-4 flex-1 grid grid-cols-1 lg:grid-cols-4 gap-4">
     
-    <!-- 左側 3 欄：台積電 32 年 K 線圖 + 5 人資產曲線 + 人類下單控制台 -->
+    <!-- 左側 3 欄：台積電 K 線圖 + 5 人資產曲線 + 人類下單控制台 -->
     <div class="lg:col-span-3 flex flex-col gap-3">
       
       <!-- 即時行情條 -->
       <div class="bg-slate-900 border border-slate-800 rounded-lg px-4 py-2.5 flex flex-wrap justify-between items-center gap-2">
         <div class="flex items-baseline gap-3">
-          <span class="text-xs text-slate-400 font-mono">週線 #<span id="tick-num">1</span> / 1280 (<span id="date-label" class="text-cyan-400 font-bold">1994-09</span>)</span>
+          <span id="era-badge" class="text-[11px] bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded font-bold">📜 歷史重演</span>
+          <span class="text-xs text-slate-400 font-mono">週線 #<span id="tick-num">1</span> (<span id="date-label" class="text-cyan-400 font-bold">1994-09</span>)</span>
           <span id="market-price" class="text-2xl font-mono font-bold text-white">$96.00</span>
           <span id="price-change" class="text-xs font-mono font-bold text-slate-400">0.00%</span>
         </div>
-        <div id="news-ticker" class="text-xs text-cyan-300 font-medium">🏛️ 1994/09/05：台積電 (2330) 正式掛牌上市！</div>
+        <div id="news-ticker" class="text-xs text-cyan-300 font-medium">🏛️ 1994/09：台積電掛牌上市！跑完 1,280 週將無縫進入 2026/11 後自由走勢。</div>
         <div id="vol-display" class="text-xs text-slate-400 font-mono">週成交量：42,000 張</div>
       </div>
 
@@ -77,7 +80,7 @@
 
         <!-- 5 人總淨值競速曲線 -->
         <div class="bg-slate-900 p-3 rounded-lg border border-slate-800 flex flex-col">
-          <div class="text-xs text-slate-400 mb-1">💰 總淨值即時競速（你 vs 4 大 AI｜初始 $1M）</div>
+          <div class="text-xs text-slate-400 mb-1">💰 總淨值無限競速（你 vs 4 大 AI｜初始 $1M）</div>
           <div class="flex-1 relative min-h-[215px]">
             <canvas id="equityChart"></canvas>
           </div>
@@ -123,7 +126,7 @@
     <!-- 右側 1 欄：即時 5 人排行榜 + 最新交易明細 -->
     <div class="flex flex-col gap-3">
       <div class="bg-slate-900 p-3 rounded-lg border border-slate-800">
-        <h3 class="font-bold text-slate-200 text-xs border-b border-slate-800 pb-1.5 mb-2">🏆 32 年長跑排行榜（初始 $1M）</h3>
+        <h3 class="font-bold text-slate-200 text-xs border-b border-slate-800 pb-1.5 mb-2">🏆 即時戰力排行榜（初始 $1M）</h3>
         <div id="leaderboard-list" class="space-y-2 text-xs font-mono"></div>
       </div>
 
@@ -135,15 +138,16 @@
           </div>
         </div>
         <div class="border-t border-slate-800 pt-2 mt-2 text-[11px] text-slate-400 leading-relaxed">
-          💡 <b>為什麼人能贏 AI？</b><br>
-          AI 靠技術指標在震盪期容易被雙向洗盤；人類只要在 2002 ($35)、2008 ($38) 或大回檔時「買進抱緊」，就能吃到 20 倍以上的長線複利！
+          🌌 <b>雙階段宇宙規則：</b><br>
+          1. <b>第 1~1280 週</b>：1994–2026 真實歷史。<br>
+          2. <b>第 1281 週起</b>：無縫接軌 2026/11 後自由走勢，永不結束，隨時可按利多/利空造浪！
         </div>
       </div>
     </div>
   </main>
 
   <script>
-    // ====== 1. 建構台積電 (2330) 1994/09 上市至今 2026/11 (1,280 根週 K 線) 完整歷史波段 ======
+    // ====== 1. 建構台積電 (2330) 1994/09 上市至今 2026/11 (1,280 根週 K 線) 歷史數據 ======
     function generateTSMC32YearData() {
       const anchors = [
         { wk: 0,    price: 96,   label: "1994-09", note: "🏛️ 1994/09：台積電掛牌上市，首月即衝破百元大關！" },
@@ -152,7 +156,7 @@
         { wk: 155,  price: 185,  label: "1997-10", note: "🚀 1997/10：赴美掛牌 ADR (TSM)，外資大舉買進" },
         { wk: 210,  price: 72,   label: "1998-10", note: "❄️ 1998/10：亞洲金融風暴席捲，股價腰斬再回測" },
         { wk: 280,  price: 222,  label: "2000-02", note: "🔥 2000/02：千禧年網路狂潮，台積電創下 $222 階段天價！" },
-        { wk: 410,  price: 35,   label: "2002-10", note: "💀 2002/10：網路泡沫破裂，股價跌至 $35 歷史低谷（超級黃金坑）" },
+        { wk: 410,  price: 35,   label: "2002-10", note: "💀 2002/10：網路泡沫破裂，股價跌至 $35 歷史低谷" },
         { wk: 530,  price: 68,   label: "2005-03", note: "📊 2005/03：進入長達數年的大型箱型整理區間" },
         { wk: 650,  price: 72,   label: "2007-07", note: "📈 2007/07：高股息政策吸引外資長線持有" },
         { wk: 725,  price: 38,   label: "2008-11", note: "❄️ 2008/11：全球金融海嘯爆發，股價再度跌破 $40 大關！" },
@@ -162,10 +166,10 @@
         { wk: 1110, price: 265,  label: "2017-11", note: "🔥 2017/11：10奈米量產與 HPC 高效能運算起飛" },
         { wk: 1175, price: 245,  label: "2020-03", note: "⚠️ 2020/03：全球新冠疫情爆發美股熔斷，回測 $235~$245 支撐" },
         { wk: 1215, price: 688,  label: "2022-01", note: "🚀 2022/01：疫情紅利與晶片荒推升股價衝上 $688 歷史新高！" },
-        { wk: 1235, price: 375,  label: "2022-10", note: "❄️ 2022/10：聯準會暴力升息與巴菲特短線賣出，急殺回測 $370 區間" },
+        { wk: 1235, price: 375,  label: "2022-10", note: "❄️ 2022/10：聯準會暴力升息急殺回測 $370 區間" },
         { wk: 1255, price: 1080, label: "2024-10", note: "⚡ 2024/10：生成式 AI 爆發，台積電正式突破千元大關！" },
         { wk: 1272, price: 2705, label: "2026-09", note: "👑 2026/09：AI 算力需求井噴，台積電寫下 $2,705 驚人天價！" },
-        { wk: 1279, price: 2150, label: "2026-11", note: "📊 2026/11：高檔劇烈震盪回測兩千元關卡，最新收盤 $2,150" }
+        { wk: 1279, price: 2150, label: "2026-11", note: "📊 2026/11：歷史數據終點（$2,150），下一週起進入未知未來！" }
       ];
 
       const bars = [];
@@ -181,10 +185,8 @@
           }
         }
         const progress = (w - a1.wk) / Math.max(1, a2.wk - a1.wk);
-        // 使用對數插值讓百元時代與兩千元時代的漲跌幅比例更符合真實幾何複利
         const logTarget = Math.exp(Math.log(a1.price) * (1 - progress) + Math.log(a2.price) * progress);
 
-        // 加入週線級別的真實洗盤波動（振幅約 2% ~ 5%）
         const cycle = Math.sin(w * 0.28) * 0.025 + Math.cos(w * 0.11) * 0.03;
         const noise = ((Math.sin(w * 17.13) * 43758.5453) % 1 - 0.5) * 0.045;
         const gap = Math.cos(w * 5.3) > 0.85 ? (Math.sin(w * 2.7) * 0.018) : 0;
@@ -213,7 +215,87 @@
 
     let tsmcData = generateTSMC32YearData();
 
-    // ====== 2. 預設 4 大 AI 策略（各自代表不同量化流派） ======
+    // ====== 2. 未來平行宇宙（第 1281 週起）擬真自由走勢生成器 ======
+    let futureRegime = 'BULL_CHOP'; // 'BULL_CHOP' | 'SURGE' | 'CORRECTION'
+    let regimeCounter = 0;
+    let futureAnchor = 2150;
+
+    function generateNextFutureBar(wIndex, prevClose) {
+      regimeCounter++;
+      // 每 18~35 週隨機切換一次大環境狀態（模擬真實景氣循環與消息面波段）
+      if (regimeCounter > 18 + Math.random() * 18) {
+        regimeCounter = 0;
+        const r = Math.random();
+        if (r < 0.48) {
+          futureRegime = 'BULL_CHOP'; // 震盪盤堅
+          document.getElementById('news-ticker').innerText = "📊 【未來自由行情】半導體產能滿載，股價進入高檔箱型震盪墊高階段";
+        } else if (r < 0.78) {
+          futureRegime = 'SURGE'; // AI 新世代主升段
+          futureAnchor = prevClose * (1.18 + Math.random() * 0.15);
+          document.getElementById('news-ticker').innerText = "🔥 【未來自由行情】次世代埃米製程提前量產，外資大舉調升目標價！";
+        } else {
+          futureRegime = 'CORRECTION'; // 景氣庫存修正回檔
+          futureAnchor = prevClose * (0.78 + Math.random() * 0.1);
+          document.getElementById('news-ticker').innerText = "❄️ 【未來自由行情】全球科技股估值修正，獲利了結賣壓湧現回測支撐";
+        }
+      }
+
+      // 計算當週趨勢漂移與均值回歸力
+      let drift = 0.0025; // 長期向上基本面微幅正漂移
+      if (futureRegime === 'SURGE') drift = 0.012;
+      if (futureRegime === 'CORRECTION') drift = -0.011;
+
+      // 整數關卡心理阻力（例如每 500 元整數關卡附近容易反覆洗盤）
+      const mod500 = prevClose % 500;
+      let psychPull = 0;
+      if (mod500 > 460) psychPull = -0.008;
+      if (mod500 < 40) psychPull = 0.006;
+
+      const gap = (Math.random() - 0.5) * 0.018;
+      const open = Number(Math.max(500, prevClose * (1 + gap)).toFixed(1));
+      const weeklyReturn = drift + psychPull + (Math.random() - 0.49) * 0.052;
+      const close = Number(Math.max(500, open * (1 + weeklyReturn)).toFixed(1));
+
+      const spread = Math.abs(close - open) + close * (0.014 + Math.random() * 0.024);
+      const high = Number((Math.max(open, close) + spread * (0.35 + Math.random() * 0.35)).toFixed(1));
+      const low = Number(Math.max(480, Math.min(open, close) - spread * (0.35 + Math.random() * 0.35)).toFixed(1));
+
+      const movePct = Math.abs(close - open) / open;
+      const volume = Math.floor(40000 + movePct * 1100000 + Math.random() * 50000);
+
+      // 推算未來年月標籤 (從 2026-12 往後算每 4.33 週為一個月)
+      const weeksSinceStart = wIndex - 1280;
+      const totalMonths = 10 + Math.floor(weeksSinceStart / 4.333); // 2026-11 為第 10 個月(0-indexed)
+      const yr = 2026 + Math.floor(totalMonths / 12);
+      const mo = String((totalMonths % 12) + 1).padStart(2, '0');
+
+      return {
+        tick: wIndex + 1,
+        dateLabel: `${yr}-${mo}`,
+        newsNote: wIndex === 1280 ? "🌌 【進入無限未來自由模式】已越過 2026/11，接下來走勢完全由市場多空自由演進！" : null,
+        open, high, low, close, volume
+      };
+    }
+
+    // 未來模式中手動觸發利多/利空造浪
+    function triggerFutureNews(type) {
+      if (weekIndex < 1280) {
+        document.getElementById('news-ticker').innerText = "⏳ 目前還在 1994–2026 歷史重演階段，跑過第 1,280 週進入未來模式後即可自由造浪！";
+        return;
+      }
+      regimeCounter = 0;
+      if (type === 'GOOD') {
+        futureRegime = 'SURGE';
+        currentPrice = Number((currentPrice * 1.055).toFixed(1));
+        document.getElementById('news-ticker').innerText = "🔥 【手動引爆重大利多】AI 訂單大爆發，多頭主升段強勢啟動！";
+      } else {
+        futureRegime = 'CORRECTION';
+        currentPrice = Number((currentPrice * 0.945).toFixed(1));
+        document.getElementById('news-ticker').innerText = "❄️ 【手動引爆突發利空】系統性風險升溫，市場出現恐慌性拋售！";
+      }
+    }
+
+    // ====== 3. 預設 4 大 AI 策略 ======
     const DEFAULT_BOTS = [
       {
         id: 'botA',
@@ -299,7 +381,7 @@
       },
       {
         id: 'botD',
-        name: '🤖 AI-D (布林突破派)',
+        name: '🤖 AI-D (布林突破逃頂派)',
         color: '#f472b6',
         code: `function decide(market, me) {
   const prices = market.history.map(h => h.close).slice(-20);
@@ -326,7 +408,7 @@
       </div>
     `).join('');
 
-    // ====== 3. 參賽者與模擬狀態 ======
+    // ====== 4. 參賽者與模擬狀態 ======
     let weekIndex = 0;
     let currentPrice = tsmcData[0].close;
     let history = [];
@@ -354,6 +436,8 @@
       weekIndex = 0;
       history = [];
       recentTrades = [];
+      futureRegime = 'BULL_CHOP';
+      regimeCounter = 0;
       currentPrice = tsmcData[0].close;
       human.cash = 1000000; human.shares = 0; human.trades = 0;
       pendingHumanOrder = null;
@@ -400,24 +484,36 @@
       if (recentTrades.length > 9) recentTrades.pop();
     }
 
-    // ====== 4. 單週行情推進 ======
+    // ====== 5. 單週行情推進（無終點：1280 週前讀真實歷史，1280 週後無限自由生成） ======
     function stepMarket() {
-      if (weekIndex >= tsmcData.length) {
-        isPaused = true;
-        document.getElementById('pause-btn').innerText = '🏁 32 年史詩長跑結束';
-        document.getElementById('news-ticker').innerText = '🏁 1994–2026 台積電 32 年史詩走勢完畢！最終收盤 $2,150。';
-        return;
+      let bar;
+      const prevPrice = weekIndex > 0 ? currentPrice : tsmcData[0].open;
+
+      if (weekIndex < tsmcData.length) {
+        bar = tsmcData[weekIndex];
+      } else {
+        bar = generateNextFutureBar(weekIndex, prevPrice);
       }
 
-      const bar = tsmcData[weekIndex];
-      const prevPrice = weekIndex > 0 ? tsmcData[weekIndex - 1].close : bar.open;
       currentPrice = bar.close;
+
+      // 更新時代標籤（歷史重演 vs 自由未來）
+      const eraBadge = document.getElementById('era-badge');
+      if (weekIndex < 1280) {
+        eraBadge.innerText = "📜 歷史重演 (1994–2026)";
+        eraBadge.className = "text-[11px] bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded font-bold";
+      } else {
+        eraBadge.innerText = "🌌 自由未來模式 (無限推進)";
+        eraBadge.className = "text-[11px] bg-purple-500/20 text-purple-300 border border-purple-500/40 px-2 py-0.5 rounded font-bold";
+      }
 
       if (bar.newsNote) {
         document.getElementById('news-ticker').innerText = bar.newsNote;
       }
 
       history.push({ ...bar, price: bar.close });
+      // 限制歷史陣列長度保留最近 200 週即可，避免無限跑下去記憶體累積
+      if (history.length > 200) history.shift();
 
       // (A) 執行人類委託
       if (pendingHumanOrder) {
@@ -478,7 +574,7 @@
       weekIndex++;
     }
 
-    // ====== 5. 圖表與即時介面渲染 ======
+    // ====== 6. 圖表與即時介面渲染 ======
     function drawKlineChart() {
       const canvas = document.getElementById('klineCanvas');
       const ctx = canvas.getContext('2d');
@@ -610,11 +706,15 @@
 
       drawKlineChart();
 
-      // 每 4 週更新一次淨值曲線，兼顧流暢度與 32 年完整跨度視野
-      if (weekIndex % 4 === 0 || weekIndex === tsmcData.length - 1) {
+      if (weekIndex % 4 === 0) {
         eqChart.data.labels.push(bar.dateLabel);
         eqChart.data.datasets[0].data.push(pEq);
         bots.forEach((b, idx) => eqChart.data.datasets[idx + 1].data.push(b.cash + b.shares * currentPrice));
+        // 保留最近 300 個採樣點（約 23 年跨度視野），無限往後滾動不卡頓
+        if (eqChart.data.labels.length > 300) {
+          eqChart.data.labels.shift();
+          eqChart.data.datasets.forEach(ds => ds.data.shift());
+        }
         eqChart.update();
       }
     }
@@ -637,8 +737,8 @@
     }
 
     function copyArenaPrompt() {
-      const prompt = `請擔任頂級量化交易員，寫一個純 JavaScript 掛單決策函式 \`function decide(market, me)\`，在台積電 (2330) 1994年上市至2026年共32年（1,280根週K線）歷史波段競技場中擊敗人類與其他 AI。
-嚴禁高頻刷單，必須使用長週期均線、ATR 或波動率通道過濾，並用移動停利抱緊數年級別的主升段。
+      const prompt = `請擔任頂級量化交易員，寫一個純 JavaScript 掛單決策函式 \`function decide(market, me)\`，在台積電 (2330) 歷史波段與未來自由走勢競技場中擊敗人類與其他 AI。
+嚴禁高頻刷單，必須使用長週期均線、ATR 或波動率通道過濾，並懂得在崩盤前避險、主升段重倉抱緊。
 輸入：\`market = { tick, price, history }\`（history 為 \`{ tick, open, high, low, close, price, volume }\` 陣列），\`me = { cash, shares, equity }\`。
 輸出：\`{ side: "BUY" | "SELL", price: 限價數字, qty: 整數股數 }\` 或 \`null\`。只輸出純程式碼，不要解釋文字。`;
       navigator.clipboard.writeText(prompt);
