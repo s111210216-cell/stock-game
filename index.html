@@ -2,234 +2,310 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <title>Live Market Arena｜持續演進的公平撮合股市競技場</title>
+  <title>Live Market Arena｜人機同盤公平撮合競技場</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col">
 
-  <!-- 頂部控制台與造物主干預區 -->
+  <!-- 頂部控制台 -->
   <header class="bg-slate-900 border-b border-slate-800 p-3">
     <div class="max-w-7xl mx-auto flex flex-wrap gap-3 items-center justify-between">
       <div class="flex items-center gap-2">
         <span class="text-2xl">🏛️</span>
         <div>
-          <h1 class="text-base font-bold text-cyan-400">Live Market Arena（持續演進集合競價競技場）</h1>
-          <p class="text-[11px] text-slate-400">40 名異質 NPC + 2 位 AI 選手同盤搶單｜統一結算價公平撮合｜無預設 K 線</p>
+          <h1 class="text-base font-bold text-cyan-400">Live Market Arena（人機同盤集合競價競技場）</h1>
+          <p class="text-[11px] text-slate-400">你 + 4 位 AI 選手 + 40 名異質 NPC｜統一結算價公平撮合｜支持鍵盤快捷鍵 [B] 買進 / [S] 賣出</p>
         </div>
       </div>
 
-      <!-- 模擬速度與突發新聞觸發器 -->
       <div class="flex flex-wrap items-center gap-2 text-xs">
         <button onclick="togglePause()" id="pause-btn" class="bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 rounded font-bold">⏸ 暫停盤面</button>
         <select id="speed-select" onchange="updateSpeed()" class="bg-slate-800 border border-slate-700 rounded px-2 py-1.5">
-          <option value="800">速度：1x (擬真)</option>
-          <option value="250" selected>速度：3x (流暢)</option>
-          <option value="50">速度：15x (極速演進)</option>
+          <option value="900">速度：1x (適合人類手操)</option>
+          <option value="350" selected>速度：2.5x (標準節奏)</option>
+          <option value="80">速度：10x (極速演進)</option>
         </select>
         <div class="h-4 w-[1px] bg-slate-700 mx-1"></div>
-        <button onclick="triggerNews('GOOD')" class="bg-rose-900/80 hover:bg-rose-800 border border-rose-600 text-rose-200 px-2.5 py-1.5 rounded font-bold">🔥 發布重大利多</button>
-        <button onclick="triggerNews('BAD')" class="bg-teal-900/80 hover:bg-teal-800 border border-teal-600 text-teal-200 px-2.5 py-1.5 rounded font-bold">❄️ 發布突發利空</button>
-        <button onclick="toggleEditor()" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 px-3 py-1.5 rounded font-bold">🧠 熱插拔替換 AI 大腦</button>
+        <button onclick="triggerNews('GOOD')" class="bg-rose-900/80 hover:bg-rose-800 border border-rose-600 text-rose-200 px-2.5 py-1.5 rounded font-bold">🔥 重大利多</button>
+        <button onclick="triggerNews('BAD')" class="bg-teal-900/80 hover:bg-teal-800 border border-teal-600 text-teal-200 px-2.5 py-1.5 rounded font-bold">❄️ 突發利空</button>
+        <button onclick="toggleEditor()" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 px-3 py-1.5 rounded font-bold">🧠 管理 4 位 AI 大腦</button>
       </div>
     </div>
   </header>
 
-  <!-- 雙 AI 戰況計分板（置頂即時跳動） -->
-  <section class="max-w-7xl mx-auto w-full px-4 pt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
-    <!-- 選手 A -->
-    <div class="bg-slate-900 border border-amber-500/40 rounded-lg p-3 flex justify-between items-center">
-      <div>
-        <div class="text-xs text-amber-400 font-bold" id="disp-name-a">🤖 AI 選手 A（動能突破派）</div>
-        <div class="text-xl font-mono font-bold text-white mt-0.5" id="eq-a">$1,000,000</div>
-        <div class="text-[11px] text-slate-400 font-mono" id="pos-a">現金: $1,000,000 | 持股: 0 張</div>
-      </div>
-      <div class="text-right font-mono">
-        <div id="ret-a" class="text-sm font-bold text-slate-300">0.00%</div>
-        <div id="trades-a" class="text-[11px] text-slate-500">成交 0 筆</div>
-      </div>
-    </div>
-
-    <!-- 市場即時行情中心 -->
-    <div class="bg-slate-900 border border-slate-700 rounded-lg p-3 flex flex-col justify-center items-center text-center">
-      <div class="text-[11px] text-slate-400">Tick #<span id="tick-num">0</span> ｜ 公平集合競價成交價</div>
-      <div class="flex items-baseline gap-2 my-0.5">
-        <span id="market-price" class="text-2xl font-mono font-bold text-white">$100.00</span>
-        <span id="price-change" class="text-xs font-mono font-bold text-slate-400">(0.00%)</span>
-      </div>
-      <div id="news-ticker" class="text-[11px] text-cyan-300 truncate max-w-full">📢 市場開盤：各路資金與造市商進場掛單中...</div>
-    </div>
-
-    <!-- 選手 B -->
-    <div class="bg-slate-900 border border-purple-500/40 rounded-lg p-3 flex justify-between items-center">
-      <div>
-        <div class="text-xs text-purple-400 font-bold" id="disp-name-b">🤖 AI 選手 B（均值逆勢做市派）</div>
-        <div class="text-xl font-mono font-bold text-white mt-0.5" id="eq-b">$1,000,000</div>
-        <div class="text-[11px] text-slate-400 font-mono" id="pos-b">現金: $1,000,000 | 持股: 0 張</div>
-      </div>
-      <div class="text-right font-mono">
-        <div id="ret-b" class="text-sm font-bold text-slate-300">0.00%</div>
-        <div id="trades-b" class="text-[11px] text-slate-500">成交 0 筆</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 可收合的 AI 策略熱插拔編輯器 -->
+  <!-- 4 位 AI 策略熱插拔編輯器（預設收合） -->
   <section id="editor-panel" class="hidden max-w-7xl mx-auto w-full px-4 pt-3">
     <div class="bg-slate-900 border border-cyan-500/50 rounded-lg p-3">
       <div class="flex justify-between items-center mb-2">
-        <span class="text-xs font-bold text-cyan-400">隨時貼上新的 AI 策略函式，按下「套用並重置資產」即可在不停盤情況下熱插拔上線</span>
-        <button onclick="copyArenaPrompt()" id="copy-prompt-btn" class="bg-cyan-700 hover:bg-cyan-600 px-3 py-1 rounded text-xs font-bold">📋 複製出題指令給 ChatGPT / Claude</button>
+        <span class="text-xs font-bold text-cyan-400">可隨時修改或貼上 ChatGPT / Claude / Gemini 寫的新策略，按套用即可重置全員資金重新開戰</span>
+        <button onclick="copyArenaPrompt()" id="copy-prompt-btn" class="bg-cyan-700 hover:bg-cyan-600 px-3 py-1 rounded text-xs font-bold">📋 複製出題指令給其他 AI</button>
       </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div>
-          <input id="input-name-a" value="🤖 AI 選手 A（動能突破派）" class="w-full bg-slate-800 text-amber-400 text-xs font-bold px-2 py-1 rounded mb-1 border border-slate-700">
-          <textarea id="input-code-a" rows="7" class="w-full bg-slate-950 text-green-400 text-xs font-mono p-2 rounded border border-slate-800">function decide(market, me) {
-  // 動能突破策略：偵測短期均線向上且成交量放大時，掛高 0.3% 搶單追買；跌破均線則掛低 0.3% 停損
-  const prices = market.history.map(h => h.price);
-  if (prices.length < 15) return null;
-  const ma5 = prices.slice(-5).reduce((a,b)=>a+b,0)/5;
-  const ma15 = prices.slice(-15).reduce((a,b)=>a+b,0)/15;
-  const p = market.price;
-
-  if (ma5 > ma15 * 1.003 && me.cash > p * 20) {
-    return { side: "BUY", price: p * 1.003, qty: Math.floor((me.cash * 0.4) / p) };
-  }
-  if (ma5 < ma15 * 0.997 && me.shares > 0) {
-    return { side: "SELL", price: p * 0.997, qty: Math.ceil(me.shares * 0.6) };
-  }
-  return null;
-}</textarea>
-        </div>
-        <div>
-          <input id="input-name-b" value="🤖 AI 選手 B（均值逆勢做市派）" class="w-full bg-slate-800 text-purple-400 text-xs font-bold px-2 py-1 rounded mb-1 border border-slate-700">
-          <textarea id="input-code-b" rows="7" class="w-full bg-slate-950 text-green-400 text-xs font-mono p-2 rounded border border-slate-800">function decide(market, me) {
-  // 逆勢做市策略：計算 20 期公允均價，低於均價 1.2% 逢低掛單接刀，高於均價 1.2% 逢高倒貨給追價散戶
-  const prices = market.history.map(h => h.price);
-  if (prices.length < 20) return null;
-  const fair = prices.slice(-20).reduce((a,b)=>a+b,0)/20;
-  const p = market.price;
-
-  if (p < fair * 0.988 && me.cash > p * 10) {
-    return { side: "BUY", price: p * 1.001, qty: Math.floor((me.cash * 0.35) / p) };
-  }
-  if (p > fair * 1.012 && me.shares > 0) {
-    return { side: "SELL", price: p * 0.999, qty: Math.ceil(me.shares * 0.5) };
-  }
-  return null;
-}</textarea>
-        </div>
-      </div>
-      <div class="mt-2 flex justify-end">
-        <button onclick="applyHotSwap()" class="bg-amber-600 hover:bg-amber-500 px-4 py-1.5 rounded text-xs font-bold">⚡ 套用新大腦並重置雙方資產</button>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3" id="bot-editors"></div>
+      <div class="mt-3 flex justify-end">
+        <button onclick="applyHotSwap()" class="bg-amber-600 hover:bg-amber-500 px-4 py-1.5 rounded text-xs font-bold">⚡ 套用全部 AI 策略並重置全員 $1,000,000</button>
       </div>
     </div>
   </section>
 
-  <!-- 主戰場視覺化區：左側雙圖表 + 右側即時集合競價五檔盤口與生態動態 -->
+  <!-- 主戰場區 -->
   <main class="max-w-7xl mx-auto w-full p-4 flex-1 grid grid-cols-1 lg:grid-cols-4 gap-4">
-    <!-- 左側 3 欄：股價走勢 + 雙方總資產對決曲線 -->
-    <div class="lg:col-span-3 flex flex-col gap-4">
-      <div class="bg-slate-900 p-3 rounded-lg border border-slate-800">
-        <div class="flex justify-between text-xs text-slate-400 mb-1">
-          <span>📈 內生市場即時成交價走勢（由全場買賣供需即時決定）</span>
-          <span id="vol-display">本回合集合競價成交量：0 股</span>
+    
+    <!-- 左側 3 欄：行情圖 + 5 人資產曲線 + 你的人類下單控制台 -->
+    <div class="lg:col-span-3 flex flex-col gap-3">
+      
+      <!-- 即時行情條 -->
+      <div class="bg-slate-900 border border-slate-800 rounded-lg px-4 py-2.5 flex flex-wrap justify-between items-center gap-2">
+        <div class="flex items-baseline gap-3">
+          <span class="text-xs text-slate-400 font-mono">Tick #<span id="tick-num">0</span></span>
+          <span id="market-price" class="text-2xl font-mono font-bold text-white">$100.00</span>
+          <span id="price-change" class="text-xs font-mono font-bold text-slate-400">0.00%</span>
         </div>
-        <canvas id="priceChart" height="95"></canvas>
+        <div id="news-ticker" class="text-xs text-cyan-300 font-medium">📢 市場開盤：人類玩家與 4 大 AI 同步進場搶單！</div>
+        <div id="vol-display" class="text-xs text-slate-400 font-mono">撮合成交量：0 股</div>
       </div>
 
-      <div class="bg-slate-900 p-3 rounded-lg border border-slate-800">
-        <div class="flex justify-between text-xs text-slate-400 mb-1">
-          <span>💰 選手 A vs 選手 B 總淨值即時競爭曲線（初始本金皆為 $1,000,000）</span>
-          <span id="wealth-gap" class="font-mono text-cyan-400">領先差距：$0</span>
+      <!-- 雙圖表區 -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div class="bg-slate-900 p-3 rounded-lg border border-slate-800">
+          <div class="text-xs text-slate-400 mb-1">📈 公平集合競價成交走勢（無劇本內生價格）</div>
+          <canvas id="priceChart" height="125"></canvas>
         </div>
-        <canvas id="equityChart" height="80"></canvas>
+        <div class="bg-slate-900 p-3 rounded-lg border border-slate-800">
+          <div class="text-xs text-slate-400 mb-1">💰 總淨值即時競速（你 vs 4 大 AI）</div>
+          <canvas id="equityChart" height="125"></canvas>
+        </div>
+      </div>
+
+      <!-- 人類玩家親自下單操控台 -->
+      <div class="bg-slate-900 border-2 border-cyan-500/50 rounded-lg p-3.5 shadow-lg">
+        <div class="flex flex-wrap justify-between items-center border-b border-slate-800 pb-2 mb-3 gap-2">
+          <div class="flex items-center gap-2">
+            <span class="text-lg">🧑‍💻</span>
+            <span class="font-bold text-cyan-300 text-sm">你的操盤控制台（人類玩家）</span>
+            <span id="player-pending-badge" class="hidden text-[11px] bg-amber-500/20 text-amber-300 border border-amber-500/50 px-2 py-0.5 rounded font-mono"></span>
+          </div>
+          <div class="flex gap-4 font-mono text-xs">
+            <div>總淨值：<span id="p-equity" class="text-white font-bold text-sm">$1,000,000</span> (<span id="p-ret" class="text-slate-300">0.00%</span>)</div>
+            <div>可用現金：<span id="p-cash" class="text-emerald-400 font-bold">$1,000,000</span></div>
+            <div>持有股數：<span id="p-shares" class="text-amber-400 font-bold">0 股</span></div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center text-xs">
+          <!-- 價格設定 -->
+          <div class="md:col-span-4 flex items-center gap-2">
+            <label class="text-slate-400 whitespace-nowrap">委託價格：</label>
+            <input id="order-price" type="number" step="0.1" placeholder="市價自動搶單" class="w-full bg-slate-950 border border-slate-700 rounded px-2.5 py-1.5 font-mono text-white focus:outline-none focus:border-cyan-400">
+            <button onclick="document.getElementById('order-price').value=''" class="bg-slate-800 hover:bg-slate-700 px-2 py-1.5 rounded text-[11px] whitespace-nowrap">市價</button>
+          </div>
+
+          <!-- 快捷買進按鈕 -->
+          <div class="md:col-span-4 flex gap-1.5">
+            <button onclick="submitHumanOrder('BUY', 0.25)" class="flex-1 bg-rose-700 hover:bg-rose-600 py-2 rounded font-bold transition">買 25%</button>
+            <button onclick="submitHumanOrder('BUY', 0.50)" class="flex-1 bg-rose-600 hover:bg-rose-500 py-2 rounded font-bold transition">買 50% [B]</button>
+            <button onclick="submitHumanOrder('BUY', 1.00)" class="flex-1 bg-rose-500 hover:bg-rose-400 text-slate-950 py-2 rounded font-extrabold transition">All-In 梭哈</button>
+          </div>
+
+          <!-- 快捷賣出按鈕 -->
+          <div class="md:col-span-4 flex gap-1.5">
+            <button onclick="submitHumanOrder('SELL', 0.50)" class="flex-1 bg-emerald-700 hover:bg-emerald-600 py-2 rounded font-bold transition">賣一半 [S]</button>
+            <button onclick="submitHumanOrder('SELL', 1.00)" class="flex-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 py-2 rounded font-extrabold transition">全部清倉</button>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- 右側 1 欄：即時五檔委託簿 & 生態系資金流向 -->
-    <div class="bg-slate-900 p-3 rounded-lg border border-slate-800 flex flex-col justify-between text-xs font-mono">
-      <div>
-        <h3 class="font-bold text-slate-300 border-b border-slate-800 pb-1.5 mb-2">📊 即時集合競價委託簿</h3>
-        <div class="space-y-1 mb-3" id="ask-book">
-          <div class="text-slate-500">等待賣單掛入...</div>
-        </div>
-        <div class="bg-slate-800 text-center py-1 rounded font-bold text-white my-2" id="mid-price-tag">$100.00</div>
-        <div class="space-y-1" id="bid-book">
-          <div class="text-slate-500">等待買單掛入...</div>
-        </div>
+    <!-- 右側 1 欄：即時 5 人排行榜 + 集合競價五檔盤口 -->
+    <div class="flex flex-col gap-3">
+      <!-- 即時總資產排行榜 -->
+      <div class="bg-slate-900 p-3 rounded-lg border border-slate-800">
+        <h3 class="font-bold text-slate-200 text-xs border-b border-slate-800 pb-1.5 mb-2">🏆 即時戰力排行榜（初始 $1M）</h3>
+        <div id="leaderboard-list" class="space-y-2 text-xs font-mono"></div>
       </div>
 
-      <!-- 市場生態組成說明 -->
-      <div class="border-t border-slate-800 pt-2 mt-3 text-[11px] text-slate-400 space-y-1">
-        <div class="font-bold text-slate-300">🌐 同場競爭個體（共 42 名）</div>
-        <div>• 15 名動能追價散戶（追漲殺跌）</div>
-        <div>• 12 名價值基本面派（錨定內在價值）</div>
-        <div>• 8 名流動性做市商（雙邊掛單賺價差）</div>
-        <div>• 5 名隨機噪聲交易員（製造日常波動）</div>
-        <div class="text-amber-400">• 1 名 AI 選手 A（獨立帳戶）</div>
-        <div class="text-purple-400">• 1 名 AI 選手 B（獨立帳戶）</div>
+      <!-- 即時五檔委託簿 -->
+      <div class="bg-slate-900 p-3 rounded-lg border border-slate-800 flex-1 flex flex-col justify-between text-xs font-mono">
+        <div>
+          <h3 class="font-bold text-slate-300 border-b border-slate-800 pb-1.5 mb-2">📊 集合競價委託簿</h3>
+          <div class="space-y-1 mb-2" id="ask-book"></div>
+          <div class="bg-slate-800 text-center py-1 rounded font-bold text-white my-1.5" id="mid-price-tag">$100.00</div>
+          <div class="space-y-1" id="bid-book"></div>
+        </div>
+        <div class="border-t border-slate-800 pt-2 mt-2 text-[11px] text-slate-500">
+          盤口標記：<span class="text-cyan-400">🧑‍💻你的單</span>｜<span class="text-amber-400">🤖AI單</span>
+        </div>
       </div>
     </div>
   </main>
 
   <script>
-    // ====== 1. 核心市場狀態 ======
+    // ====== 1. 預設 4 大不同流派 AI 策略 ======
+    const DEFAULT_BOTS = [
+      {
+        id: 'botA',
+        name: '🤖 AI-A (高頻動能派)',
+        color: '#fbbf24', // Amber
+        code: `function decide(market, me) {
+  const prices = market.history.map(h => h.price);
+  if (prices.length < 3) return null;
+  const prev = prices[prices.length - 2];
+  const p = market.price;
+  if (p > prev * 1.001 && me.cash > p * 15) {
+    return { side: "BUY", price: p * 1.004, qty: Math.floor((me.cash * 0.35) / p) };
+  }
+  if (p < prev * 0.999 && me.shares > 0) {
+    return { side: "SELL", price: p * 0.996, qty: Math.ceil(me.shares * 0.5) };
+  }
+  return null;
+}`
+      },
+      {
+        id: 'botB',
+        name: '🤖 AI-B (逆勢做市派)',
+        color: '#c084fc', // Purple
+        code: `function decide(market, me) {
+  const prices = market.history.map(h => h.price);
+  if (prices.length < 6) return null;
+  const ma6 = prices.slice(-6).reduce((a,b)=>a+b,0)/6;
+  const p = market.price;
+  if (p < ma6 * 0.997 && me.cash > p * 15) {
+    return { side: "BUY", price: p * 1.002, qty: Math.floor((me.cash * 0.35) / p) };
+  }
+  if (p > ma6 * 1.003 && me.shares > 0) {
+    return { side: "SELL", price: p * 0.998, qty: Math.ceil(me.shares * 0.5) };
+  }
+  return null;
+}`
+      },
+      {
+        id: 'botC',
+        name: '🤖 AI-C (RSI 波段派)',
+        color: '#34d399', // Emerald
+        code: `function decide(market, me) {
+  const prices = market.history.map(h => h.price);
+  if (prices.length < 10) return null;
+  let gains = 0, losses = 0;
+  for (let i = prices.length - 9; i < prices.length; i++) {
+    const diff = prices[i] - prices[i - 1];
+    if (diff >= 0) gains += diff; else losses -= diff;
+  }
+  const rsi = losses === 0 ? 100 : 100 - (100 / (1 + gains / losses));
+  const p = market.price;
+  if (rsi < 35 && me.cash > p * 15) {
+    return { side: "BUY", price: p * 1.003, qty: Math.floor((me.cash * 0.45) / p) };
+  }
+  if (rsi > 65 && me.shares > 0) {
+    return { side: "SELL", price: p * 0.997, qty: Math.ceil(me.shares * 0.6) };
+  }
+  return null;
+}`
+      },
+      {
+        id: 'botD',
+        name: '🤖 AI-D (布林狙擊派)',
+        color: '#f472b6', // Pink
+        code: `function decide(market, me) {
+  const prices = market.history.map(h => h.price).slice(-12);
+  if (prices.length < 12) return null;
+  const mean = prices.reduce((a,b)=>a+b,0)/12;
+  const std = Math.sqrt(prices.reduce((a,b)=>a+Math.pow(b-mean,2),0)/12);
+  const p = market.price;
+  if (p > mean + 1.2 * std && me.cash > p * 15) {
+    return { side: "BUY", price: p * 1.005, qty: Math.floor((me.cash * 0.4) / p) };
+  }
+  if (p < mean - 1.2 * std && me.shares > 0) {
+    return { side: "SELL", price: p * 0.995, qty: Math.ceil(me.shares * 0.7) };
+  }
+  return null;
+}`
+      }
+    ];
+
+    // 初始化編輯器 UI
+    const editorContainer = document.getElementById('bot-editors');
+    editorContainer.innerHTML = DEFAULT_BOTS.map((b, idx) => `
+      <div class="bg-slate-950 p-2 rounded border border-slate-800">
+        <input id="ed-name-${idx}" value="${b.name}" style="color:${b.color}" class="w-full bg-slate-900 text-xs font-bold px-2 py-1 rounded mb-1 border border-slate-800">
+        <textarea id="ed-code-${idx}" rows="6" class="w-full bg-slate-900 text-green-400 text-[11px] font-mono p-1.5 rounded border border-slate-800">${b.code}</textarea>
+      </div>
+    `).join('');
+
+    // ====== 2. 市場參與者狀態 ======
     let tick = 0;
     let currentPrice = 100.00;
-    let intrinsicValue = 100.00; // 隱藏的經濟基本面價值（會隨突發新聞變動）
+    let intrinsicValue = 100.00;
     let history = [];
     let isPaused = false;
     let timer = null;
 
-    // 40 名異質 NPC 個體初始化
+    // 人類玩家狀態與待撮合委託單
+    const human = { id: 'human', name: '🧑‍💻 你 (人類玩家)', color: '#22d3ee', cash: 1000000, shares: 0, trades: 0, isHuman: true };
+    let pendingHumanOrder = null;
+
+    // 4 個 AI 實例
+    let bots = DEFAULT_BOTS.map(b => ({ ...b, cash: 1000000, shares: 0, trades: 0, fn: null, isBot: true }));
+
+    // 40 個異質 NPC
     const npcs = [];
     for (let i = 0; i < 40; i++) {
-      let type = 'NOISE';
-      if (i < 15) type = 'MOMENTUM';
-      else if (i < 27) type = 'VALUE';
-      else if (i < 35) type = 'MARKET_MAKER';
-      npcs.push({
-        id: `npc_${i}`,
-        type,
-        cash: 1000000,
-        shares: 5000,
-        bias: 0.96 + Math.random() * 0.08 // 每個個體對價值的認知都有個別差異
-      });
+      let type = i < 15 ? 'MOMENTUM' : (i < 27 ? 'VALUE' : (i < 35 ? 'MARKET_MAKER' : 'NOISE'));
+      npcs.push({ id: `npc_${i}`, type, cash: 1000000, shares: 5000, bias: 0.96 + Math.random() * 0.08 });
     }
 
-    // 兩位 AI 參賽選手初始化
-    let botA = { name: "🤖 AI 選手 A", cash: 1000000, shares: 0, trades: 0, fn: null };
-    let botB = { name: "🤖 AI 選手 B", cash: 1000000, shares: 0, trades: 0, fn: null };
-
     function compileBots() {
-      try {
-        botA.name = document.getElementById('input-name-a').value;
-        botB.name = document.getElementById('input-name-b').value;
-        document.getElementById('disp-name-a').innerText = botA.name;
-        document.getElementById('disp-name-b').innerText = botB.name;
-        botA.fn = new Function(`${document.getElementById('input-code-a').value}; return decide;`)();
-        botB.fn = new Function(`${document.getElementById('input-code-b').value}; return decide;`)();
-      } catch (e) {
-        alert("AI 程式碼語法錯誤：" + e.message);
-      }
+      bots.forEach((b, idx) => {
+        try {
+          b.name = document.getElementById(`ed-name-${idx}`).value;
+          const codeStr = document.getElementById(`ed-code-${idx}`).value;
+          b.fn = new Function(`${codeStr}; return decide;`)();
+        } catch (e) {
+          alert(`${b.name} 語法錯誤：${e.message}`);
+        }
+      });
     }
 
     function applyHotSwap() {
       compileBots();
-      botA.cash = 1000000; botA.shares = 0; botA.trades = 0;
-      botB.cash = 1000000; botB.shares = 0; botB.trades = 0;
+      human.cash = 1000000; human.shares = 0; human.trades = 0;
+      bots.forEach(b => { b.cash = 1000000; b.shares = 0; b.trades = 0; });
       eqChart.data.labels = [];
-      eqChart.data.datasets[0].data = [];
-      eqChart.data.datasets[1].data = [];
+      eqChart.data.datasets.forEach(ds => ds.data = []);
       eqChart.update();
     }
 
-    // ====== 2. 公平集合競價撮合引擎 (Uniform Clearing Price) ======
+    // 人類玩家送出委託單
+    function submitHumanOrder(side, ratio) {
+      const customPrice = parseFloat(document.getElementById('order-price').value);
+      const execPrice = !isNaN(customPrice) && customPrice > 0
+        ? customPrice
+        : (side === 'BUY' ? currentPrice * 1.008 : currentPrice * 0.992); // 市價單自動讓價 0.8% 確保吃單成交
+
+      if (side === 'BUY') {
+        const qty = Math.floor((human.cash * ratio) / execPrice);
+        if (qty <= 0) return;
+        pendingHumanOrder = { side: 'BUY', price: Number(execPrice.toFixed(2)), qty };
+      } else {
+        const qty = Math.ceil(human.shares * ratio);
+        if (qty <= 0) return;
+        pendingHumanOrder = { side: 'SELL', price: Number(execPrice.toFixed(2)), qty };
+      }
+
+      const badge = document.getElementById('player-pending-badge');
+      badge.innerText = `掛單排隊中：${pendingHumanOrder.side === 'BUY' ? '買進' : '賣出'} ${pendingHumanOrder.qty} 股 @ $${pendingHumanOrder.price}`;
+      badge.classList.remove('hidden');
+    }
+
+    // 鍵盤快捷鍵支援 (B 買進 50%, S 賣出 50%)
+    document.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.key.toLowerCase() === 'b') submitHumanOrder('BUY', 0.5);
+      if (e.key.toLowerCase() === 's') submitHumanOrder('SELL', 0.5);
+    });
+
+    // ====== 3. 公平集合競價撮合引擎 ======
     function runCallAuction(bids, asks, fallbackPrice) {
       if (bids.length === 0 || asks.length === 0) return { price: fallbackPrice, volume: 0, filledBids: [], filledAsks: [] };
-
-      // 收集所有候選價格點
       const candidatePrices = [...new Set([...bids.map(b => b.price), ...asks.map(a => a.price)])].sort((a, b) => a - b);
       let bestPrice = fallbackPrice;
       let maxVolume = 0;
@@ -243,215 +319,208 @@
           bestPrice = p;
         }
       }
-
       if (maxVolume === 0) return { price: fallbackPrice, volume: 0, filledBids: [], filledAsks: [] };
 
-      // 價格優先、隨機時間優先（確保公平，無人有插隊特權）
       const eligibleBids = bids.filter(b => b.price >= bestPrice).sort((a, b) => b.price - a.price || Math.random() - 0.5);
       const eligibleAsks = asks.filter(a => a.price <= bestPrice).sort((a, b) => a.price - b.price || Math.random() - 0.5);
 
-      let remBuy = maxVolume;
-      const filledBids = [];
+      let remBuy = maxVolume, remSell = maxVolume;
+      const filledBids = [], filledAsks = [];
       for (const b of eligibleBids) {
         if (remBuy <= 0) break;
         const fill = Math.min(b.qty, remBuy);
         filledBids.push({ ...b, fillQty: fill });
         remBuy -= fill;
       }
-
-      let remSell = maxVolume;
-      const filledAsks = [];
       for (const a of eligibleAsks) {
         if (remSell <= 0) break;
         const fill = Math.min(a.qty, remSell);
         filledAsks.push({ ...a, fillQty: fill });
         remSell -= fill;
       }
-
       return { price: Number(bestPrice.toFixed(2)), volume: maxVolume, filledBids, filledAsks };
     }
 
-    // ====== 3. 單回合市場演進 ======
+    // ====== 4. 單回合市場推進 ======
     function stepMarket() {
       tick++;
-      // 基本面價值自然隨機漫步
-      intrinsicValue *= (1 + (Math.random() - 0.5) * 0.004);
+      intrinsicValue *= (1 + (Math.random() - 0.5) * 0.0045);
 
-      const bids = [];
-      const asks = [];
-
-      // (A) 40 名異質 NPC 根據各自性格獨立掛單
-      const recentPrices = history.slice(-10).map(h => h.price);
+      const bids = [], asks = [];
+      const recentPrices = history.slice(-8).map(h => h.price);
       const shortMa = recentPrices.length ? recentPrices.reduce((a, b) => a + b, 0) / recentPrices.length : currentPrice;
 
+      // (A) 40 名 NPC 掛單
       for (const npc of npcs) {
-        const qty = Math.floor(20 + Math.random() * 80);
+        const qty = Math.floor(25 + Math.random() * 85);
         if (npc.type === 'MOMENTUM') {
-          if (currentPrice > shortMa * 1.002 && npc.cash > currentPrice * qty) {
-            bids.push({ owner: npc, price: Number((currentPrice * (1 + Math.random() * 0.008)).toFixed(2)), qty });
-          } else if (currentPrice < shortMa * 0.998 && npc.shares >= qty) {
-            asks.push({ owner: npc, price: Number((currentPrice * (1 - Math.random() * 0.008)).toFixed(2)), qty });
-          }
+          if (currentPrice > shortMa * 1.0015 && npc.cash > currentPrice * qty) bids.push({ owner: npc, price: Number((currentPrice * (1 + Math.random() * 0.008)).toFixed(2)), qty });
+          else if (currentPrice < shortMa * 0.9985 && npc.shares >= qty) asks.push({ owner: npc, price: Number((currentPrice * (1 - Math.random() * 0.008)).toFixed(2)), qty });
         } else if (npc.type === 'VALUE') {
           const perceived = intrinsicValue * npc.bias;
-          if (currentPrice < perceived * 0.99 && npc.cash > currentPrice * qty) {
-            bids.push({ owner: npc, price: Number((currentPrice * (1 + Math.random() * 0.005)).toFixed(2)), qty });
-          } else if (currentPrice > perceived * 1.01 && npc.shares >= qty) {
-            asks.push({ owner: npc, price: Number((currentPrice * (1 - Math.random() * 0.005)).toFixed(2)), qty });
-          }
+          if (currentPrice < perceived * 0.992 && npc.cash > currentPrice * qty) bids.push({ owner: npc, price: Number((currentPrice * (1 + Math.random() * 0.005)).toFixed(2)), qty });
+          else if (currentPrice > perceived * 1.008 && npc.shares >= qty) asks.push({ owner: npc, price: Number((currentPrice * (1 - Math.random() * 0.005)).toFixed(2)), qty });
         } else if (npc.type === 'MARKET_MAKER') {
-          if (npc.cash > currentPrice * 100) bids.push({ owner: npc, price: Number((currentPrice * 0.996).toFixed(2)), qty: 60 });
-          if (npc.shares >= 100) asks.push({ owner: npc, price: Number((currentPrice * 1.004).toFixed(2)), qty: 60 });
+          if (npc.cash > currentPrice * 100) bids.push({ owner: npc, price: Number((currentPrice * 0.996).toFixed(2)), qty: 70 });
+          if (npc.shares >= 100) asks.push({ owner: npc, price: Number((currentPrice * 1.004).toFixed(2)), qty: 70 });
         } else {
-          if (Math.random() > 0.5 && npc.cash > currentPrice * qty) {
-            bids.push({ owner: npc, price: Number((currentPrice * (0.992 + Math.random() * 0.016)).toFixed(2)), qty });
-          } else if (npc.shares >= qty) {
-            asks.push({ owner: npc, price: Number((currentPrice * (0.992 + Math.random() * 0.016)).toFixed(2)), qty });
-          }
+          if (Math.random() > 0.5 && npc.cash > currentPrice * qty) bids.push({ owner: npc, price: Number((currentPrice * (0.992 + Math.random() * 0.016)).toFixed(2)), qty });
+          else if (npc.shares >= qty) asks.push({ owner: npc, price: Number((currentPrice * (0.992 + Math.random() * 0.016)).toFixed(2)), qty });
         }
       }
 
-      // (B) 兩位參賽 AI 選手在完全相同的資訊與規則下提交委託單
-      const publicMarketState = { tick, price: currentPrice, history: [...history] };
-      [botA, botB].forEach(bot => {
+      // (B) 4 位 AI 選手同時掛單
+      const publicMarket = { tick, price: currentPrice, history: [...history] };
+      bots.forEach(bot => {
         if (!bot.fn) return;
         try {
-          const order = bot.fn(publicMarketState, { cash: bot.cash, shares: bot.shares, equity: bot.cash + bot.shares * currentPrice });
+          const order = bot.fn(publicMarket, { cash: bot.cash, shares: bot.shares, equity: bot.cash + bot.shares * currentPrice });
           if (order && order.qty > 0 && order.price > 0) {
-            const cleanPrice = Number(Number(order.price).toFixed(2));
-            const cleanQty = Math.floor(order.qty);
-            if (order.side === 'BUY' && bot.cash >= cleanPrice * cleanQty) {
-              bids.push({ owner: bot, price: cleanPrice, qty: cleanQty, isBot: true });
-            } else if (order.side === 'SELL' && bot.shares >= cleanQty) {
-              asks.push({ owner: bot, price: cleanPrice, qty: cleanQty, isBot: true });
-            }
+            const p = Number(Number(order.price).toFixed(2));
+            const q = Math.floor(order.qty);
+            if (order.side === 'BUY' && bot.cash >= p * q) bids.push({ owner: bot, price: p, qty: q, tag: 'AI' });
+            else if (order.side === 'SELL' && bot.shares >= q) asks.push({ owner: bot, price: p, qty: q, tag: 'AI' });
           }
-        } catch (e) { /* 忽略單次策略例外，維持市場持續運作 */ }
+        } catch (e) {}
       });
 
-      // (C) 執行集合競價，得出本回合唯一公平價格
-      const prevPrice = currentPrice;
-      const result = runCallAuction(bids, asks, currentPrice);
-      currentPrice = result.price;
+      // (C) 人類玩家掛單進場
+      if (pendingHumanOrder) {
+        const o = pendingHumanOrder;
+        if (o.side === 'BUY' && human.cash >= o.price * o.qty) bids.push({ owner: human, price: o.price, qty: o.qty, tag: 'HUMAN' });
+        else if (o.side === 'SELL' && human.shares >= o.qty) asks.push({ owner: human, price: o.price, qty: o.qty, tag: 'HUMAN' });
+        pendingHumanOrder = null;
+        document.getElementById('player-pending-badge').classList.add('hidden');
+      }
 
-      // 結算所有成交委託（統一以公平價格 result.price 交割）
-      for (const b of result.filledBids) {
+      // (D) 統一結算價撮合
+      const prevPrice = currentPrice;
+      const res = runCallAuction(bids, asks, currentPrice);
+      currentPrice = res.price;
+
+      for (const b of res.filledBids) {
         const cost = b.fillQty * currentPrice;
         if (b.owner.cash >= cost) {
           b.owner.cash -= cost;
           b.owner.shares += b.fillQty;
-          if (b.isBot) b.owner.trades++;
+          if (b.tag) b.owner.trades++;
         }
       }
-      for (const a of result.filledAsks) {
+      for (const a of res.filledAsks) {
         if (a.owner.shares >= a.fillQty) {
           a.owner.shares -= a.fillQty;
           a.owner.cash += a.fillQty * currentPrice;
-          if (a.isBot) a.owner.trades++;
+          if (a.tag) a.owner.trades++;
         }
       }
 
-      history.push({ tick, price: currentPrice, volume: result.volume });
+      history.push({ tick, price: currentPrice, volume: res.volume });
       if (history.length > 200) history.shift();
 
-      updateUI(prevPrice, result.volume, bids, asks);
+      updateUI(prevPrice, res.volume, bids, asks);
     }
 
-    // ====== 4. 介面與圖表即時更新 ======
-    const priceCtx = document.getElementById('priceChart').getContext('2d');
-    const priceChart = new Chart(priceCtx, {
+    // ====== 5. 圖表與即時介面渲染 ======
+    const priceChart = new Chart(document.getElementById('priceChart').getContext('2d'), {
       type: 'line',
-      data: { labels: [], datasets: [{ label: '公平集合競價成交價', data: [], borderColor: '#38bdf8', backgroundColor: 'rgba(56,189,248,0.1)', fill: true, borderWidth: 2, pointRadius: 0, tension: 0.15 }] },
-      options: { animation: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' } } } }
+      data: { labels: [], datasets: [{ data: [], borderColor: '#38bdf8', backgroundColor: 'rgba(56,189,248,0.1)', fill: true, borderWidth: 2, pointRadius: 0, tension: 0.15 }] },
+      options: { animation: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: '#1e293b' } } } }
     });
 
-    const eqCtx = document.getElementById('equityChart').getContext('2d');
-    const eqChart = new Chart(eqCtx, {
+    const eqChart = new Chart(document.getElementById('equityChart').getContext('2d'), {
       type: 'line',
       data: {
         labels: [],
         datasets: [
-          { label: 'AI 選手 A', data: [], borderColor: '#fbbf24', borderWidth: 2, pointRadius: 0 },
-          { label: 'AI 選手 B', data: [], borderColor: '#c084fc', borderWidth: 2, pointRadius: 0 }
+          { label: '🧑‍💻 你', data: [], borderColor: '#22d3ee', borderWidth: 2.5, pointRadius: 0 },
+          ...bots.map(b => ({ label: b.name.replace('🤖 ', ''), data: [], borderColor: b.color, borderWidth: 1.5, pointRadius: 0 }))
         ]
       },
-      options: { animation: false, plugins: { legend: { labels: { color: '#cbd5e1', boxWidth: 12 } } }, scales: { x: { display: false }, y: { ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' } } } }
+      options: { animation: false, plugins: { legend: { labels: { color: '#cbd5e1', boxWidth: 10, font: { size: 10 } } } }, scales: { x: { display: false }, y: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: '#1e293b' } } } }
     });
 
     function updateUI(prevPrice, vol, bids, asks) {
       document.getElementById('tick-num').innerText = tick;
       document.getElementById('market-price').innerText = `$${currentPrice.toFixed(2)}`;
       document.getElementById('mid-price-tag').innerText = `$${currentPrice.toFixed(2)}`;
-      document.getElementById('vol-display').innerText = `本回合集合競價成交量：${vol.toLocaleString()} 股`;
+      document.getElementById('vol-display').innerText = `撮合成交量：${vol.toLocaleString()} 股`;
 
       const chg = ((currentPrice - prevPrice) / prevPrice) * 100;
       const chgEl = document.getElementById('price-change');
       chgEl.innerText = `${chg >= 0 ? '▲' : '▼'} ${Math.abs(chg).toFixed(2)}%`;
       chgEl.className = `text-xs font-mono font-bold ${chg >= 0 ? 'text-rose-400' : 'text-emerald-400'}`;
 
-      // 更新雙方資產狀態
-      const eqA = botA.cash + botA.shares * currentPrice;
-      const eqB = botB.cash + botB.shares * currentPrice;
-      const retA = ((eqA - 1000000) / 1000000) * 100;
-      const retB = ((eqB - 1000000) / 1000000) * 100;
+      // 更新人類玩家面板
+      const pEq = human.cash + human.shares * currentPrice;
+      const pRet = ((pEq - 1000000) / 1000000) * 100;
+      document.getElementById('p-equity').innerText = `$${Math.round(pEq).toLocaleString()}`;
+      document.getElementById('p-cash').innerText = `$${Math.round(human.cash).toLocaleString()}`;
+      document.getElementById('p-shares').innerText = `${human.shares.toLocaleString()} 股`;
+      const pRetEl = document.getElementById('p-ret');
+      pRetEl.innerText = `${pRet >= 0 ? '+' : ''}${pRet.toFixed(2)}%`;
+      pRetEl.className = pRet >= 0 ? 'text-rose-400 font-bold' : 'text-emerald-400 font-bold';
 
-      document.getElementById('eq-a').innerText = `$${Math.round(eqA).toLocaleString()}`;
-      document.getElementById('pos-a').innerText = `現金: $${Math.round(botA.cash).toLocaleString()} | 持股: ${botA.shares} 股`;
-      document.getElementById('ret-a').innerText = `${retA >= 0 ? '+' : ''}${retA.toFixed(2)}%`;
-      document.getElementById('ret-a').className = `text-sm font-bold ${retA >= 0 ? 'text-rose-400' : 'text-emerald-400'}`;
-      document.getElementById('trades-a').innerText = `成交 ${botA.trades} 筆`;
+      // 計算 5 人即時排行榜
+      const contestants = [
+        { name: human.name, color: human.color, eq: pEq, trades: human.trades, isHuman: true },
+        ...bots.map(b => ({ name: b.name, color: b.color, eq: b.cash + b.shares * currentPrice, trades: b.trades }))
+      ].sort((a, b) => b.eq - a.eq);
 
-      document.getElementById('eq-b').innerText = `$${Math.round(eqB).toLocaleString()}`;
-      document.getElementById('pos-b').innerText = `現金: $${Math.round(botB.cash).toLocaleString()} | 持股: ${botB.shares} 股`;
-      document.getElementById('ret-b').innerText = `${retB >= 0 ? '+' : ''}${retB.toFixed(2)}%`;
-      document.getElementById('ret-b').className = `text-sm font-bold ${retB >= 0 ? 'text-rose-400' : 'text-emerald-400'}`;
-      document.getElementById('trades-b').innerText = `成交 ${botB.trades} 筆`;
+      document.getElementById('leaderboard-list').innerHTML = contestants.map((c, i) => {
+        const ret = ((c.eq - 1000000) / 1000000) * 100;
+        const medal = i === 0 ? '🥇' : (i === 1 ? '🥈' : (i === 2 ? '🥉' : `#${i + 1}`));
+        return `
+          <div class="p-2 rounded border ${c.isHuman ? 'bg-cyan-950/40 border-cyan-500/60' : 'bg-slate-950 border-slate-800'} flex justify-between items-center">
+            <div>
+              <div class="font-bold" style="color:${c.color}">${medal} ${c.name}</div>
+              <div class="text-[10px] text-slate-500">成交 ${c.trades} 筆</div>
+            </div>
+            <div class="text-right">
+              <div class="text-white font-bold">$${Math.round(c.eq).toLocaleString()}</div>
+              <div class="text-[11px] ${ret >= 0 ? 'text-rose-400' : 'text-emerald-400'}">${ret >= 0 ? '+' : ''}${ret.toFixed(2)}%</div>
+            </div>
+          </div>`;
+      }).join('');
 
-      const gap = eqA - eqB;
-      document.getElementById('wealth-gap').innerText = gap >= 0
-        ? `選手 A 領先 +$${Math.round(gap).toLocaleString()}`
-        : `選手 B 領先 +$${Math.round(-gap).toLocaleString()}`;
-
-      // 更新五檔掛單簿顯示
+      // 五檔委託簿
       const topAsks = [...asks].sort((a, b) => a.price - b.price).slice(0, 4).reverse();
       const topBids = [...bids].sort((a, b) => b.price - a.price).slice(0, 4);
+      const badge = (tag) => tag === 'HUMAN' ? '🧑‍💻' : (tag === 'AI' ? '🤖' : '');
       document.getElementById('ask-book').innerHTML = topAsks.map(a =>
-        `<div class="flex justify-between text-emerald-400"><span>賣 $${a.price.toFixed(2)}</span><span>${a.qty} 股 ${a.isBot ? '⭐' : ''}</span></div>`
+        `<div class="flex justify-between text-emerald-400"><span>賣 $${a.price.toFixed(2)}</span><span>${a.qty} ${badge(a.tag)}</span></div>`
       ).join('') || '<div class="text-slate-600">無賣單</div>';
       document.getElementById('bid-book').innerHTML = topBids.map(b =>
-        `<div class="flex justify-between text-rose-400"><span>買 $${b.price.toFixed(2)}</span><span>${b.qty} 股 ${b.isBot ? '⭐' : ''}</span></div>`
+        `<div class="flex justify-between text-rose-400"><span>買 $${b.price.toFixed(2)}</span><span>${b.qty} ${badge(b.tag)}</span></div>`
       ).join('') || '<div class="text-slate-600">無買單</div>';
 
-      // 更新走勢圖（維持最近 120 個 Tick）
+      // 更新曲線
       priceChart.data.labels.push(tick);
       priceChart.data.datasets[0].data.push(currentPrice);
-      if (priceChart.data.labels.length > 120) {
+      if (priceChart.data.labels.length > 100) {
         priceChart.data.labels.shift();
         priceChart.data.datasets[0].data.shift();
       }
       priceChart.update();
 
       eqChart.data.labels.push(tick);
-      eqChart.data.datasets[0].data.push(eqA);
-      eqChart.data.datasets[1].data.push(eqB);
-      if (eqChart.data.labels.length > 120) {
+      eqChart.data.datasets[0].data.push(pEq);
+      bots.forEach((b, idx) => eqChart.data.datasets[idx + 1].data.push(b.cash + b.shares * currentPrice));
+      if (eqChart.data.labels.length > 100) {
         eqChart.data.labels.shift();
-        eqChart.data.datasets[0].data.shift();
-        eqChart.data.datasets[1].data.shift();
+        eqChart.data.datasets.forEach(ds => ds.data.shift());
       }
       eqChart.update();
     }
 
-    // 造物主新聞事件觸發
     function triggerNews(type) {
       if (type === 'GOOD') {
         const shock = 1.08 + Math.random() * 0.07;
         intrinsicValue *= shock;
-        document.getElementById('news-ticker').innerText = `🔥 【突發利多】AI 晶片需求大爆發，基本面估值上調 +${((shock - 1) * 100).toFixed(1)}%！`;
+        document.getElementById('news-ticker').innerText = `🔥 【突發利多】基本面估值上調 +${((shock - 1) * 100).toFixed(1)}%，買盤湧入！`;
       } else {
         const shock = 0.85 + Math.random() * 0.07;
         intrinsicValue *= shock;
-        document.getElementById('news-ticker').innerText = `❄️ 【突發利空】供應鏈庫存警報，基本面估值下修 -${((1 - shock) * 100).toFixed(1)}%！`;
+        document.getElementById('news-ticker').innerText = `❄️ 【突發利空】基本面估值下修 -${((1 - shock) * 100).toFixed(1)}%，賣壓出籠！`;
       }
     }
 
@@ -473,23 +542,15 @@
     }
 
     function copyArenaPrompt() {
-      const prompt = `請擔任頂尖高頻量化交易員，寫一個純 JavaScript 掛單決策函式 \`function decide(market, me)\`，在一個由 40 名異質交易者組成的「集合競價人工股市」中賺取最大利潤。
-
-【市場規則】
-1. 每一回合所有參與者同時送出限價單，撮合引擎計算「最大成交量交會點」作為該回合唯一公平成交價（Uniform Clearing Price）。
-2. \`market\` 物件包含：\`{ tick, price, history }\`（\`history\` 為過去成交紀錄陣列 \`{ tick, price, volume }\`）。
-3. \`me\` 物件包含：\`{ cash, shares, equity }\`（初始資金 1,000,000）。
-
-【回傳格式】
-回傳 \`{ side: "BUY" | "SELL", price: 限價數字, qty: 整數股數 }\`，若本回合不掛單則回傳 \`null\`。
-只輸出 \`function decide(market, me) { ... }\` 純程式碼，不要有任何解釋文字。`;
+      const prompt = `請寫一個純 JavaScript 掛單決策函式 \`function decide(market, me)\`，在集合競價人工股市中與人類及其他 AI 競爭最大利潤。
+輸入：\`market = { tick, price, history }\`（history 為 \`{ tick, price, volume }\` 陣列），\`me = { cash, shares, equity }\`。
+輸出：\`{ side: "BUY" | "SELL", price: 限價數字, qty: 整數股數 }\` 或 \`null\`。只輸出純程式碼，不要解釋文字。`;
       navigator.clipboard.writeText(prompt);
       const btn = document.getElementById('copy-prompt-btn');
       btn.innerText = '✅ 已複製！';
-      setTimeout(() => btn.innerText = '📋 複製出題指令給 ChatGPT / Claude', 2000);
+      setTimeout(() => btn.innerText = '📋 複製出題指令給其他 AI', 2000);
     }
 
-    // 啟動引擎
     compileBots();
     updateSpeed();
   </script>
