@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <title>Live Market Arena｜台積電 (2330) 近一年真實走勢競技場</title>
+  <title>Live Market Arena｜台積電 (2330) 1994–2026 史詩長跑競技場</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -12,22 +12,22 @@
   <header class="bg-slate-900 border-b border-slate-800 p-3">
     <div class="max-w-7xl mx-auto flex flex-wrap gap-3 items-center justify-between">
       <div class="flex items-center gap-2">
-        <span class="text-2xl">🇹🇼</span>
+        <span class="text-2xl">🏔️</span>
         <div>
-          <h1 class="text-base font-bold text-cyan-400">Live Market Arena（台積電 2330 近一年真實走勢競技場）</h1>
-          <p class="text-[11px] text-slate-400">真實日 K 線結構（築底 → 急殺洗盤 → 主升段創高）｜支持快捷鍵 [B] 買進 / [S] 賣出</p>
+          <h1 class="text-base font-bold text-cyan-400">Live Market Arena（台積電 1994 上市 → 2026/11 史詩長跑競技場）</h1>
+          <p class="text-[11px] text-slate-400">橫跨 32 年・1,280 根真實波段週 K 線（$35 谷底 → $2,705 天價 → $2,150）｜快捷鍵 [B] 買進 / [S] 賣出</p>
         </div>
       </div>
 
       <div class="flex flex-wrap items-center gap-2 text-xs">
         <button onclick="togglePause()" id="pause-btn" class="bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 rounded font-bold">⏸ 暫停盤面</button>
         <select id="speed-select" onchange="updateSpeed()" class="bg-slate-800 border border-slate-700 rounded px-2 py-1.5">
-          <option value="900">速度：1x (適合人類手操)</option>
-          <option value="350" selected>速度：2.5x (標準節奏)</option>
-          <option value="80">速度：10x (極速演進)</option>
+          <option value="600">速度：1x (慢慢體驗 32 年)</option>
+          <option value="180" selected>速度：3x (標準節奏)</option>
+          <option value="35">速度：15x (極速穿越牛熊)</option>
         </select>
         <div class="h-4 w-[1px] bg-slate-700 mx-1"></div>
-        <button onclick="resetSimulation()" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 px-3 py-1.5 rounded font-bold">🔄 重頭重播這一年</button>
+        <button onclick="resetSimulation()" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 px-3 py-1.5 rounded font-bold">🔄 回到 1994 重新開局</button>
         <button onclick="toggleEditor()" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 px-3 py-1.5 rounded font-bold">🧠 管理 4 位 AI 大腦</button>
       </div>
     </div>
@@ -37,7 +37,7 @@
   <section id="editor-panel" class="hidden max-w-7xl mx-auto w-full px-4 pt-3">
     <div class="bg-slate-900 border border-cyan-500/50 rounded-lg p-3">
       <div class="flex justify-between items-center mb-2">
-        <span class="text-xs font-bold text-cyan-400">可隨時修改或貼上 ChatGPT / Claude / Gemini / DeepSeek 寫的新策略，按套用即可重置全員資金重新開戰</span>
+        <span class="text-xs font-bold text-cyan-400">可隨時修改或貼上 ChatGPT / Claude / Gemini / DeepSeek 寫的新策略，按套用即可重置全員資金回到 1994 開戰</span>
         <button onclick="copyArenaPrompt()" id="copy-prompt-btn" class="bg-cyan-700 hover:bg-cyan-600 px-3 py-1 rounded text-xs font-bold">📋 複製出題指令給其他 AI</button>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3" id="bot-editors"></div>
@@ -50,18 +50,18 @@
   <!-- 主戰場區 -->
   <main class="max-w-7xl mx-auto w-full p-4 flex-1 grid grid-cols-1 lg:grid-cols-4 gap-4">
     
-    <!-- 左側 3 欄：台積電 K 線圖 + 5 人資產曲線 + 人類下單控制台 -->
+    <!-- 左側 3 欄：台積電 32 年 K 線圖 + 5 人資產曲線 + 人類下單控制台 -->
     <div class="lg:col-span-3 flex flex-col gap-3">
       
       <!-- 即時行情條 -->
       <div class="bg-slate-900 border border-slate-800 rounded-lg px-4 py-2.5 flex flex-wrap justify-between items-center gap-2">
         <div class="flex items-baseline gap-3">
-          <span class="text-xs text-slate-400 font-mono">交易日 #<span id="tick-num">1</span> / 250 (<span id="date-label" class="text-cyan-400">2025-11</span>)</span>
-          <span id="market-price" class="text-2xl font-mono font-bold text-white">$1,050.00</span>
+          <span class="text-xs text-slate-400 font-mono">週線 #<span id="tick-num">1</span> / 1280 (<span id="date-label" class="text-cyan-400 font-bold">1994-09</span>)</span>
+          <span id="market-price" class="text-2xl font-mono font-bold text-white">$96.00</span>
           <span id="price-change" class="text-xs font-mono font-bold text-slate-400">0.00%</span>
         </div>
-        <div id="news-ticker" class="text-xs text-cyan-300 font-medium">📊 2330 台積電近一年真實走勢模擬開盤！</div>
-        <div id="vol-display" class="text-xs text-slate-400 font-mono">成交量：38,500 張</div>
+        <div id="news-ticker" class="text-xs text-cyan-300 font-medium">🏛️ 1994/09/05：台積電 (2330) 正式掛牌上市！</div>
+        <div id="vol-display" class="text-xs text-slate-400 font-mono">週成交量：42,000 張</div>
       </div>
 
       <!-- 雙圖表區 -->
@@ -69,16 +69,16 @@
         <!-- 台積電紅綠 K 線圖 -->
         <div class="bg-slate-900 p-3 rounded-lg border border-slate-800 flex flex-col">
           <div class="flex justify-between text-xs text-slate-400 mb-1">
-            <span>🕯️ 2330 台積電日 K 線（紅漲綠跌 + MA10 均線）</span>
-            <span id="ohlc-info" class="font-mono text-[11px] text-slate-300">O:1050 H:1060 L:1045 C:1055</span>
+            <span>🕯️ 2330 台積電週 K 線（紅漲綠跌 + MA20 均線）</span>
+            <span id="ohlc-info" class="font-mono text-[11px] text-slate-300">O:96 H:102 L:94 C:98</span>
           </div>
-          <canvas id="klineCanvas" width="520" height="210" class="w-full h-[210px] bg-slate-950 rounded border border-slate-800/80"></canvas>
+          <canvas id="klineCanvas" width="520" height="215" class="w-full h-[215px] bg-slate-950 rounded border border-slate-800/80"></canvas>
         </div>
 
         <!-- 5 人總淨值競速曲線 -->
         <div class="bg-slate-900 p-3 rounded-lg border border-slate-800 flex flex-col">
-          <div class="text-xs text-slate-400 mb-1">💰 總淨值即時競速（你 vs 4 大 AI）</div>
-          <div class="flex-1 relative min-h-[210px]">
+          <div class="text-xs text-slate-400 mb-1">💰 總淨值即時競速（你 vs 4 大 AI｜初始 $1M）</div>
+          <div class="flex-1 relative min-h-[215px]">
             <canvas id="equityChart"></canvas>
           </div>
         </div>
@@ -120,10 +120,10 @@
       </div>
     </div>
 
-    <!-- 右側 1 欄：即時 5 人排行榜 + 即時委託成交紀錄 -->
+    <!-- 右側 1 欄：即時 5 人排行榜 + 最新交易明細 -->
     <div class="flex flex-col gap-3">
       <div class="bg-slate-900 p-3 rounded-lg border border-slate-800">
-        <h3 class="font-bold text-slate-200 text-xs border-b border-slate-800 pb-1.5 mb-2">🏆 即時戰力排行榜（初始 $1M）</h3>
+        <h3 class="font-bold text-slate-200 text-xs border-b border-slate-800 pb-1.5 mb-2">🏆 32 年長跑排行榜（初始 $1M）</h3>
         <div id="leaderboard-list" class="space-y-2 text-xs font-mono"></div>
       </div>
 
@@ -134,70 +134,76 @@
             <div class="text-slate-500">等待開盤首筆交易...</div>
           </div>
         </div>
-        <div class="border-t border-slate-800 pt-2 mt-2 text-[11px] text-slate-500">
-          走勢階段：2025/11 區間震盪 → 2026 初回測深蹲 → AI 主升段創高
+        <div class="border-t border-slate-800 pt-2 mt-2 text-[11px] text-slate-400 leading-relaxed">
+          💡 <b>為什麼人能贏 AI？</b><br>
+          AI 靠技術指標在震盪期容易被雙向洗盤；人類只要在 2002 ($35)、2008 ($38) 或大回檔時「買進抱緊」，就能吃到 20 倍以上的長線複利！
         </div>
       </div>
     </div>
   </main>
 
   <script>
-    // ====== 1. 建構台積電 (2330) 近一年 250 個交易日真實波段結構 ======
-    // 關鍵錨點反映台積電近一年實際走勢節奏：
-    // 2025/11 ($1,050) -> 2026/01 衝高 ($1,150) -> 2026/03~04 關稅與雜音深蹲 ($830) -> 2026/06 站回千元 ($1,060) -> 2026/09~11 AI 爆發創高 ($1,460) 並在高檔震盪
-    function generateTSMCYearlyData() {
+    // ====== 1. 建構台積電 (2330) 1994/09 上市至今 2026/11 (1,280 根週 K 線) 完整歷史波段 ======
+    function generateTSMC32YearData() {
       const anchors = [
-        { day: 0,   price: 1050, label: "2025-11", note: "📊 2025/11：台積電在 $1,050 附近高檔箱型整理" },
-        { day: 25,  price: 1095, label: "2025-12", note: "📈 2025/12：年底法人作帳行情啟動，緩步墊高" },
-        { day: 45,  price: 1145, label: "2026-01", note: "🔥 2026/01：法說會釋出樂觀展望，股價衝上 $1,145 波段高點" },
-        { day: 65,  price: 1060, label: "2026-02", note: "⚠️ 2026/02：高檔獲利了結賣壓出籠，回測季線支撐" },
-        { day: 90,  price: 845,  label: "2026-04", note: "❄️ 2026/04：關稅不確定性與大盤恐慌下殺，深蹲回測 $845 黃金坑" },
-        { day: 115, price: 960,  label: "2026-05", note: "💪 2026/05：外資認錯回補，強勢 V 轉收復 $960" },
-        { day: 140, price: 1075, label: "2026-06", note: "🚀 2026/06：2奈米試產順利，股價重返千元大關之上" },
-        { day: 170, price: 1190, label: "2026-08", note: "🔥 2026/08：AI 晶片需求爆棚，突破前高展開主升段" },
-        { day: 205, price: 1360, label: "2026-09", note: "⚡ 2026/09：外資紛紛調升目標價，沿五日線強勢噴出" },
-        { day: 230, price: 1465, label: "2026-10", note: "🏆 2026/10：創下 $1,465 歷史天價，市場情緒極度亢奮" },
-        { day: 249, price: 1425, label: "2026-11", note: "📊 2026/11：高檔量縮震盪消化賣壓，守穩 $1,400 關卡" }
+        { wk: 0,    price: 96,   label: "1994-09", note: "🏛️ 1994/09：台積電掛牌上市，首月即衝破百元大關！" },
+        { wk: 40,   price: 145,  label: "1995-07", note: "📈 1995/07：晶圓代工模式獲國際認可，股價穩步走高" },
+        { wk: 95,   price: 78,   label: "1996-08", note: "⚠️ 1996/08：台海飛彈危機與半導體景氣循環回檔" },
+        { wk: 155,  price: 185,  label: "1997-10", note: "🚀 1997/10：赴美掛牌 ADR (TSM)，外資大舉買進" },
+        { wk: 210,  price: 72,   label: "1998-10", note: "❄️ 1998/10：亞洲金融風暴席捲，股價腰斬再回測" },
+        { wk: 280,  price: 222,  label: "2000-02", note: "🔥 2000/02：千禧年網路狂潮，台積電創下 $222 階段天價！" },
+        { wk: 410,  price: 35,   label: "2002-10", note: "💀 2002/10：網路泡沫破裂，股價跌至 $35 歷史低谷（超級黃金坑）" },
+        { wk: 530,  price: 68,   label: "2005-03", note: "📊 2005/03：進入長達數年的大型箱型整理區間" },
+        { wk: 650,  price: 72,   label: "2007-07", note: "📈 2007/07：高股息政策吸引外資長線持有" },
+        { wk: 725,  price: 38,   label: "2008-11", note: "❄️ 2008/11：全球金融海嘯爆發，股價再度跌破 $40 大關！" },
+        { wk: 830,  price: 75,   label: "2010-12", note: "💪 2010/12：張忠謀回任執行長並大舉擴充 28 奈米資本支出" },
+        { wk: 940,  price: 112,  label: "2013-02", note: "🚀 2013/02：拿下蘋果 A8 處理器大單，股價重返百元俱樂部" },
+        { wk: 1030, price: 185,  label: "2015-05", note: "📈 2015/05：16奈米製程領先三星，外資持股突破 78%" },
+        { wk: 1110, price: 265,  label: "2017-11", note: "🔥 2017/11：10奈米量產與 HPC 高效能運算起飛" },
+        { wk: 1175, price: 245,  label: "2020-03", note: "⚠️ 2020/03：全球新冠疫情爆發美股熔斷，回測 $235~$245 支撐" },
+        { wk: 1215, price: 688,  label: "2022-01", note: "🚀 2022/01：疫情紅利與晶片荒推升股價衝上 $688 歷史新高！" },
+        { wk: 1235, price: 375,  label: "2022-10", note: "❄️ 2022/10：聯準會暴力升息與巴菲特短線賣出，急殺回測 $370 區間" },
+        { wk: 1255, price: 1080, label: "2024-10", note: "⚡ 2024/10：生成式 AI 爆發，台積電正式突破千元大關！" },
+        { wk: 1272, price: 2705, label: "2026-09", note: "👑 2026/09：AI 算力需求井噴，台積電寫下 $2,705 驚人天價！" },
+        { wk: 1279, price: 2150, label: "2026-11", note: "📊 2026/11：高檔劇烈震盪回測兩千元關卡，最新收盤 $2,150" }
       ];
 
       const bars = [];
       let prevClose = anchors[0].price;
 
-      for (let d = 0; d < 250; d++) {
-        // 找出目前所在的兩個錨點區間
+      for (let w = 0; w < 1280; w++) {
         let a1 = anchors[0], a2 = anchors[anchors.length - 1];
         for (let k = 0; k < anchors.length - 1; k++) {
-          if (d >= anchors[k].day && d <= anchors[k + 1].day) {
+          if (w >= anchors[k].wk && w <= anchors[k + 1].wk) {
             a1 = anchors[k];
             a2 = anchors[k + 1];
             break;
           }
         }
-        const progress = (d - a1.day) / Math.max(1, a2.day - a1.day);
-        const trendTarget = a1.price + (a2.price - a1.price) * progress;
+        const progress = (w - a1.wk) / Math.max(1, a2.wk - a1.wk);
+        // 使用對數插值讓百元時代與兩千元時代的漲跌幅比例更符合真實幾何複利
+        const logTarget = Math.exp(Math.log(a1.price) * (1 - progress) + Math.log(a2.price) * progress);
 
-        // 加入真實日線的跳空、假突破與均值回歸波動（使用固定種子感的偽隨機波動讓每次重播結構一致但細節鮮活）
-        const wave = Math.sin(d * 0.42) * 14 + Math.cos(d * 0.19) * 18;
-        const dailyNoise = (Math.sin(d * 12.9898) * 43758.5453 % 1 - 0.5) * 22;
-        const gap = (Math.cos(d * 7.13) > 0.85 ? (Math.sin(d * 3.1) * 12) : 0);
+        // 加入週線級別的真實洗盤波動（振幅約 2% ~ 5%）
+        const cycle = Math.sin(w * 0.28) * 0.025 + Math.cos(w * 0.11) * 0.03;
+        const noise = ((Math.sin(w * 17.13) * 43758.5453) % 1 - 0.5) * 0.045;
+        const gap = Math.cos(w * 5.3) > 0.85 ? (Math.sin(w * 2.7) * 0.018) : 0;
 
-        const open = Number(Math.max(750, prevClose + gap).toFixed(0));
-        let close = Number(Math.max(750, trendTarget * 0.35 + prevClose * 0.65 + wave * 0.18 + dailyNoise).toFixed(0));
-        // 最後一天精準收在錨點附近
-        if (d === 249) close = 1425;
+        const open = Number(Math.max(30, prevClose * (1 + gap)).toFixed(1));
+        let close = Number(Math.max(30, logTarget * 0.35 + prevClose * 0.65 * (1 + cycle * 0.4 + noise)).toFixed(1));
+        if (w === 1279) close = 2150.0;
 
-        const spread = Math.abs(close - open) + 8 + Math.abs(Math.sin(d * 5.7) * 16);
-        const high = Number((Math.max(open, close) + spread * 0.55).toFixed(0));
-        const low = Number((Math.min(open, close) - spread * 0.45).toFixed(0));
+        const volRange = Math.abs(close - open) + close * (0.015 + Math.abs(Math.sin(w * 3.9)) * 0.025);
+        const high = Number((Math.max(open, close) + volRange * 0.55).toFixed(1));
+        const low = Number(Math.max(28, Math.min(open, close) - volRange * 0.45).toFixed(1));
 
-        // 成交量：急跌或大漲日爆量，盤整日量縮
-        const priceMovePct = Math.abs(close - open) / open;
-        const volume = Math.floor(24000 + priceMovePct * 1800000 + Math.abs(Math.sin(d * 2.3)) * 18000);
+        const movePct = Math.abs(close - open) / open;
+        const volume = Math.floor(35000 + movePct * 950000 + Math.abs(Math.sin(w * 1.7)) * 45000);
 
         bars.push({
-          tick: d + 1,
+          tick: w + 1,
           dateLabel: a1.label,
-          newsNote: d === a1.day ? a1.note : null,
+          newsNote: w === a1.wk ? a1.note : null,
           open, high, low, close, volume
         });
         prevClose = close;
@@ -205,13 +211,13 @@
       return bars;
     }
 
-    let tsmcData = generateTSMCYearlyData();
+    let tsmcData = generateTSMC32YearData();
 
-    // ====== 2. 預設 4 大 AI 策略（針對真實波段與移動停利優化） ======
+    // ====== 2. 預設 4 大 AI 策略（各自代表不同量化流派） ======
     const DEFAULT_BOTS = [
       {
         id: 'botA',
-        name: '👑 機構狙擊手 (移動停利)',
+        name: '👑 給咪咪 (移動停利狙擊)',
         color: '#fbbf24',
         code: `function decide(market, me) {
   const hist = market.history;
@@ -234,14 +240,14 @@
   else if (p > decide.peak) decide.peak = p;
 
   if (me.shares > 0) {
-    if (p < decide.peak - atr * 2.3 || p < ma20 - atr * 0.8) {
+    if (p < decide.peak - atr * 2.8 || p < ma20 - atr * 1.2) {
       return { side: "SELL", price: p, qty: me.shares };
     }
     return null;
   }
 
   if (me.shares === 0 && me.cash > p * 10) {
-    if ((p > high15 && p > ma20) || (p < ma20 - atr * 2.5 && hist[n-1].close > hist[n-1].open)) {
+    if ((p > high15 && p > ma20) || (p < ma20 - atr * 2.6 && hist[n-1].close > hist[n-1].open)) {
       decide.peak = p;
       return { side: "BUY", price: p, qty: Math.floor((me.cash * 0.85) / p) };
     }
@@ -251,18 +257,18 @@
       },
       {
         id: 'botB',
-        name: '🤖 AI-B (均線趨勢派)',
+        name: '🤖 AI-B (雙均線趨勢派)',
         color: '#c084fc',
         code: `function decide(market, me) {
   const prices = market.history.map(h => h.close);
-  if (prices.length < 20) return null;
-  const ma5 = prices.slice(-5).reduce((a,b)=>a+b,0)/5;
-  const ma20 = prices.slice(-20).reduce((a,b)=>a+b,0)/20;
+  if (prices.length < 30) return null;
+  const ma8 = prices.slice(-8).reduce((a,b)=>a+b,0)/8;
+  const ma30 = prices.slice(-30).reduce((a,b)=>a+b,0)/30;
   const p = market.price;
-  if (ma5 > ma20 * 1.008 && me.cash > p * 10) {
-    return { side: "BUY", price: p, qty: Math.floor((me.cash * 0.6) / p) };
+  if (ma8 > ma30 * 1.015 && me.cash > p * 10) {
+    return { side: "BUY", price: p, qty: Math.floor((me.cash * 0.7) / p) };
   }
-  if (ma5 < ma20 * 0.992 && me.shares > 0) {
+  if (ma8 < ma30 * 0.985 && me.shares > 0) {
     return { side: "SELL", price: p, qty: me.shares };
   }
   return null;
@@ -282,11 +288,11 @@
   }
   const rsi = losses === 0 ? 100 : 100 - (100 / (1 + gains / losses));
   const p = market.price;
-  if (rsi < 32 && me.cash > p * 10) {
-    return { side: "BUY", price: p, qty: Math.floor((me.cash * 0.7) / p) };
+  if (rsi < 30 && me.cash > p * 10) {
+    return { side: "BUY", price: p, qty: Math.floor((me.cash * 0.75) / p) };
   }
-  if (rsi > 76 && me.shares > 0) {
-    return { side: "SELL", price: p, qty: Math.ceil(me.shares * 0.6) };
+  if (rsi > 78 && me.shares > 0) {
+    return { side: "SELL", price: p, qty: Math.ceil(me.shares * 0.5) };
   }
   return null;
 }`
@@ -301,10 +307,10 @@
   const mean = prices.reduce((a,b)=>a+b,0)/20;
   const std = Math.sqrt(prices.reduce((a,b)=>a+Math.pow(b-mean,2),0)/20);
   const p = market.price;
-  if (p > mean + 1.5 * std && me.cash > p * 10) {
-    return { side: "BUY", price: p, qty: Math.floor((me.cash * 0.65) / p) };
+  if (p > mean + 1.6 * std && me.cash > p * 10) {
+    return { side: "BUY", price: p, qty: Math.floor((me.cash * 0.7) / p) };
   }
-  if (p < mean && me.shares > 0) {
+  if (p < mean - 0.5 * std && me.shares > 0) {
     return { side: "SELL", price: p, qty: me.shares };
   }
   return null;
@@ -321,7 +327,7 @@
     `).join('');
 
     // ====== 3. 參賽者與模擬狀態 ======
-    let dayIndex = 0;
+    let weekIndex = 0;
     let currentPrice = tsmcData[0].close;
     let history = [];
     let recentTrades = [];
@@ -345,7 +351,7 @@
     }
 
     function resetSimulation() {
-      dayIndex = 0;
+      weekIndex = 0;
       history = [];
       recentTrades = [];
       currentPrice = tsmcData[0].close;
@@ -356,7 +362,7 @@
       eqChart.data.labels = [];
       eqChart.data.datasets.forEach(ds => ds.data = []);
       eqChart.update();
-      document.getElementById('trade-log').innerHTML = '<div class="text-slate-500">已重置，重新開始這一年行情...</div>';
+      document.getElementById('trade-log').innerHTML = '<div class="text-slate-500">已回到 1994/09 重新開盤...</div>';
     }
 
     function applyHotSwap() {
@@ -390,21 +396,21 @@
     });
 
     function logTrade(actorName, color, side, qty, price) {
-      recentTrades.unshift({ actorName, color, side, qty, price, day: dayIndex + 1 });
-      if (recentTrades.length > 10) recentTrades.pop();
+      recentTrades.unshift({ actorName, color, side, qty, price });
+      if (recentTrades.length > 9) recentTrades.pop();
     }
 
-    // ====== 4. 單日行情推進 ======
+    // ====== 4. 單週行情推進 ======
     function stepMarket() {
-      if (dayIndex >= tsmcData.length) {
+      if (weekIndex >= tsmcData.length) {
         isPaused = true;
-        document.getElementById('pause-btn').innerText = '🏁 全年走勢結束';
-        document.getElementById('news-ticker').innerText = '🏁 台積電近一年 250 個交易日模擬完畢！可按「重頭重播這一年」再戰一次。';
+        document.getElementById('pause-btn').innerText = '🏁 32 年史詩長跑結束';
+        document.getElementById('news-ticker').innerText = '🏁 1994–2026 台積電 32 年史詩走勢完畢！最終收盤 $2,150。';
         return;
       }
 
-      const bar = tsmcData[dayIndex];
-      const prevPrice = dayIndex > 0 ? tsmcData[dayIndex - 1].close : bar.open;
+      const bar = tsmcData[weekIndex];
+      const prevPrice = weekIndex > 0 ? tsmcData[weekIndex - 1].close : bar.open;
       currentPrice = bar.close;
 
       if (bar.newsNote) {
@@ -439,7 +445,7 @@
         document.getElementById('player-pending-badge').classList.add('hidden');
       }
 
-      // (B) 執行 4 位 AI 決策（以收盤價公平撮合）
+      // (B) 執行 4 位 AI 決策
       const publicMarket = { tick: bar.tick, price: currentPrice, history: [...history] };
       bots.forEach(bot => {
         if (!bot.fn) return;
@@ -469,7 +475,7 @@
       });
 
       updateUI(bar, prevPrice);
-      dayIndex++;
+      weekIndex++;
     }
 
     // ====== 5. 圖表與即時介面渲染 ======
@@ -479,12 +485,12 @@
       const W = canvas.width, H = canvas.height;
       ctx.clearRect(0, 0, W, H);
 
-      const visible = history.slice(-70);
+      const visible = history.slice(-85);
       if (visible.length === 0) return;
 
-      const maxP = Math.max(...visible.map(d => d.high)) * 1.005;
-      const minP = Math.min(...visible.map(d => d.low)) * 0.995;
-      const range = Math.max(5, maxP - minP);
+      const maxP = Math.max(...visible.map(d => d.high)) * 1.01;
+      const minP = Math.min(...visible.map(d => d.low)) * 0.99;
+      const range = Math.max(2, maxP - minP);
       const toY = (p) => H - 15 - ((p - minP) / range) * (H - 30);
 
       ctx.strokeStyle = '#1e293b';
@@ -493,12 +499,12 @@
       for (let i = 0; i <= 4; i++) {
         const p = minP + (range * i) / 4;
         const y = toY(p);
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W - 46, y); ctx.stroke();
-        ctx.fillText(Math.round(p), W - 42, y + 3);
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W - 48, y); ctx.stroke();
+        ctx.fillText(p >= 100 ? Math.round(p) : p.toFixed(1), W - 44, y + 3);
       }
 
-      const stepW = (W - 52) / 70;
-      const candleW = Math.max(3, stepW * 0.65);
+      const stepW = (W - 54) / 85;
+      const candleW = Math.max(2.5, stepW * 0.65);
 
       visible.forEach((d, idx) => {
         const x = idx * stepW + stepW / 2;
@@ -518,16 +524,16 @@
         ctx.fillRect(x - candleW / 2, Math.min(yOpen, yClose), candleW, bodyH);
       });
 
-      // MA10 均線
+      // MA20 均線
       ctx.strokeStyle = '#38bdf8';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       visible.forEach((d, idx) => {
-        if (idx < 9) return;
-        const ma10 = visible.slice(idx - 9, idx + 1).reduce((s, x) => s + x.close, 0) / 10;
+        if (idx < 19) return;
+        const ma20 = visible.slice(idx - 19, idx + 1).reduce((s, x) => s + x.close, 0) / 20;
         const x = idx * stepW + stepW / 2;
-        const y = toY(ma10);
-        if (idx === 9) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        const y = toY(ma20);
+        if (idx === 19) ctx.moveTo(x, y); else ctx.lineTo(x, y);
       });
       ctx.stroke();
       ctx.lineWidth = 1;
@@ -558,7 +564,7 @@
       document.getElementById('tick-num').innerText = bar.tick;
       document.getElementById('date-label').innerText = bar.dateLabel;
       document.getElementById('market-price').innerText = `$${currentPrice.toLocaleString()}`;
-      document.getElementById('vol-display').innerText = `成交量：${bar.volume.toLocaleString()} 張`;
+      document.getElementById('vol-display').innerText = `週成交量：${bar.volume.toLocaleString()} 張`;
 
       const chg = ((currentPrice - prevPrice) / prevPrice) * 100;
       const chgEl = document.getElementById('price-change');
@@ -604,10 +610,13 @@
 
       drawKlineChart();
 
-      eqChart.data.labels.push(bar.dateLabel);
-      eqChart.data.datasets[0].data.push(pEq);
-      bots.forEach((b, idx) => eqChart.data.datasets[idx + 1].data.push(b.cash + b.shares * currentPrice));
-      eqChart.update();
+      // 每 4 週更新一次淨值曲線，兼顧流暢度與 32 年完整跨度視野
+      if (weekIndex % 4 === 0 || weekIndex === tsmcData.length - 1) {
+        eqChart.data.labels.push(bar.dateLabel);
+        eqChart.data.datasets[0].data.push(pEq);
+        bots.forEach((b, idx) => eqChart.data.datasets[idx + 1].data.push(b.cash + b.shares * currentPrice));
+        eqChart.update();
+      }
     }
 
     function togglePause() {
@@ -628,8 +637,8 @@
     }
 
     function copyArenaPrompt() {
-      const prompt = `請擔任頂級量化交易員，寫一個純 JavaScript 掛單決策函式 \`function decide(market, me)\`，在台積電 (2330) 近一年真實歷史日K線競技場中擊敗人類與其他 AI。
-嚴禁高頻刷單（250天內出手不超過20次），必須使用 ATR、均線或通道過濾，並用移動停利抱緊主升段。
+      const prompt = `請擔任頂級量化交易員，寫一個純 JavaScript 掛單決策函式 \`function decide(market, me)\`，在台積電 (2330) 1994年上市至2026年共32年（1,280根週K線）歷史波段競技場中擊敗人類與其他 AI。
+嚴禁高頻刷單，必須使用長週期均線、ATR 或波動率通道過濾，並用移動停利抱緊數年級別的主升段。
 輸入：\`market = { tick, price, history }\`（history 為 \`{ tick, open, high, low, close, price, volume }\` 陣列），\`me = { cash, shares, equity }\`。
 輸出：\`{ side: "BUY" | "SELL", price: 限價數字, qty: 整數股數 }\` 或 \`null\`。只輸出純程式碼，不要解釋文字。`;
       navigator.clipboard.writeText(prompt);
