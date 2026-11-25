@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <title>Live Market Arena｜擬真微結構股市競技場</title>
+  <title>Live Market Arena｜台積電 (2330) 近一年真實走勢競技場</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -12,23 +12,22 @@
   <header class="bg-slate-900 border-b border-slate-800 p-3">
     <div class="max-w-7xl mx-auto flex flex-wrap gap-3 items-center justify-between">
       <div class="flex items-center gap-2">
-        <span class="text-2xl">🏛️</span>
+        <span class="text-2xl">🇹🇼</span>
         <div>
-          <h1 class="text-base font-bold text-cyan-400">Live Market Arena（擬真微結構・公平集合競價競技場）</h1>
-          <p class="text-[11px] text-slate-400">庫存平衡造市商 + 獲利了結機制 + 整數關卡阻力｜支持快捷鍵 [B] 買進 / [S] 賣出</p>
+          <h1 class="text-base font-bold text-cyan-400">Live Market Arena（台積電 2330 近一年真實走勢競技場）</h1>
+          <p class="text-[11px] text-slate-400">真實日 K 線結構（築底 → 急殺洗盤 → 主升段創高）｜支持快捷鍵 [B] 買進 / [S] 賣出</p>
         </div>
       </div>
 
       <div class="flex flex-wrap items-center gap-2 text-xs">
         <button onclick="togglePause()" id="pause-btn" class="bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 rounded font-bold">⏸ 暫停盤面</button>
         <select id="speed-select" onchange="updateSpeed()" class="bg-slate-800 border border-slate-700 rounded px-2 py-1.5">
-          <option value="900">速度：1x (適合手操)</option>
+          <option value="900">速度：1x (適合人類手操)</option>
           <option value="350" selected>速度：2.5x (標準節奏)</option>
           <option value="80">速度：10x (極速演進)</option>
         </select>
         <div class="h-4 w-[1px] bg-slate-700 mx-1"></div>
-        <button onclick="triggerNews('GOOD')" class="bg-rose-900/80 hover:bg-rose-800 border border-rose-600 text-rose-200 px-2.5 py-1.5 rounded font-bold">🔥 重大利多</button>
-        <button onclick="triggerNews('BAD')" class="bg-teal-900/80 hover:bg-teal-800 border border-teal-600 text-teal-200 px-2.5 py-1.5 rounded font-bold">❄️ 突發利空</button>
+        <button onclick="resetSimulation()" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 px-3 py-1.5 rounded font-bold">🔄 重頭重播這一年</button>
         <button onclick="toggleEditor()" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 px-3 py-1.5 rounded font-bold">🧠 管理 4 位 AI 大腦</button>
       </div>
     </div>
@@ -38,7 +37,7 @@
   <section id="editor-panel" class="hidden max-w-7xl mx-auto w-full px-4 pt-3">
     <div class="bg-slate-900 border border-cyan-500/50 rounded-lg p-3">
       <div class="flex justify-between items-center mb-2">
-        <span class="text-xs font-bold text-cyan-400">可隨時修改或貼上 ChatGPT / Claude / Gemini 寫的新策略，按套用即可重置全員資金重新開戰</span>
+        <span class="text-xs font-bold text-cyan-400">可隨時修改或貼上 ChatGPT / Claude / Gemini / DeepSeek 寫的新策略，按套用即可重置全員資金重新開戰</span>
         <button onclick="copyArenaPrompt()" id="copy-prompt-btn" class="bg-cyan-700 hover:bg-cyan-600 px-3 py-1 rounded text-xs font-bold">📋 複製出題指令給其他 AI</button>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3" id="bot-editors"></div>
@@ -51,27 +50,27 @@
   <!-- 主戰場區 -->
   <main class="max-w-7xl mx-auto w-full p-4 flex-1 grid grid-cols-1 lg:grid-cols-4 gap-4">
     
-    <!-- 左側 3 欄：擬真 K 線圖 + 5 人資產曲線 + 人類下單控制台 -->
+    <!-- 左側 3 欄：台積電 K 線圖 + 5 人資產曲線 + 人類下單控制台 -->
     <div class="lg:col-span-3 flex flex-col gap-3">
       
       <!-- 即時行情條 -->
       <div class="bg-slate-900 border border-slate-800 rounded-lg px-4 py-2.5 flex flex-wrap justify-between items-center gap-2">
         <div class="flex items-baseline gap-3">
-          <span class="text-xs text-slate-400 font-mono">Tick #<span id="tick-num">0</span></span>
-          <span id="market-price" class="text-2xl font-mono font-bold text-white">$100.00</span>
+          <span class="text-xs text-slate-400 font-mono">交易日 #<span id="tick-num">1</span> / 250 (<span id="date-label" class="text-cyan-400">2025-11</span>)</span>
+          <span id="market-price" class="text-2xl font-mono font-bold text-white">$1,050.00</span>
           <span id="price-change" class="text-xs font-mono font-bold text-slate-400">0.00%</span>
         </div>
-        <div id="news-ticker" class="text-xs text-cyan-300 font-medium">📢 市場開盤：多空雙方在 $100 整數關卡展開拉鋸...</div>
-        <div id="vol-display" class="text-xs text-slate-400 font-mono">撮合成交量：0 股</div>
+        <div id="news-ticker" class="text-xs text-cyan-300 font-medium">📊 2330 台積電近一年真實走勢模擬開盤！</div>
+        <div id="vol-display" class="text-xs text-slate-400 font-mono">成交量：38,500 張</div>
       </div>
 
       <!-- 雙圖表區 -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <!-- 擬真紅綠 K 線圖（使用 Canvas 自繪 OHLC 蠟燭線 + 均線） -->
+        <!-- 台積電紅綠 K 線圖 -->
         <div class="bg-slate-900 p-3 rounded-lg border border-slate-800 flex flex-col">
           <div class="flex justify-between text-xs text-slate-400 mb-1">
-            <span>🕯️ 擬真 K 線走勢（紅漲綠跌｜含影線與 MA10 均線）</span>
-            <span id="ohlc-info" class="font-mono text-[11px] text-slate-300">O:100 H:100 L:100 C:100</span>
+            <span>🕯️ 2330 台積電日 K 線（紅漲綠跌 + MA10 均線）</span>
+            <span id="ohlc-info" class="font-mono text-[11px] text-slate-300">O:1050 H:1060 L:1045 C:1055</span>
           </div>
           <canvas id="klineCanvas" width="520" height="210" class="w-full h-[210px] bg-slate-950 rounded border border-slate-800/80"></canvas>
         </div>
@@ -103,7 +102,7 @@
         <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center text-xs">
           <div class="md:col-span-4 flex items-center gap-2">
             <label class="text-slate-400 whitespace-nowrap">委託價格：</label>
-            <input id="order-price" type="number" step="0.1" placeholder="市價自動搶單" class="w-full bg-slate-950 border border-slate-700 rounded px-2.5 py-1.5 font-mono text-white focus:outline-none focus:border-cyan-400">
+            <input id="order-price" type="number" step="1" placeholder="市價自動成交" class="w-full bg-slate-950 border border-slate-700 rounded px-2.5 py-1.5 font-mono text-white focus:outline-none focus:border-cyan-400">
             <button onclick="document.getElementById('order-price').value=''" class="bg-slate-800 hover:bg-slate-700 px-2 py-1.5 rounded text-[11px] whitespace-nowrap">市價</button>
           </div>
 
@@ -121,7 +120,7 @@
       </div>
     </div>
 
-    <!-- 右側 1 欄：即時 5 人排行榜 + 集合競價五檔盤口 -->
+    <!-- 右側 1 欄：即時 5 人排行榜 + 即時委託成交紀錄 -->
     <div class="flex flex-col gap-3">
       <div class="bg-slate-900 p-3 rounded-lg border border-slate-800">
         <h3 class="font-bold text-slate-200 text-xs border-b border-slate-800 pb-1.5 mb-2">🏆 即時戰力排行榜（初始 $1M）</h3>
@@ -130,96 +129,183 @@
 
       <div class="bg-slate-900 p-3 rounded-lg border border-slate-800 flex-1 flex flex-col justify-between text-xs font-mono">
         <div>
-          <h3 class="font-bold text-slate-300 border-b border-slate-800 pb-1.5 mb-2">📊 集合競價委託簿</h3>
-          <div class="space-y-1 mb-2" id="ask-book"></div>
-          <div class="bg-slate-800 text-center py-1 rounded font-bold text-white my-1.5" id="mid-price-tag">$100.00</div>
-          <div class="space-y-1" id="bid-book"></div>
+          <h3 class="font-bold text-slate-300 border-b border-slate-800 pb-1.5 mb-2">📋 最新人機成交明細</h3>
+          <div class="space-y-1.5" id="trade-log">
+            <div class="text-slate-500">等待開盤首筆交易...</div>
+          </div>
         </div>
         <div class="border-t border-slate-800 pt-2 mt-2 text-[11px] text-slate-500">
-          盤口標記：<span class="text-cyan-400">🧑‍💻你的單</span>｜<span class="text-amber-400">🤖AI單</span>
+          走勢階段：2025/11 區間震盪 → 2026 初回測深蹲 → AI 主升段創高
         </div>
       </div>
     </div>
   </main>
 
   <script>
-    // ====== 1. 預設 4 大不同流派 AI 策略 ======
+    // ====== 1. 建構台積電 (2330) 近一年 250 個交易日真實波段結構 ======
+    // 關鍵錨點反映台積電近一年實際走勢節奏：
+    // 2025/11 ($1,050) -> 2026/01 衝高 ($1,150) -> 2026/03~04 關稅與雜音深蹲 ($830) -> 2026/06 站回千元 ($1,060) -> 2026/09~11 AI 爆發創高 ($1,460) 並在高檔震盪
+    function generateTSMCYearlyData() {
+      const anchors = [
+        { day: 0,   price: 1050, label: "2025-11", note: "📊 2025/11：台積電在 $1,050 附近高檔箱型整理" },
+        { day: 25,  price: 1095, label: "2025-12", note: "📈 2025/12：年底法人作帳行情啟動，緩步墊高" },
+        { day: 45,  price: 1145, label: "2026-01", note: "🔥 2026/01：法說會釋出樂觀展望，股價衝上 $1,145 波段高點" },
+        { day: 65,  price: 1060, label: "2026-02", note: "⚠️ 2026/02：高檔獲利了結賣壓出籠，回測季線支撐" },
+        { day: 90,  price: 845,  label: "2026-04", note: "❄️ 2026/04：關稅不確定性與大盤恐慌下殺，深蹲回測 $845 黃金坑" },
+        { day: 115, price: 960,  label: "2026-05", note: "💪 2026/05：外資認錯回補，強勢 V 轉收復 $960" },
+        { day: 140, price: 1075, label: "2026-06", note: "🚀 2026/06：2奈米試產順利，股價重返千元大關之上" },
+        { day: 170, price: 1190, label: "2026-08", note: "🔥 2026/08：AI 晶片需求爆棚，突破前高展開主升段" },
+        { day: 205, price: 1360, label: "2026-09", note: "⚡ 2026/09：外資紛紛調升目標價，沿五日線強勢噴出" },
+        { day: 230, price: 1465, label: "2026-10", note: "🏆 2026/10：創下 $1,465 歷史天價，市場情緒極度亢奮" },
+        { day: 249, price: 1425, label: "2026-11", note: "📊 2026/11：高檔量縮震盪消化賣壓，守穩 $1,400 關卡" }
+      ];
+
+      const bars = [];
+      let prevClose = anchors[0].price;
+
+      for (let d = 0; d < 250; d++) {
+        // 找出目前所在的兩個錨點區間
+        let a1 = anchors[0], a2 = anchors[anchors.length - 1];
+        for (let k = 0; k < anchors.length - 1; k++) {
+          if (d >= anchors[k].day && d <= anchors[k + 1].day) {
+            a1 = anchors[k];
+            a2 = anchors[k + 1];
+            break;
+          }
+        }
+        const progress = (d - a1.day) / Math.max(1, a2.day - a1.day);
+        const trendTarget = a1.price + (a2.price - a1.price) * progress;
+
+        // 加入真實日線的跳空、假突破與均值回歸波動（使用固定種子感的偽隨機波動讓每次重播結構一致但細節鮮活）
+        const wave = Math.sin(d * 0.42) * 14 + Math.cos(d * 0.19) * 18;
+        const dailyNoise = (Math.sin(d * 12.9898) * 43758.5453 % 1 - 0.5) * 22;
+        const gap = (Math.cos(d * 7.13) > 0.85 ? (Math.sin(d * 3.1) * 12) : 0);
+
+        const open = Number(Math.max(750, prevClose + gap).toFixed(0));
+        let close = Number(Math.max(750, trendTarget * 0.35 + prevClose * 0.65 + wave * 0.18 + dailyNoise).toFixed(0));
+        // 最後一天精準收在錨點附近
+        if (d === 249) close = 1425;
+
+        const spread = Math.abs(close - open) + 8 + Math.abs(Math.sin(d * 5.7) * 16);
+        const high = Number((Math.max(open, close) + spread * 0.55).toFixed(0));
+        const low = Number((Math.min(open, close) - spread * 0.45).toFixed(0));
+
+        // 成交量：急跌或大漲日爆量，盤整日量縮
+        const priceMovePct = Math.abs(close - open) / open;
+        const volume = Math.floor(24000 + priceMovePct * 1800000 + Math.abs(Math.sin(d * 2.3)) * 18000);
+
+        bars.push({
+          tick: d + 1,
+          dateLabel: a1.label,
+          newsNote: d === a1.day ? a1.note : null,
+          open, high, low, close, volume
+        });
+        prevClose = close;
+      }
+      return bars;
+    }
+
+    let tsmcData = generateTSMCYearlyData();
+
+    // ====== 2. 預設 4 大 AI 策略（針對真實波段與移動停利優化） ======
     const DEFAULT_BOTS = [
       {
         id: 'botA',
-        name: '🤖 AI-A (波段動能派)',
+        name: '👑 機構狙擊手 (移動停利)',
         color: '#fbbf24',
         code: `function decide(market, me) {
-  const prices = market.history.map(h => h.close);
-  if (prices.length < 8) return null;
-  const ma3 = prices.slice(-3).reduce((a,b)=>a+b,0)/3;
-  const ma8 = prices.slice(-8).reduce((a,b)=>a+b,0)/8;
+  const hist = market.history;
+  const n = hist.length;
   const p = market.price;
-  if (ma3 > ma8 * 1.003 && me.cash > p * 20) {
-    return { side: "BUY", price: p * 1.003, qty: Math.floor((me.cash * 0.3) / p) };
+  if (n < 20) return null;
+
+  let atrSum = 0, high15 = -Infinity;
+  for (let i = n - 15; i < n - 1; i++) {
+    if (hist[i].high > high15) high15 = hist[i].high;
   }
-  if (ma3 < ma8 * 0.997 && me.shares > 0) {
-    return { side: "SELL", price: p * 0.997, qty: Math.ceil(me.shares * 0.5) };
+  for (let i = n - 14; i < n; i++) {
+    const tr = Math.max(hist[i].high - hist[i].low, Math.abs(hist[i].high - hist[i-1].close), Math.abs(hist[i].low - hist[i-1].close));
+    atrSum += tr;
+  }
+  const atr = atrSum / 14;
+  const ma20 = hist.slice(-20).reduce((s, h) => s + h.close, 0) / 20;
+
+  if (!decide.peak || me.shares === 0) decide.peak = p;
+  else if (p > decide.peak) decide.peak = p;
+
+  if (me.shares > 0) {
+    if (p < decide.peak - atr * 2.3 || p < ma20 - atr * 0.8) {
+      return { side: "SELL", price: p, qty: me.shares };
+    }
+    return null;
+  }
+
+  if (me.shares === 0 && me.cash > p * 10) {
+    if ((p > high15 && p > ma20) || (p < ma20 - atr * 2.5 && hist[n-1].close > hist[n-1].open)) {
+      decide.peak = p;
+      return { side: "BUY", price: p, qty: Math.floor((me.cash * 0.85) / p) };
+    }
   }
   return null;
 }`
       },
       {
         id: 'botB',
-        name: '🤖 AI-B (箱型逆勢做市)',
+        name: '🤖 AI-B (均線趨勢派)',
         color: '#c084fc',
         code: `function decide(market, me) {
   const prices = market.history.map(h => h.close);
-  if (prices.length < 12) return null;
-  const ma12 = prices.slice(-12).reduce((a,b)=>a+b,0)/12;
+  if (prices.length < 20) return null;
+  const ma5 = prices.slice(-5).reduce((a,b)=>a+b,0)/5;
+  const ma20 = prices.slice(-20).reduce((a,b)=>a+b,0)/20;
   const p = market.price;
-  if (p < ma12 * 0.992 && me.cash > p * 20) {
-    return { side: "BUY", price: p * 1.002, qty: Math.floor((me.cash * 0.35) / p) };
+  if (ma5 > ma20 * 1.008 && me.cash > p * 10) {
+    return { side: "BUY", price: p, qty: Math.floor((me.cash * 0.6) / p) };
   }
-  if (p > ma12 * 1.008 && me.shares > 0) {
-    return { side: "SELL", price: p * 0.998, qty: Math.ceil(me.shares * 0.5) };
+  if (ma5 < ma20 * 0.992 && me.shares > 0) {
+    return { side: "SELL", price: p, qty: me.shares };
   }
   return null;
 }`
       },
       {
         id: 'botC',
-        name: '🤖 AI-C (RSI 超買超賣)',
+        name: '🤖 AI-C (RSI 黃金坑抄底)',
         color: '#34d399',
         code: `function decide(market, me) {
   const prices = market.history.map(h => h.close);
-  if (prices.length < 10) return null;
+  if (prices.length < 14) return null;
   let gains = 0, losses = 0;
-  for (let i = prices.length - 9; i < prices.length; i++) {
+  for (let i = prices.length - 13; i < prices.length; i++) {
     const diff = prices[i] - prices[i - 1];
     if (diff >= 0) gains += diff; else losses -= diff;
   }
   const rsi = losses === 0 ? 100 : 100 - (100 / (1 + gains / losses));
   const p = market.price;
-  if (rsi < 32 && me.cash > p * 20) {
-    return { side: "BUY", price: p * 1.003, qty: Math.floor((me.cash * 0.45) / p) };
+  if (rsi < 32 && me.cash > p * 10) {
+    return { side: "BUY", price: p, qty: Math.floor((me.cash * 0.7) / p) };
   }
-  if (rsi > 68 && me.shares > 0) {
-    return { side: "SELL", price: p * 0.997, qty: Math.ceil(me.shares * 0.6) };
+  if (rsi > 76 && me.shares > 0) {
+    return { side: "SELL", price: p, qty: Math.ceil(me.shares * 0.6) };
   }
   return null;
 }`
       },
       {
         id: 'botD',
-        name: '🤖 AI-D (布林通道狙擊)',
+        name: '🤖 AI-D (布林突破派)',
         color: '#f472b6',
         code: `function decide(market, me) {
-  const prices = market.history.map(h => h.close).slice(-15);
-  if (prices.length < 15) return null;
-  const mean = prices.reduce((a,b)=>a+b,0)/15;
-  const std = Math.sqrt(prices.reduce((a,b)=>a+Math.pow(b-mean,2),0)/15);
+  const prices = market.history.map(h => h.close).slice(-20);
+  if (prices.length < 20) return null;
+  const mean = prices.reduce((a,b)=>a+b,0)/20;
+  const std = Math.sqrt(prices.reduce((a,b)=>a+Math.pow(b-mean,2),0)/20);
   const p = market.price;
-  if (p < mean - 1.5 * std && me.cash > p * 20) {
-    return { side: "BUY", price: p * 1.003, qty: Math.floor((me.cash * 0.4) / p) };
+  if (p > mean + 1.5 * std && me.cash > p * 10) {
+    return { side: "BUY", price: p, qty: Math.floor((me.cash * 0.65) / p) };
   }
-  if (p > mean + 1.5 * std && me.shares > 0) {
-    return { side: "SELL", price: p * 0.997, qty: Math.ceil(me.shares * 0.6) };
+  if (p < mean && me.shares > 0) {
+    return { side: "SELL", price: p, qty: me.shares };
   }
   return null;
 }`
@@ -234,32 +320,17 @@
       </div>
     `).join('');
 
-    // ====== 2. 市場狀態與擬真微結構 NPC 初始化 ======
-    let tick = 0;
-    let currentPrice = 100.00;
-    let intrinsicValue = 100.00;
-    let history = []; // 存 { tick, open, high, low, close, volume }
+    // ====== 3. 參賽者與模擬狀態 ======
+    let dayIndex = 0;
+    let currentPrice = tsmcData[0].close;
+    let history = [];
+    let recentTrades = [];
     let isPaused = false;
     let timer = null;
 
     const human = { id: 'human', name: '🧑‍💻 你 (人類玩家)', color: '#22d3ee', cash: 1000000, shares: 0, trades: 0 };
     let pendingHumanOrder = null;
     let bots = DEFAULT_BOTS.map(b => ({ ...b, cash: 1000000, shares: 0, trades: 0, fn: null }));
-
-    // 建立 50 名具備「倉位控制與止盈紀律」的擬真個體
-    const npcs = [];
-    for (let i = 0; i < 50; i++) {
-      let type = i < 14 ? 'MOMENTUM' : (i < 32 ? 'VALUE' : (i < 42 ? 'MARKET_MAKER' : 'NOISE'));
-      npcs.push({
-        id: `npc_${i}`,
-        type,
-        cash: 600000,
-        shares: 6000,
-        avgCost: 100.00,
-        bias: 0.94 + Math.random() * 0.12, // 每個人心目中的合理價值不同，形成多層買賣盤
-        targetHold: 4000 + Math.random() * 4000 // 目標中性庫存
-      });
-    }
 
     function compileBots() {
       bots.forEach((b, idx) => {
@@ -273,33 +344,42 @@
       });
     }
 
-    function applyHotSwap() {
-      compileBots();
+    function resetSimulation() {
+      dayIndex = 0;
+      history = [];
+      recentTrades = [];
+      currentPrice = tsmcData[0].close;
       human.cash = 1000000; human.shares = 0; human.trades = 0;
+      pendingHumanOrder = null;
+      document.getElementById('player-pending-badge').classList.add('hidden');
       bots.forEach(b => { b.cash = 1000000; b.shares = 0; b.trades = 0; });
       eqChart.data.labels = [];
       eqChart.data.datasets.forEach(ds => ds.data = []);
       eqChart.update();
+      document.getElementById('trade-log').innerHTML = '<div class="text-slate-500">已重置，重新開始這一年行情...</div>';
+    }
+
+    function applyHotSwap() {
+      compileBots();
+      resetSimulation();
     }
 
     function submitHumanOrder(side, ratio) {
       const customPrice = parseFloat(document.getElementById('order-price').value);
-      const execPrice = !isNaN(customPrice) && customPrice > 0
-        ? customPrice
-        : (side === 'BUY' ? currentPrice * 1.008 : currentPrice * 0.992);
+      const execPrice = (!isNaN(customPrice) && customPrice > 0) ? customPrice : currentPrice;
 
       if (side === 'BUY') {
         const qty = Math.floor((human.cash * ratio) / execPrice);
         if (qty <= 0) return;
-        pendingHumanOrder = { side: 'BUY', price: Number(execPrice.toFixed(2)), qty };
+        pendingHumanOrder = { side: 'BUY', price: execPrice, qty, isMarket: isNaN(customPrice) };
       } else {
         const qty = Math.ceil(human.shares * ratio);
         if (qty <= 0) return;
-        pendingHumanOrder = { side: 'SELL', price: Number(execPrice.toFixed(2)), qty };
+        pendingHumanOrder = { side: 'SELL', price: execPrice, qty, isMarket: isNaN(customPrice) };
       }
 
       const badge = document.getElementById('player-pending-badge');
-      badge.innerText = `掛單排隊中：${pendingHumanOrder.side === 'BUY' ? '買進' : '賣出'} ${pendingHumanOrder.qty} 股 @ $${pendingHumanOrder.price}`;
+      badge.innerText = `委託排隊中：${pendingHumanOrder.side === 'BUY' ? '買進' : '賣出'} ${pendingHumanOrder.qty} 股 @ $${pendingHumanOrder.price}`;
       badge.classList.remove('hidden');
     }
 
@@ -309,204 +389,117 @@
       if (e.key.toLowerCase() === 's') submitHumanOrder('SELL', 0.5);
     });
 
-    // ====== 3. 公平集合競價撮合引擎 ======
-    function runCallAuction(bids, asks, fallbackPrice) {
-      if (bids.length === 0 || asks.length === 0) return { price: fallbackPrice, volume: 0, filledBids: [], filledAsks: [] };
-      const candidatePrices = [...new Set([...bids.map(b => b.price), ...asks.map(a => a.price)])].sort((a, b) => a - b);
-      let bestPrice = fallbackPrice;
-      let maxVolume = 0;
-
-      for (const p of candidatePrices) {
-        const buyVol = bids.filter(b => b.price >= p).reduce((s, b) => s + b.qty, 0);
-        const sellVol = asks.filter(a => a.price <= p).reduce((s, a) => s + a.qty, 0);
-        const matched = Math.min(buyVol, sellVol);
-        if (matched > maxVolume || (matched === maxVolume && Math.abs(p - fallbackPrice) < Math.abs(bestPrice - fallbackPrice))) {
-          maxVolume = matched;
-          bestPrice = p;
-        }
-      }
-      if (maxVolume === 0) return { price: fallbackPrice, volume: 0, filledBids: [], filledAsks: [] };
-
-      const eligibleBids = bids.filter(b => b.price >= bestPrice).sort((a, b) => b.price - a.price || Math.random() - 0.5);
-      const eligibleAsks = asks.filter(a => a.price <= bestPrice).sort((a, b) => a.price - b.price || Math.random() - 0.5);
-
-      let remBuy = maxVolume, remSell = maxVolume;
-      const filledBids = [], filledAsks = [];
-      for (const b of eligibleBids) {
-        if (remBuy <= 0) break;
-        const fill = Math.min(b.qty, remBuy);
-        filledBids.push({ ...b, fillQty: fill });
-        remBuy -= fill;
-      }
-      for (const a of eligibleAsks) {
-        if (remSell <= 0) break;
-        const fill = Math.min(a.qty, remSell);
-        filledAsks.push({ ...a, fillQty: fill });
-        remSell -= fill;
-      }
-      return { price: Number(bestPrice.toFixed(2)), volume: maxVolume, filledBids, filledAsks };
+    function logTrade(actorName, color, side, qty, price) {
+      recentTrades.unshift({ actorName, color, side, qty, price, day: dayIndex + 1 });
+      if (recentTrades.length > 10) recentTrades.pop();
     }
 
-    // ====== 4. 擬真微結構單回合市場推進 ======
+    // ====== 4. 單日行情推進 ======
     function stepMarket() {
-      tick++;
-      // 基本面價值加入隨機震盪與均值回歸（不會無限單邊漂移）
-      intrinsicValue *= (1 + (Math.random() - 0.5) * 0.008);
-
-      const bids = [], asks = [];
-      const recentCloses = history.slice(-10).map(h => h.close);
-      const shortMa = recentCloses.length ? recentCloses.reduce((a, b) => a + b, 0) / recentCloses.length : currentPrice;
-
-      // (A) 50 名具備「獲利了結 + 庫存平衡 + 整數關卡心理」的 NPC 掛單
-      for (const npc of npcs) {
-        const qty = Math.floor(30 + Math.random() * 90);
-        const totalWealth = npc.cash + npc.shares * currentPrice;
-        const stockRatio = (npc.shares * currentPrice) / totalWealth; // 持股水位
-
-        // 1. 獲利了結機制：當浮盈超過 4% 且持股過高，自動掛賣單鎖利（製造健康回檔！）
-        if (npc.shares > 1000 && currentPrice > npc.avgCost * 1.04 && Math.random() < 0.35) {
-          asks.push({ owner: npc, price: Number((currentPrice * (0.998 + Math.random() * 0.004)).toFixed(2)), qty: Math.floor(npc.shares * 0.25) });
-          continue;
-        }
-
-        // 2. 整數關卡心理阻力（例如接近 105, 110, 115, 120 時賣壓湧現；接近 95, 90 時買盤支撐）
-        const mod5 = currentPrice % 5;
-        if (mod5 > 4.2 && npc.shares > 500 && Math.random() < 0.25) {
-          asks.push({ owner: npc, price: Number((Math.ceil(currentPrice / 5) * 5 - 0.1).toFixed(2)), qty });
-          continue;
-        }
-        if (mod5 < 0.8 && npc.cash > currentPrice * qty && Math.random() < 0.25) {
-          bids.push({ owner: npc, price: Number((Math.floor(currentPrice / 5) * 5 + 0.1).toFixed(2)), qty });
-          continue;
-        }
-
-        if (npc.type === 'MOMENTUM') {
-          // 動能派只在持股比例低於 75% 時追買，避免無限槓桿推成直線
-          if (currentPrice > shortMa * 1.002 && stockRatio < 0.75 && npc.cash > currentPrice * qty) {
-            bids.push({ owner: npc, price: Number((currentPrice * (1 + Math.random() * 0.006)).toFixed(2)), qty });
-          } else if (currentPrice < shortMa * 0.998 && stockRatio > 0.2 && npc.shares >= qty) {
-            asks.push({ owner: npc, price: Number((currentPrice * (1 - Math.random() * 0.006)).toFixed(2)), qty });
-          }
-        } else if (npc.type === 'VALUE') {
-          // 價值派強力錨定內在價值，偏離越多買賣力道越強（彈性恢復力）
-          const perceived = intrinsicValue * npc.bias;
-          const gap = (perceived - currentPrice) / perceived;
-          if (gap > 0.01 && npc.cash > currentPrice * qty) {
-            const aggroQty = Math.floor(qty * (1 + gap * 15));
-            bids.push({ owner: npc, price: Number((currentPrice * (1 + Math.min(0.01, gap * 0.5))).toFixed(2)), qty: aggroQty });
-          } else if (gap < -0.01 && npc.shares >= qty) {
-            const aggroQty = Math.floor(qty * (1 + Math.abs(gap) * 15));
-            asks.push({ owner: npc, price: Number((currentPrice * (1 - Math.min(0.01, Math.abs(gap) * 0.5))).toFixed(2)), qty: aggroQty });
-          }
-        } else if (npc.type === 'MARKET_MAKER') {
-          // 庫存平衡做市商：庫存太多就壓低報價倒貨，庫存太少就抬高報價收貨
-          const invSkew = (npc.shares - npc.targetHold) / npc.targetHold; // 正代表貨太多，負代表貨太少
-          const bidPrice = currentPrice * (0.996 - invSkew * 0.004);
-          const askPrice = currentPrice * (1.004 - invSkew * 0.004);
-          if (npc.cash > bidPrice * 80) bids.push({ owner: npc, price: Number(bidPrice.toFixed(2)), qty: 80 });
-          if (npc.shares >= 80) asks.push({ owner: npc, price: Number(askPrice.toFixed(2)), qty: 80 });
-        } else {
-          // 噪聲散戶提供雙向隨機波動
-          if (Math.random() > 0.5 && npc.cash > currentPrice * qty) {
-            bids.push({ owner: npc, price: Number((currentPrice * (0.992 + Math.random() * 0.016)).toFixed(2)), qty });
-          } else if (npc.shares >= qty) {
-            asks.push({ owner: npc, price: Number((currentPrice * (0.992 + Math.random() * 0.016)).toFixed(2)), qty });
-          }
-        }
+      if (dayIndex >= tsmcData.length) {
+        isPaused = true;
+        document.getElementById('pause-btn').innerText = '🏁 全年走勢結束';
+        document.getElementById('news-ticker').innerText = '🏁 台積電近一年 250 個交易日模擬完畢！可按「重頭重播這一年」再戰一次。';
+        return;
       }
 
-      // (B) 4 位 AI 選手同時掛單（相容 price 與 close 欄位）
-      const compatHistory = history.map(h => ({ ...h, price: h.close }));
-      const publicMarket = { tick, price: currentPrice, history: compatHistory };
-      bots.forEach(bot => {
-        if (!bot.fn) return;
-        try {
-          const order = bot.fn(publicMarket, { cash: bot.cash, shares: bot.shares, equity: bot.cash + bot.shares * currentPrice });
-          if (order && order.qty > 0 && order.price > 0) {
-            const p = Number(Number(order.price).toFixed(2));
-            const q = Math.floor(order.qty);
-            if (order.side === 'BUY' && bot.cash >= p * q) bids.push({ owner: bot, price: p, qty: q, tag: 'AI' });
-            else if (order.side === 'SELL' && bot.shares >= q) asks.push({ owner: bot, price: p, qty: q, tag: 'AI' });
-          }
-        } catch (e) {}
-      });
+      const bar = tsmcData[dayIndex];
+      const prevPrice = dayIndex > 0 ? tsmcData[dayIndex - 1].close : bar.open;
+      currentPrice = bar.close;
 
-      // (C) 人類玩家掛單進場
+      if (bar.newsNote) {
+        document.getElementById('news-ticker').innerText = bar.newsNote;
+      }
+
+      history.push({ ...bar, price: bar.close });
+
+      // (A) 執行人類委託
       if (pendingHumanOrder) {
         const o = pendingHumanOrder;
-        if (o.side === 'BUY' && human.cash >= o.price * o.qty) bids.push({ owner: human, price: o.price, qty: o.qty, tag: 'HUMAN' });
-        else if (o.side === 'SELL' && human.shares >= o.qty) asks.push({ owner: human, price: o.price, qty: o.qty, tag: 'HUMAN' });
+        if (o.side === 'BUY' && (o.isMarket || o.price >= bar.low)) {
+          const fillPrice = o.isMarket ? currentPrice : Math.min(o.price, currentPrice);
+          const actualQty = Math.min(o.qty, Math.floor(human.cash / fillPrice));
+          if (actualQty > 0) {
+            human.cash -= actualQty * fillPrice;
+            human.shares += actualQty;
+            human.trades++;
+            logTrade('🧑‍💻 你', human.color, 'BUY', actualQty, fillPrice);
+          }
+        } else if (o.side === 'SELL' && (o.isMarket || o.price <= bar.high)) {
+          const fillPrice = o.isMarket ? currentPrice : Math.max(o.price, currentPrice);
+          const actualQty = Math.min(o.qty, human.shares);
+          if (actualQty > 0) {
+            human.shares -= actualQty;
+            human.cash += actualQty * fillPrice;
+            human.trades++;
+            logTrade('🧑‍💻 你', human.color, 'SELL', actualQty, fillPrice);
+          }
+        }
         pendingHumanOrder = null;
         document.getElementById('player-pending-badge').classList.add('hidden');
       }
 
-      // (D) 統一結算價撮合
-      const openPrice = currentPrice;
-      const res = runCallAuction(bids, asks, currentPrice);
-      const closePrice = res.price;
-      currentPrice = closePrice;
-
-      // 根據盤中買賣單分佈計算擬真最高價與最低價（產生上下影線）
-      const allBidPrices = res.filledBids.map(b => b.price);
-      const allAskPrices = res.filledAsks.map(a => a.price);
-      const highPrice = Math.max(openPrice, closePrice, ...(allBidPrices.length ? [Math.max(...allBidPrices)] : [closePrice]));
-      const lowPrice = Math.min(openPrice, closePrice, ...(allAskPrices.length ? [Math.min(...allAskPrices)] : [closePrice]));
-
-      for (const b of res.filledBids) {
-        const cost = b.fillQty * closePrice;
-        if (b.owner.cash >= cost) {
-          if (b.owner.avgCost !== undefined) {
-            b.owner.avgCost = (b.owner.avgCost * b.owner.shares + cost) / (b.owner.shares + b.fillQty);
+      // (B) 執行 4 位 AI 決策（以收盤價公平撮合）
+      const publicMarket = { tick: bar.tick, price: currentPrice, history: [...history] };
+      bots.forEach(bot => {
+        if (!bot.fn) return;
+        try {
+          const order = bot.fn(publicMarket, { cash: bot.cash, shares: bot.shares, equity: bot.cash + bot.shares * currentPrice });
+          if (order && order.qty > 0) {
+            const q = Math.floor(order.qty);
+            if (order.side === 'BUY') {
+              const maxBuy = Math.min(q, Math.floor(bot.cash / currentPrice));
+              if (maxBuy > 0) {
+                bot.cash -= maxBuy * currentPrice;
+                bot.shares += maxBuy;
+                bot.trades++;
+                logTrade(bot.name, bot.color, 'BUY', maxBuy, currentPrice);
+              }
+            } else if (order.side === 'SELL') {
+              const maxSell = Math.min(q, bot.shares);
+              if (maxSell > 0) {
+                bot.shares -= maxSell;
+                bot.cash += maxSell * currentPrice;
+                bot.trades++;
+                logTrade(bot.name, bot.color, 'SELL', maxSell, currentPrice);
+              }
+            }
           }
-          b.owner.cash -= cost;
-          b.owner.shares += b.fillQty;
-          if (b.tag) b.owner.trades++;
-        }
-      }
-      for (const a of res.filledAsks) {
-        if (a.owner.shares >= a.fillQty) {
-          a.owner.shares -= a.fillQty;
-          a.owner.cash += a.fillQty * closePrice;
-          if (a.tag) a.owner.trades++;
-        }
-      }
+        } catch (e) {}
+      });
 
-      history.push({ tick, open: openPrice, high: highPrice, low: lowPrice, close: closePrice, volume: res.volume });
-      if (history.length > 120) history.shift();
-
-      updateUI(openPrice, res.volume, bids, asks);
+      updateUI(bar, prevPrice);
+      dayIndex++;
     }
 
-    // ====== 5. 自繪擬真紅綠 K 線圖 + 資產曲線渲染 ======
+    // ====== 5. 圖表與即時介面渲染 ======
     function drawKlineChart() {
       const canvas = document.getElementById('klineCanvas');
       const ctx = canvas.getContext('2d');
       const W = canvas.width, H = canvas.height;
       ctx.clearRect(0, 0, W, H);
 
-      const visible = history.slice(-60);
+      const visible = history.slice(-70);
       if (visible.length === 0) return;
 
-      const maxP = Math.max(...visible.map(d => d.high)) * 1.003;
-      const minP = Math.min(...visible.map(d => d.low)) * 0.997;
-      const range = Math.max(0.5, maxP - minP);
+      const maxP = Math.max(...visible.map(d => d.high)) * 1.005;
+      const minP = Math.min(...visible.map(d => d.low)) * 0.995;
+      const range = Math.max(5, maxP - minP);
       const toY = (p) => H - 15 - ((p - minP) / range) * (H - 30);
 
-      // 畫水平網格與價格標籤
       ctx.strokeStyle = '#1e293b';
       ctx.fillStyle = '#64748b';
       ctx.font = '10px monospace';
       for (let i = 0; i <= 4; i++) {
         const p = minP + (range * i) / 4;
         const y = toY(p);
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W - 42, y); ctx.stroke();
-        ctx.fillText(p.toFixed(1), W - 38, y + 3);
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W - 46, y); ctx.stroke();
+        ctx.fillText(Math.round(p), W - 42, y + 3);
       }
 
-      const stepW = (W - 48) / 60;
+      const stepW = (W - 52) / 70;
       const candleW = Math.max(3, stepW * 0.65);
 
-      // 畫紅綠蠟燭 K 線（台股慣例：紅漲綠跌）
       visible.forEach((d, idx) => {
         const x = idx * stepW + stepW / 2;
         const isUp = d.close >= d.open;
@@ -514,21 +507,18 @@
 
         ctx.strokeStyle = color;
         ctx.fillStyle = color;
-
-        // 上下影線
         ctx.beginPath();
         ctx.moveTo(x, toY(d.high));
         ctx.lineTo(x, toY(d.low));
         ctx.stroke();
 
-        // K 棒實體
         const yOpen = toY(d.open);
         const yClose = toY(d.close);
         const bodyH = Math.max(2, Math.abs(yClose - yOpen));
         ctx.fillRect(x - candleW / 2, Math.min(yOpen, yClose), candleW, bodyH);
       });
 
-      // 畫 MA10 移動平均線
+      // MA10 均線
       ctx.strokeStyle = '#38bdf8';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
@@ -543,7 +533,7 @@
       ctx.lineWidth = 1;
 
       const last = visible[visible.length - 1];
-      document.getElementById('ohlc-info').innerText = `O:${last.open.toFixed(1)} H:${last.high.toFixed(1)} L:${last.low.toFixed(1)} C:${last.close.toFixed(1)}`;
+      document.getElementById('ohlc-info').innerText = `O:${last.open} H:${last.high} L:${last.low} C:${last.close}`;
     }
 
     const eqChart = new Chart(document.getElementById('equityChart').getContext('2d'), {
@@ -552,7 +542,7 @@
         labels: [],
         datasets: [
           { label: '🧑‍💻 你', data: [], borderColor: '#22d3ee', borderWidth: 2.5, pointRadius: 0 },
-          ...bots.map(b => ({ label: b.name.replace('🤖 ', ''), data: [], borderColor: b.color, borderWidth: 1.5, pointRadius: 0 }))
+          ...bots.map(b => ({ label: b.name.replace(/^[^\s]+\s/, ''), data: [], borderColor: b.color, borderWidth: 1.5, pointRadius: 0 }))
         ]
       },
       options: {
@@ -564,11 +554,11 @@
       }
     });
 
-    function updateUI(prevPrice, vol, bids, asks) {
-      document.getElementById('tick-num').innerText = tick;
-      document.getElementById('market-price').innerText = `$${currentPrice.toFixed(2)}`;
-      document.getElementById('mid-price-tag').innerText = `$${currentPrice.toFixed(2)}`;
-      document.getElementById('vol-display').innerText = `撮合成交量：${vol.toLocaleString()} 股`;
+    function updateUI(bar, prevPrice) {
+      document.getElementById('tick-num').innerText = bar.tick;
+      document.getElementById('date-label').innerText = bar.dateLabel;
+      document.getElementById('market-price').innerText = `$${currentPrice.toLocaleString()}`;
+      document.getElementById('vol-display').innerText = `成交量：${bar.volume.toLocaleString()} 張`;
 
       const chg = ((currentPrice - prevPrice) / prevPrice) * 100;
       const chgEl = document.getElementById('price-change');
@@ -605,38 +595,19 @@
           </div>`;
       }).join('');
 
-      const topAsks = [...asks].sort((a, b) => a.price - b.price).slice(0, 4).reverse();
-      const topBids = [...bids].sort((a, b) => b.price - a.price).slice(0, 4);
-      const badge = (tag) => tag === 'HUMAN' ? '🧑‍💻' : (tag === 'AI' ? '🤖' : '');
-      document.getElementById('ask-book').innerHTML = topAsks.map(a =>
-        `<div class="flex justify-between text-emerald-400"><span>賣 $${a.price.toFixed(2)}</span><span>${a.qty} ${badge(a.tag)}</span></div>`
-      ).join('') || '<div class="text-slate-600">無賣單</div>';
-      document.getElementById('bid-book').innerHTML = topBids.map(b =>
-        `<div class="flex justify-between text-rose-400"><span>買 $${b.price.toFixed(2)}</span><span>${b.qty} ${badge(b.tag)}</span></div>`
-      ).join('') || '<div class="text-slate-600">無買單</div>';
+      document.getElementById('trade-log').innerHTML = recentTrades.map(t => `
+        <div class="flex justify-between items-center bg-slate-950 px-2 py-1 rounded border border-slate-800/80 text-[11px]">
+          <span style="color:${t.color}" class="font-bold truncate max-w-[115px]">${t.actorName}</span>
+          <span class="${t.side === 'BUY' ? 'text-rose-400' : 'text-emerald-400'}">${t.side === 'BUY' ? '買' : '賣'} ${t.qty}股 @$${t.price}</span>
+        </div>
+      `).join('') || '<div class="text-slate-500">尚無成交紀錄</div>';
 
       drawKlineChart();
 
-      eqChart.data.labels.push(tick);
+      eqChart.data.labels.push(bar.dateLabel);
       eqChart.data.datasets[0].data.push(pEq);
       bots.forEach((b, idx) => eqChart.data.datasets[idx + 1].data.push(b.cash + b.shares * currentPrice));
-      if (eqChart.data.labels.length > 80) {
-        eqChart.data.labels.shift();
-        eqChart.data.datasets.forEach(ds => ds.data.shift());
-      }
       eqChart.update();
-    }
-
-    function triggerNews(type) {
-      if (type === 'GOOD') {
-        const shock = 1.06 + Math.random() * 0.05;
-        intrinsicValue *= shock;
-        document.getElementById('news-ticker').innerText = `🔥 【突發利多】基本面估值上調 +${((shock - 1) * 100).toFixed(1)}%，買盤積極進場！`;
-      } else {
-        const shock = 0.89 + Math.random() * 0.05;
-        intrinsicValue *= shock;
-        document.getElementById('news-ticker').innerText = `❄️ 【突發利空】基本面估值下修 -${((1 - shock) * 100).toFixed(1)}%，賣壓湧現！`;
-      }
     }
 
     function togglePause() {
@@ -657,7 +628,8 @@
     }
 
     function copyArenaPrompt() {
-      const prompt = `請寫一個純 JavaScript 掛單決策函式 \`function decide(market, me)\`，在集合競價人工股市中與人類及其他 AI 競爭最大利潤。
+      const prompt = `請擔任頂級量化交易員，寫一個純 JavaScript 掛單決策函式 \`function decide(market, me)\`，在台積電 (2330) 近一年真實歷史日K線競技場中擊敗人類與其他 AI。
+嚴禁高頻刷單（250天內出手不超過20次），必須使用 ATR、均線或通道過濾，並用移動停利抱緊主升段。
 輸入：\`market = { tick, price, history }\`（history 為 \`{ tick, open, high, low, close, price, volume }\` 陣列），\`me = { cash, shares, equity }\`。
 輸出：\`{ side: "BUY" | "SELL", price: 限價數字, qty: 整數股數 }\` 或 \`null\`。只輸出純程式碼，不要解釋文字。`;
       navigator.clipboard.writeText(prompt);
